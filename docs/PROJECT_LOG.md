@@ -27,6 +27,13 @@
 
 ## 本轮新增/变更
 
+- **备份自动化已实现（2026-11-08）**：新增 `experimental/backup_job.py`、`experimental/wincred.py`、`experimental/backup_cli.py` 与 `tools/backup/schedule-backup.ps1`。
+  - 口令与恢复码改存 **Windows 凭据管理器**（`Jarvis:backup-passphrase`、`Jarvis:backup-recovery-code`），不再依赖环境变量；缺失时抛 `PASSPHRASE_UNAVAILABLE`，不猜。
+  - 恢复码**复用同一枚**并自动持久化，保证每次备份的归档都能被同一份材料打开。
+  - 保留策略：本地按修改时间保留最近 N 份，远端按列表保留 N 份；遇到 `ObjectLockedByBucketPolicy` 记入 `remote_locked` 而不是失败（与 35 天桶锁共存）。
+  - 审计：`<vault>/audit.log` 追加 JSON 行，只含归档名、`key_id`、字节数与保留统计；测试断言口令与恢复码都不出现在审计里。
+  - 命令行：`store-passphrase` / `show-recovery-code` / `run --vault ... --local ... [--remote]`。
+- 新增 `verify_backup_job.py`：凭据往返、无凭据时拒绝、创建与上传、两次运行复用恢复码、保留策略、两种材料都能恢复、审计不含密钥、锁定容忍。回归 **54 PASS / 0 FAIL / 0 SKIP**（3.14），3.13 对照 42 PASS / 12 SKIP。
 - **S4 并发验证通过并修掉两个适配器缺陷（2026-11-07）**：新增 `verify_vault_concurrency.py` —— 4 个写线程 × 40 次自增 + 3 个读线程并发，实测 **160/160 无丢失**、读者观测到单调递增（最高 160）、无死锁、WAL/SHM 清理干净。
 - 缺陷一：`BEGIN IMMEDIATE` 前不释放旧语句。SQLite 对 `SQLITE_BUSY_SNAPSHOT` 不调用 busy handler，导致“先读后写”在 20 ms 内直接 `BusyError`；修法是在 `begin_immediate()` 里先 finalize 游标。
 - 缺陷二：连接用**强引用**保存活跃游标，一次性查询（`PRAGMA integrity_check`、单行 `fetchone()`）被丢弃后语句不释放，读快照永不结束——同一连接永远读到旧值。改为 `weakref.WeakSet` 后，读者能看到 0→1→2→3→4→5 的提交。这个缺陷比第一个严重：任何“读一次、再写”的服务代码都会拿到陈旧数据。

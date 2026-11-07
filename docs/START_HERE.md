@@ -49,6 +49,15 @@ $env:TMP = $jarvisTemp
 & $jarvisPython (Join-Path $jarvisRoot 'backend\verification\verify_vault_backup_upload.py')
 ```
 
+如需**配置自动备份**（口令存 Windows 凭据管理器，不落盘）：
+
+```powershell
+$cli = Join-Path $jarvisRoot 'backend\experimental\backup_cli.py'
+& $jarvisPython $cli store-passphrase        # 交互式录入一次
+& $jarvisPython $cli show-recovery-code      # 抄写离线保存
+& $jarvisPython $cli run --vault <vault 目录> --local <本地备份目录> [--remote]
+```
+
 输出分别列出 PASS、FAIL、SKIP；有跳过项时脚本按设计返回非零，跳过并非通过。**2026-11-07 实测：49 项通过、0 项失败、0 项跳过**（`ALL_SELECTED_CHECKS=PASS`）。为此把 `sqlcipher3-wheels` 装进了 `.jarvis-python314-deps`，并把 `apsw-sqlite3mc` 放在 `.jarvis-python314-apswmc-probe`；这两个目录是本机实验资产，缺失时对应检查会自动 SKIP 而不是误报通过。加密候选仍是独立实验，尚未保护主应用。
 
 项目进度和下一步见 [项目日志](PROJECT_LOG.md)、[路线图](ROADMAP.md) 和 [本地数据保护方案](DATA_SECURITY_DESIGN.md)。

@@ -228,14 +228,24 @@ KEK：不由用户记忆，派生或系统托管；绝不与 DEK 同存明文
 | 上传前守卫 | 拒绝包含恢复材料或 DPAPI 包装的目录；校验归档与清单哈希一致才上传（B6） |
 | 合规 | 遵守服务商条款与所在地数据要求；不适合时改用自控介质 |
 
-### 6.6 备份计划
+### 6.6 备份计划（已实现）
 
 ```
-每日 02:00  → 本地目录快照（保留 7 份），写审计
-每周日      → 打包 .jvault（zstd）→ 校验哈希 → 上传 S3（保留 4 份）
-每月一次    → 恢复演练：从云端副本恢复到临时目录，跑 integrity_check 与业务自检（B7）
-每半年或泄密疑点 → 轮换备份密钥，旧归档标记 retired
+每日 02:00  → backup_job.run：本地目录快照（保留 7 份）+ 追加审计行
+每周日      → backup_job.run(sink=S3)：上传 .jvault（保留 4 份，锁定的对象跳过并记录）
+每月一次    → 恢复演练：从本地或云端副本恢复到临时目录，跑 integrity_check 与业务自检（B7）
+每半年或泄密疑点 → rotate_vault 换数据密钥；旧归档按保留期自然过期
 ```
+
+**口令与恢复码的存放（已定）：** 不再使用环境变量，改为 **Windows 凭据管理器**（`Jarvis:backup-passphrase` 与 `Jarvis:backup-recovery-code`，generic credential、当前用户）。首次用 `python backend/experimental/backup_cli.py store-passphrase` 录入；恢复码由第一次备份自动生成并写入凭据管理器，用户应执行 `show-recovery-code` 抄写一份离线保存。
+
+**实现要点（`experimental/backup_job.py`）：**
+
+- 口令解析顺序：显式参数 → `JARVIS_BACKUP_PASSPHRASE`（应急）→ 凭据管理器；都没有时抛 `PASSPHRASE_UNAVAILABLE`，绝不猜；
+- 恢复码同理，且**复用同一枚**，保证每次备份的归档都能被同一份材料打开；
+- 保留策略：本地按修改时间保留最近 N 份；远端按列表顺序保留 N 份，遇到 `ObjectLockedByBucketPolicy` 记入 `remote_locked` 而不是失败；
+- 审计：`<vault>/audit.log` 追加 JSON 行（`backup_created` / `backup_uploaded`），只记录归档名、`key_id`、字节数、保留统计，**不记录任何口令、恢复码或密钥**；
+- 命令行：`store-passphrase` / `show-recovery-code` / `run --vault DIR --local DIR [--remote]`。
 
 本地目录阶段明确接受的风险：磁盘损坏、误删、勒索软件会同时影响主库与本地副本；**缓解只能靠每周异地副本**，并在拿到外置盘后立刻补上离线副本。
 
@@ -320,6 +330,7 @@ KEK：不由用户记忆，派生或系统托管；绝不与 DEK 同存明文
 | **S2 备份与恢复** | ✅ 已交付：`.jvault` 归档、口令/恢复码包装、KDF 下限、上传守卫、本地目录 sink、S3 sink（Cloudflare R2 实测）、远端恢复；`verify_vault_backup_restore.py` + `verify_vault_backup_upload.py` | B1–B10 全部通过；R2 实测 `ObjectLockedByBucketPolicy` 阻止覆盖与删除；保留策略、定时任务与远端清单巡检仍是后续工作 |
 | **S3 轮换** | ✅ 已交付：`rotate_vault` / `resume_rotation`（pending 标记、双向验证、失败回滚、中断自动续做）+ `verify_vault_rotation.py`（K4/K5/C2） | 新密钥可读、旧包装必失效、失败后包装与 `key_id` 保持一致、中断后下次打开自动完成 |
 | **S4 并发与压力** | ✅ 已交付：`verify_vault_concurrency.py`（4 写 × 40 次 + 3 读并发，实测 160/160 无丢失、读者观测到 160、无死锁、无残留 WAL） | 压力下无丢更新、无死锁、快照可见 |
+| **自动化** | ✅ 已交付：`backup_job.py`（日程任务入口）、`wincred.py`（凭据管理器）、`backup_cli.py`（store-passphrase / show-recovery-code / run）、`tools/backup/schedule-backup.ps1`、`verify_backup_job.py` | 口令来自凭据管理器、保留策略生效、审计不含密钥、锁定对象只记录不失败 |
 | **S5 切换准备** | 迁移到默认存储的切换脚本、回滚演练、许可证与发布审查清单 | 独立安全评审通过后才允许真实数据 |
 
 **跨阶段约束**：S5 之前，任何阶段都不得把 `JARVIS_DATA_MODE` 的 synthetic 门禁降级，也不得把加密后端设为默认。
@@ -362,6 +373,8 @@ KEK：不由用户记忆，派生或系统托管；绝不与 DEK 同存明文
 | `experimental/vault_keys.py` | S1 已实现：create/open/destroy、`meta.json`、`key_id`、错误分类；S3 轮换 `rotate_vault` / `resume_rotation` |
 | `experimental/vault_backup.py` | S2 已实现：归档、包装、清单 HMAC、恢复、上传守卫 |
 | `experimental/backup_sink.py` | S2 已实现：本地目录与 S3（R2 实测）两个目的地 |
+| `experimental/backup_job.py` / `wincred.py` / `backup_cli.py` | 自动化：日程任务、Windows 凭据管理器、命令行入口 |
+| `verify_backup_job.py` | 自动化验收：凭据往返、保留策略、审计不含密钥、锁定容忍、两种材料都能恢复 |
 | `verify_vault_key_lifecycle.py` / `verify_vault_rotation.py` | S1 验收：K1–K3、K6；S3 验收：K4、K5、C2 |
 | `verify_vault_backup_restore.py` / `verify_vault_backup_upload.py` | S2 验收：B1–B5、B8–B10（离线）+ B6/B7（真实 R2） |
 | `experimental/apswmc_storage.py` | S1 的连接层；打开时按 §4 校验 cipher/key 与页 1 |

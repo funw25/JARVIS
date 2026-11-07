@@ -27,6 +27,9 @@
 
 ## 本轮新增/变更
 
+- **S3 密钥轮换已实现并验收（2026-11-07）**：`vault_keys.rotate_vault` 用 `PRAGMA rekey = raw:<hex>`（实机确认：新密钥可读、旧密钥 `NotADBError`），并以 `pending.json` + `dek.next.dpapi` + `meta.next.json` 三件套保证可恢复；成功后双向验证（新开得动、旧开不动）、旧包装退役到 `retired/dek.<old_id>.dpapi`、原子换入新包装与新 meta；失败尝试 rekey 回旧密钥并清理标记；进程在 rekey 后被杀死时，下次 `open_vault` 调用 `resume_rotation` 自动完成或放弃并回到旧密钥。
+- 新增 `verify_vault_rotation.py`（K4 轮换后数据完整与 key_id 更新、旧包装不再能开、K5 失败回滚保持包装与 key_id 一致、C2 中断后下次打开自动续做、轮换后备份/恢复仍可用）。回归 **52 PASS / 0 FAIL / 0 SKIP**（3.14），3.13 对照 42 PASS / 10 SKIP。
+- 决定：仓库历史里的截图 `批注 2026-11-08 014134.png` **保留**，不改写历史；备份口令改存 **Windows 凭据管理器**（自动化阶段实现），不再依赖环境变量。
 - **S2 全链路验收通过（2026-11-07）**：新增 `experimental/backup_sink.py`（本地目录 sink + S3 兼容 sink，Cloudflare R2 实测）与 `verify_vault_backup_upload.py`（B6/B7）。真实 R2 结果：上传与列表正常、上传守卫拒绝带恢复材料的归档、覆盖与删除都被桶锁拒绝（`ObjectLockedByBucketPolicy`）、从云端下载后分别用口令与恢复码恢复到新目录成功。
 - B5 补齐：备份期间另一连接持续写入（329 行成对插入），恢复后的快照全部成对一致，无撕裂事务。
 - 修掉 `open_vault` 的一个真实缺陷：异常分类原本包住了 `yield`，调用方代码里的任何异常都会被误报成 `DB_CORRUPT`。改为手动驱动上下文管理器，只分类打开阶段的失败，调用方异常原样传播。

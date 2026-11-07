@@ -1,6 +1,6 @@
 # 密钥生命周期、备份与恢复设计
 
-**状态：** S1、S2 已实现并验收（`vault_keys.py`、`vault_backup.py`、`backup_sink.py`）；S3 轮换起待做  
+**状态：** S1–S3 已实现并验收（`vault_keys.py`、`vault_backup.py`、`backup_sink.py`）；S4/S5 待做  
 **更新：** 2026-11-07  
 **范围：** 加密存储正式启用前的最后一段设计：密钥生成/解锁/轮换/销毁、备份与换机恢复、崩溃与并发恢复  
 **关联文档：** [数据保护与恢复方案](DATA_SECURITY_DESIGN.md)（威胁模型与候选调研）、[存储适配计划](STORAGE_ADAPTER_PLAN.md)（适配层与合同）、[多设备同步草案](SYNC_DESIGN_DRAFT.md)（跨设备传输）
@@ -124,6 +124,8 @@ KEK：不由用户记忆，派生或系统托管；绝不与 DEK 同存明文
 5. 原子替换 `dek.dpapi`，旧包装移入 `retired/`，写审计 `key_rotated`。
 
 失败语义：任一步失败 → 恢复旧包装、保留旧库、报告 `ROTATE_FAILED`；不得出现"库已用新密钥、包装还是旧密钥"的中间态。`rekey` 期间进程被杀死 → 下次打开必须失败并给出明确恢复指引（用备份 + 恢复材料），不得静默尝试猜测。
+
+**已实现（S3，2026-11-07）：** 驱动确认支持 `PRAGMA rekey = raw:<hex>`（新密钥可读、旧密钥 `NotADBError`）。实际流程比草案更保守：先写 `dek.next.dpapi` 与 `meta.next.json`，再写 `pending.json` 标记，然后 rekey 并更新 `vault_meta.key_id`；成功后双向验证（新密钥必须能开、旧密钥必须不能开），再把旧包装移入 `retired/dek.<old_id>.dpapi`、原子换入新文件、删除标记。失败会尝试把库 rekey 回旧密钥并清理标记；进程在 rekey 之后被杀死时，下次打开由 `resume_rotation` 依据标记与 `dek.next.dpapi` **自动完成**轮换（这不是猜密钥，而是完成已记录的迁移），无法完成则清理标记回到旧密钥。审计行 `key_rotated` 仍待实现。
 
 ### 5.4 销毁（destroy）
 
@@ -316,7 +318,7 @@ KEK：不由用户记忆，派生或系统托管；绝不与 DEK 同存明文
 |---|---|---|
 | **S1 密钥与打开** | ✅ 已交付：`experimental/vault_keys.py`（create/open/destroy、meta、`key_id`、错误分类）+ `verify_vault_key_lifecycle.py`（K1–K3、K6 + 门禁守卫） | 打开流程可测；失败分类稳定（`KEY_MISSING` / `KEYWRAP_MISSING` / `KEY_UNWRAP_FAILED` / `KEY_MISMATCH` / `FORMAT_UNKNOWN` / `DB_CORRUPT` / `DRIVER_UNAVAILABLE`） |
 | **S2 备份与恢复** | ✅ 已交付：`.jvault` 归档、口令/恢复码包装、KDF 下限、上传守卫、本地目录 sink、S3 sink（Cloudflare R2 实测）、远端恢复；`verify_vault_backup_restore.py` + `verify_vault_backup_upload.py` | B1–B10 全部通过；R2 实测 `ObjectLockedByBucketPolicy` 阻止覆盖与删除；保留策略、定时任务与远端清单巡检仍是后续工作 |
-| **S3 轮换** | rekey 流程、退役包装、回滚 + K4、K5、C2 | 无"库新包装旧"中间态 |
+| **S3 轮换** | ✅ 已交付：`rotate_vault` / `resume_rotation`（pending 标记、双向验证、失败回滚、中断自动续做）+ `verify_vault_rotation.py`（K4/K5/C2） | 新密钥可读、旧包装必失效、失败后包装与 `key_id` 保持一致、中断后下次打开自动完成 |
 | **S4 并发与压力** | 连接池/超时策略、压力脚本 + S1 | 压力下无丢更新、无死锁 |
 | **S5 切换准备** | 迁移到默认存储的切换脚本、回滚演练、许可证与发布审查清单 | 独立安全评审通过后才允许真实数据 |
 
@@ -357,10 +359,10 @@ KEK：不由用户记忆，派生或系统托管；绝不与 DEK 同存明文
 
 | 已有 | 本设计如何使用 |
 |---|---|
-| `experimental/vault_keys.py` | S1 已实现：create/open/destroy、`meta.json`、`key_id`、错误分类 |
+| `experimental/vault_keys.py` | S1 已实现：create/open/destroy、`meta.json`、`key_id`、错误分类；S3 轮换 `rotate_vault` / `resume_rotation` |
 | `experimental/vault_backup.py` | S2 已实现：归档、包装、清单 HMAC、恢复、上传守卫 |
 | `experimental/backup_sink.py` | S2 已实现：本地目录与 S3（R2 实测）两个目的地 |
-| `verify_vault_key_lifecycle.py` | S1 验收：K1–K3、K6 + 门禁与创建守卫 |
+| `verify_vault_key_lifecycle.py` / `verify_vault_rotation.py` | S1 验收：K1–K3、K6；S3 验收：K4、K5、C2 |
 | `verify_vault_backup_restore.py` / `verify_vault_backup_upload.py` | S2 验收：B1–B5、B8–B10（离线）+ B6/B7（真实 R2） |
 | `experimental/apswmc_storage.py` | S1 的连接层；打开时按 §4 校验 cipher/key 与页 1 |
 | `experimental/apswmc_synthetic_vault.py` | 初始化/暂存/rename/DPAPI 包装的既有模式直接复用 |

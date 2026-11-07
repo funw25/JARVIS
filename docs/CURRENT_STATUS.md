@@ -17,10 +17,10 @@
 
 ## 验证情况
 
-- **隔离 Python 3.14 一键回归（2026-11-07 实测）：51 PASS、0 FAIL、0 SKIP**，输出 `ALL_SELECTED_CHECKS=PASS`，退出码 0。环境：项目内便携解释器 `.jarvis-python-3.14.10` + `.jarvis-python314-deps`（fastapi / pydantic / uvicorn / sqlcipher3-wheels）+ `.jarvis-python314-apswmc-probe`（apsw 3.54.0.0 / SQLite3 Multiple Ciphers 2.6.1）。除五项 APSW 实验外，`apswmc_adapter`（同一套存储合同）与 `apswmc_services`（真实领域服务跑在加密库）也通过。
+- **隔离 Python 3.14 一键回归（2026-11-07 实测）：52 PASS、0 FAIL、0 SKIP**，输出 `ALL_SELECTED_CHECKS=PASS`，退出码 0。环境：项目内便携解释器 `.jarvis-python-3.14.10` + `.jarvis-python314-deps`（fastapi / pydantic / uvicorn / sqlcipher3-wheels）+ `.jarvis-python314-apswmc-probe`（apsw 3.54.0.0 / SQLite3 Multiple Ciphers 2.6.1）。除五项 APSW 实验外，`apswmc_adapter`（同一套存储合同）与 `apswmc_services`（真实领域服务跑在加密库）也通过。
 - **整套回归已能跑在加密后端上（2026-11-07）**：`verify_adapter_suite.py` 以随机密钥、`JARVIS_STORAGE_ADAPTER=apswmc` 启动 `verify_all.py`，整套同样 **49 PASS / 0 FAIL / 0 SKIP**；默认后端不受影响。这意味着存储适配合同在两种后端上逐项一致。
 - **备份链路已在真实 R2 上验证（2026-11-07）**：本地目录 sink + Cloudflare R2（桶 jarvis-backup，ackups/ 前缀 35 天桶锁、120 天生命周期）；上传守卫拒绝带恢复材料的归档，覆盖与删除都被桶锁拒绝（ObjectLockedByBucketPolicy），从云端下载后分别用口令与恢复码恢复到新目录成功；备份期间并发写入的快照无撕裂事务。凭据只存在于仓库外的 %USERPROFILE%\\.jarvis\\r2.env。
-- **Python 3.13 对照环境：42 PASS、0 FAIL、9 SKIP**，退出码 2。9 项 SKIP 都是只能跑在 3.14 的 APSW/密钥实验，不是失败；该环境下 SQLCipher 与 DPAPI 虚构库探针通过。旧环境密码库已停止公开安全维护，只供离线实验。
+- **Python 3.13 对照环境：42 PASS、0 FAIL、10 SKIP**，退出码 2。10 项 SKIP 都是只能跑在 3.14 的 APSW/密钥实验，不是失败；该环境下 SQLCipher 与 DPAPI 虚构库探针通过。旧环境密码库已停止公开安全维护，只供离线实验。
 - 回归脚本自身修了两处（不涉及存储断言）：`verify_all.py` 在 GBK 控制台打印崩溃日志时因编码失败而中断，改为替换式输出；`verify_apswmc_crash_probe.py` 在终止子进程后临时目录偶发 `WinError 32`，改为忽略清理错误、重试并报告残留。
 - 本机实际 HTTP 验证覆盖上述多项模拟流程、身份选择限制和重启；不等于生产认证。
 - 旧版虚构数据库从迁移 0012 升至当前版本的测试通过；不是实际用户数据迁移或断电恢复证明。

@@ -25,6 +25,9 @@ META = "meta.json"
 KEYFILE = "dek.dpapi"
 DBFILE = "vault.db"
 RETIRED = "retired"
+NEXT_KEYFILE = "dek.next.dpapi"
+NEXT_META = "meta.next.json"
+PENDING = "pending.json"
 
 
 class VaultError(RuntimeError):
@@ -55,6 +58,10 @@ class FormatUnknown(VaultError):
 
 class DbCorrupt(VaultError):
     code = "DB_CORRUPT"
+
+
+class RotateFailed(VaultError):
+    code = "ROTATE_FAILED"
 
 
 class DriverUnavailable(VaultError):
@@ -127,6 +134,169 @@ def write_meta(root, key_id):
     _write_json(Path(root) / META, _meta_payload(key_id))
 
 
+def _load_key(root):
+    """Unwrap the stored data key (never cache it beyond the call)."""
+    key_path = Path(root) / KEYFILE
+    if not key_path.is_file() or _unsafe(key_path):
+        raise KeywrapMissing("wrapped key file is missing")
+    try:
+        wrapped = key_path.read_bytes()
+    except OSError as exc:
+        raise KeyUnwrapFailed("wrapped key is unreadable") from exc
+    if not 1 <= len(wrapped) <= 16384:
+        raise KeyUnwrapFailed("wrapped key has an invalid size")
+    try:
+        return unprotect_synthetic_key(wrapped)
+    except (OSError, ValueError) as exc:
+        raise KeyUnwrapFailed("wrapped key could not be unwrapped") from exc
+
+
+def _rekey(connection, new_key):
+    """Ask the driver to re-encrypt the database under ``new_key``."""
+    connection.commit()
+    result = connection.pragma("rekey", "raw:" + new_key.hex())
+    if str(result).lower() != "ok":
+        raise RotateFailed("driver refused the rekey operation")
+    connection.commit()
+
+
+def _write_pending(root, old_key_id, new_key_id):
+    _write_json(Path(root) / PENDING, {
+        "format": "jarvis-rotation-v1",
+        "old_key_id": old_key_id,
+        "new_key_id": new_key_id,
+        "created_at": _now(),
+    })
+
+
+def rotate_vault(root):
+    """Rotate the data key; either every artefact ends up on the new key or none does."""
+    require_synthetic_storage()
+    _require_driver()
+    root = Path(root)
+    meta = _read_meta(root)
+    old_key_id = meta["key_id"]
+    old_key = _load_key(root)
+
+    new_key = secrets.token_bytes(32)
+    new_key_id = secrets.token_hex(8)
+    (root / RETIRED).mkdir(exist_ok=True)
+
+    # Record the new wrapper and metadata first; the pending marker makes an
+    # interrupted rotation recoverable instead of leaving a silent mismatch.
+    wrapped_new = protect_synthetic_key(new_key)
+    (root / NEXT_KEYFILE).write_bytes(wrapped_new)
+    _write_json(root / NEXT_META, _meta_payload(new_key_id))
+    _write_pending(root, old_key_id, new_key_id)
+
+    try:
+        connection = apswmc_storage.connect(root / DBFILE, old_key, create=False)
+        try:
+            handle = connection.__enter__()
+            _rekey(handle, new_key)
+            handle.execute("UPDATE vault_meta SET value=? WHERE name='key_id'", (new_key_id,))
+            handle.commit()
+        finally:
+            connection.__exit__(None, None, None)
+    except Exception as exc:  # noqa: BLE001 - roll the rotation back when possible
+        try:
+            restore = apswmc_storage.connect(root / DBFILE, new_key, create=False)
+            try:
+                handle = restore.__enter__()
+                _rekey(handle, old_key)
+                handle.execute("UPDATE vault_meta SET value=? WHERE name='key_id'", (old_key_id,))
+                handle.commit()
+            finally:
+                restore.__exit__(None, None, None)
+        except Exception:  # pragma: no cover - leaves the pending marker for resume
+            pass
+        else:
+            for name in (NEXT_KEYFILE, NEXT_META, PENDING):
+                (root / name).unlink(missing_ok=True)
+        raise RotateFailed("rotation failed and was rolled back") from exc
+
+    _finish_rotation(root, old_key_id, new_key_id)
+    return {"root": str(root), "old_key_id": old_key_id, "new_key_id": new_key_id}
+
+
+def _finish_rotation(root, old_key_id, new_key_id):
+    """Verify both directions, retire the old wrapper and swap in the new one."""
+    root = Path(root)
+    new_key = _load_key_from(root / NEXT_KEYFILE)
+    _assert_opens(root, new_key, new_key_id)
+    old_key = _load_key(root)
+    if _opens(root, old_key):
+        raise RotateFailed("old key still opens the database after rekey")
+
+    retired = root / RETIRED
+    retired.mkdir(exist_ok=True)
+    (retired / ("dek.%s.dpapi" % old_key_id)).write_bytes((root / KEYFILE).read_bytes())
+    os.replace(root / NEXT_KEYFILE, root / KEYFILE)
+    os.replace(root / NEXT_META, root / META)
+    (root / PENDING).unlink(missing_ok=True)
+
+
+def _load_key_from(path):
+    try:
+        return unprotect_synthetic_key(Path(path).read_bytes())
+    except (OSError, ValueError) as exc:
+        raise KeyUnwrapFailed("wrapped key could not be unwrapped") from exc
+
+
+def _opens(root, key):
+    try:
+        connection = apswmc_storage.connect(Path(root) / DBFILE, key, create=False)
+        try:
+            handle = connection.__enter__()
+            handle.execute("SELECT count(*) FROM vault_meta").fetchone()
+            return True
+        finally:
+            connection.__exit__(None, None, None)
+    except Exception:  # noqa: BLE001 - any failure means the key does not open it
+        return False
+
+
+def _assert_opens(root, key, key_id):
+    if not _opens(root, key):
+        raise RotateFailed("new key does not open the rotated database")
+    connection = apswmc_storage.connect(Path(root) / DBFILE, key, create=False)
+    try:
+        handle = connection.__enter__()
+        stored = dict(handle.execute("SELECT name, value FROM vault_meta").fetchall())
+    finally:
+        connection.__exit__(None, None, None)
+    if stored.get("key_id") != key_id:
+        raise RotateFailed("rotated database has an unexpected key_id")
+
+
+def resume_rotation(root):
+    """Complete or discard an interrupted rotation; returns the action taken."""
+    root = Path(root)
+    pending_path = root / PENDING
+    if not pending_path.is_file():
+        return None
+    try:
+        pending = json.loads(pending_path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        raise FormatUnknown("pending rotation marker is unreadable") from exc
+    old_key_id, new_key_id = pending.get("old_key_id"), pending.get("new_key_id")
+    if not (isinstance(old_key_id, str) and isinstance(new_key_id, str)):
+        raise FormatUnknown("pending rotation marker is incomplete")
+
+    if (root / NEXT_KEYFILE).is_file():
+        try:
+            new_key = _load_key_from(root / NEXT_KEYFILE)
+        except KeyUnwrapFailed:
+            new_key = None
+        if new_key is not None and _opens(root, new_key):
+            _finish_rotation(root, old_key_id, new_key_id)
+            return "completed"
+    # The database still uses the old key: drop the abandoned rotation artefacts.
+    for name in (NEXT_KEYFILE, NEXT_META, PENDING):
+        (root / name).unlink(missing_ok=True)
+    return "discarded"
+
+
 def create_vault(root, *, key_id=None):
     """Create an empty vault and return its metadata (key material stays wrapped)."""
     require_synthetic_storage()
@@ -168,6 +338,8 @@ def open_vault(root):
     root = Path(root)
     if not root.is_dir() or _unsafe(root):
         raise KeyMissing("vault directory is missing or unsupported")
+    if (root / PENDING).is_file():
+        resume_rotation(root)
     meta = _read_meta(root)
     key_path = root / KEYFILE
     if not key_path.is_file() or _unsafe(key_path):

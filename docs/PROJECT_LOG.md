@@ -27,6 +27,16 @@
 
 ## 本轮新增/变更
 
+- **整套回归跑在加密后端上（2026-11-07）**：新增 `verify_adapter_suite.py`（以随机密钥 + `JARVIS_STORAGE_ADAPTER=apswmc` 启动 `verify_all.py`），整套 **49 PASS / 0 FAIL / 0 SKIP**；默认后端同为 49/0/0，3.13 对照 42/0/7。为此新增 `storage_view.py`（统一走注入连接 + 后端无关异常元组），并改造 `verify_migrations.py`（去掉全部 `sqlite3.connect` 直连、按 tuple 比较）、`verify_storage_contract.py`（约束异常按后端）、`verify_storage_transactions.py`（隔离与丢失更新走注入连接；两项原始连接探针在加密后端显式标记 SKIPPED_ON_ADAPTER）。
+- 适配器侧同时修掉四个真实问题：未释放语句导致 `COMMIT` busy（提交前 finalize 所有游标）、DELETE journal 下读锁阻塞写提交（改用 WAL + `busy_timeout` + 切换重试）、`Row` 需与 tuple 按值相等（迁移与业务断言依赖）、父目录不存在时无法建库（补 `mkdir`）。
+- **服务注入与加密库业务回归（2026-11-07）**：`app/database.py` 增加可替换连接选择——`connect_sqlite` 保持默认，`connect()` 按 `JARVIS_STORAGE_ADAPTER=apswmc` + `JARVIS_APSWMC_KEY` 切到实验适配器（密钥缺失/非法时失败关闭，绝不回落明文；按需把 `backend` 与探针目录加入 `sys.path`）。服务在导入期绑定 `connect` 这个名字，因此 22 个服务模块无需改动。
+- 新增 `verify_apswmc_services.py`（`apswmc_services`）：在**加密库**上跑真实领域服务，9 组断言全部 PASS——17 个迁移、待办幂等/状态/归属隔离/只读分享与撤销、知识收集→笔记、会话历史、续聊快照开新会话、审计行与领域数据同库、跨连接持久性。
+- 一键回归升至 **49 PASS / 0 FAIL / 0 SKIP**（3.14），3.13 对照 42 PASS / 0 FAIL / 7 SKIP（7 项均为 3.14 专属 APSW 实验）。默认存储仍是 sqlite3 明文 + synthetic 门禁，未切换。
+- 已知下一批范围：47 个验证脚本中直接以 `sqlite3` 打开数据库文件的那些，需要改造成通过注入连接检查，才能真正"整套跑在加密后端上"。
+
+- **存储适配器实验（2026-11-07）**：新增 `backend/experimental/apswmc_storage.py`——与 `app.database.connect` 同形的 APSW SQLite3MC 适配器（chacha20 + 32 字节原始密钥、无明文回退、首写自动 `BEGIN IMMEDIATE`、`Row`/`Cursor` 补齐 sqlite3 子集、`changes()` 派生 rowcount）。新增 `verify_apswmc_adapter.py` 用同一套存储合同验证它，9 组断言全 PASS，包括密文/错误密钥/明文 SQLite 三重拒绝。一键回归升至 **48 PASS / 0 FAIL / 0 SKIP**（3.14），3.13 对照 42 PASS / 0 FAIL / 6 SKIP。
+- 记录该构建的一个事实：`apsw-sqlite3mc` 只暴露模块级 `mc_version`，**没有** `PRAGMA cipher_version`；因此加密生效改为实测确认（文件头、错误密钥、明文驱动）+ `cipher` 回显，而不是读不存在的 pragma。
+- 明确未做：迁移运行器仍绑定 sqlite3 实现、22 个服务导入期绑定 `..database.connect`（需要注入点）、密钥生命周期/恢复、备份换机、并发压力、许可证与独立安全评审。完成前不替换默认存储。
 - **存储合同第一步（2026-11-07）**：新增 `backend/verification/verify_storage_transactions.py` 并注册为 `storage_transactions`。覆盖门禁零副作用、反复开关库、未提交隔离、`BEGIN IMMEDIATE` 写锁、`busy_timeout` 等待、丢失更新 rowcount 检出、行对象边界（缺列/NULL 与空串/中文与 emoji/rowcount/游标）以及关闭后拒绝使用。隔离 Python 3.14 回归升至 **47 PASS / 0 FAIL / 0 SKIP**，Python 3.13 对照 42 PASS / 0 FAIL / 5 SKIP。尚未对 APSW 适配器运行，也不涉及加密、备份或恢复。
 - **加密候选验证补齐（2026-11-07）**：把 `sqlcipher3-wheels` 装进项目便携解释器的 `.jarvis-python314-deps`，五项 APSW SQLite3MC 实验（隔离候选、schema、合成 vault、备份、崩溃恢复）由 SKIP 转为真实执行。隔离 Python 3.14 一键回归现为 **46 PASS / 0 FAIL / 0 SKIP**（输出 `ALL_SELECTED_CHECKS=PASS`）；Python 3.13 对照环境 41 PASS / 0 FAIL / 5 SKIP（5 项 SKIP 全部是只能跑 3.14 的 APSW 实验）。
 - 修掉两处**回归脚本自身**的缺陷（不改动任何存储断言）：`verify_all.py` 在 GBK 控制台打印含替换字符的崩溃日志时会 `UnicodeEncodeError` 中断，已改为替换式输出；`verify_apswmc_crash_probe.py` 终止子进程后临时目录偶发 `WinError 32`，已改为忽略清理错误 + 重试并报告残留。

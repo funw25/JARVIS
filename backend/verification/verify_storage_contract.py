@@ -1,16 +1,17 @@
 """Baseline SQLite storage contract with synthetic fault injection."""
 import os
-import sqlite3
 import sys
 import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
+sys.path.insert(0, str(ROOT / "backend" / "verification"))
 from app.database import apply_migrations, connect
 from app.security.assistant_context import AssistantContext
 from app.services.todo_service import TodoService
 import app.services.synthetic_knowledge_service as knowledge_module
+import storage_view
 
 
 def fail_audit(*args, **kwargs):
@@ -44,7 +45,7 @@ with tempfile.TemporaryDirectory(prefix="jarvis-storage-contract-") as directory
         with connect() as conn:
             conn.execute("UPDATE contract_probe SET name='must rollback' WHERE id=1")
             conn.execute("INSERT INTO contract_probe VALUES (1,'duplicate id')")
-    except sqlite3.IntegrityError:
+    except storage_view.CONSTRAINT_ERRORS:
         pass
     else:
         raise AssertionError("Constraint violation was not raised")

@@ -1,6 +1,8 @@
 import hashlib
+import os
 import re
 import sqlite3
+import sys
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator
@@ -9,14 +11,22 @@ from .settings import database_path
 from .security.storage_policy import require_synthetic_storage
 
 MIGRATIONS = Path(__file__).resolve().parents[1] / "migrations"
+BACKEND_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+APSWMC_PROBE = PROJECT_ROOT / ".jarvis-python314-apswmc-probe"
 
 
 class MigrationStateError(RuntimeError):
     """Migration files or recorded versions are inconsistent."""
 
 
+class StorageAdapterError(RuntimeError):
+    """An experimental storage adapter was requested but cannot be used safely."""
+
+
 @contextmanager
-def connect(path: Path | None = None) -> Iterator[sqlite3.Connection]:
+def connect_sqlite(path: Path | None = None) -> Iterator[sqlite3.Connection]:
+    """Default storage: plain sqlite3 behind the synthetic-data gate."""
     require_synthetic_storage()
     db_path = path or database_path()
     db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -31,6 +41,48 @@ def connect(path: Path | None = None) -> Iterator[sqlite3.Connection]:
         raise
     finally:
         conn.close()
+
+
+def _adapter_connect(path: Path):
+    """Open the experimental encrypted adapter when it is explicitly selected.
+
+    Requires ``JARVIS_STORAGE_ADAPTER=apswmc`` plus a 64 hex character
+    ``JARVIS_APSWMC_KEY``. The adapter lives in ``backend/experimental`` and is
+    only imported on this explicit path, so the default storage never depends on
+    the experimental driver.
+    """
+    key_hex = os.environ.get("JARVIS_APSWMC_KEY", "").strip()
+    if len(key_hex) != 64:
+        raise StorageAdapterError("apswmc adapter requires a 64 character hex key")
+    try:
+        key = bytes.fromhex(key_hex)
+    except ValueError as exc:
+        raise StorageAdapterError("apswmc key is not valid hex") from exc
+    for entry in (BACKEND_ROOT, APSWMC_PROBE):
+        if entry.is_dir() and str(entry) not in sys.path:
+            sys.path.insert(0, str(entry))
+    try:
+        from experimental.apswmc_storage import connect as adapter_connect
+    except (ImportError, OSError) as exc:
+        raise StorageAdapterError("apswmc adapter is unavailable") from exc
+    return adapter_connect(path, key, create=not path.exists())
+
+
+def adapter_requested() -> bool:
+    return os.environ.get("JARVIS_STORAGE_ADAPTER", "").strip().lower() == "apswmc"
+
+
+def connect(path: Path | None = None):
+    """Return the storage context manager for the selected backend.
+
+    Services import this name once; the backend is resolved per call so tests can
+    switch to the experimental adapter without touching any service module.
+    """
+    require_synthetic_storage()
+    target = Path(path) if path is not None else database_path()
+    if adapter_requested():
+        return _adapter_connect(target)
+    return connect_sqlite(target)
 
 
 def _statements(script: str) -> Iterator[str]:

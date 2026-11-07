@@ -1,21 +1,24 @@
 """Verify migration atomicity, history checks, and concurrent startup on temporary data."""
 import os
-import sqlite3
 import sys
 import tempfile
-from contextlib import closing
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
+sys.path.insert(0, str(ROOT / "backend" / "verification"))
 os.environ["JARVIS_DATA_MODE"] = "synthetic"
 import app.database as database
+import storage_view
+
+
+def rows(connection, statement):
+    return [tuple(row) for row in connection.execute(statement)]
 
 
 def tables(path):
-    with closing(sqlite3.connect(path)) as conn:
-        return {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    return storage_view.table_names(path)
 
 
 with tempfile.TemporaryDirectory(prefix="jarvis-migration-check-") as directory:
@@ -31,7 +34,7 @@ with tempfile.TemporaryDirectory(prefix="jarvis-migration-check-") as directory:
     try:
         database.apply_migrations(fresh)
         raise AssertionError("invalid migration unexpectedly succeeded")
-    except sqlite3.OperationalError:
+    except storage_view.OPERATIONAL_ERRORS:
         pass
     assert "first_table" not in tables(fresh) and "schema_migrations" not in tables(fresh)
     print("FRESH_MIGRATION_FAILURE_ROLLS_BACK_ALL=PASS")
@@ -43,27 +46,27 @@ with tempfile.TemporaryDirectory(prefix="jarvis-migration-check-") as directory:
     try:
         database.apply_migrations(existing)
         raise AssertionError("invalid upgrade unexpectedly succeeded")
-    except sqlite3.OperationalError:
+    except storage_view.OPERATIONAL_ERRORS:
         pass
-    with closing(sqlite3.connect(existing)) as conn:
+    with storage_view.open_database(existing) as conn:
         assert conn.execute("SELECT value FROM first_table").fetchone()[0] == "value; inside"
-        assert conn.execute("SELECT version FROM schema_migrations").fetchall() == [(1,)]
+        assert rows(conn, "SELECT version FROM schema_migrations") == [(1,)]
     assert "second_table" not in tables(existing)
     print("UPGRADE_FAILURE_PRESERVES_PREVIOUS_VERSION=PASS")
 
     second.write_text("CREATE TABLE second_table(value TEXT); INSERT INTO second_table VALUES ('ok');", encoding="utf-8")
     database.apply_migrations(existing)
     database.apply_migrations(existing)
-    with closing(sqlite3.connect(existing)) as conn:
-        assert conn.execute("SELECT version FROM schema_migrations ORDER BY version").fetchall() == [(1,), (2,)]
+    with storage_view.open_database(existing) as conn:
+        assert rows(conn, "SELECT version FROM schema_migrations ORDER BY version") == [(1,), (2,)]
         assert conn.execute("SELECT value FROM second_table").fetchone()[0] == "ok"
     print("RETRY_AND_IDEMPOTENCE=PASS")
 
     concurrent = temp / "concurrent.sqlite3"
     with ThreadPoolExecutor(max_workers=2) as pool:
         list(pool.map(database.apply_migrations, [concurrent, concurrent]))
-    with closing(sqlite3.connect(concurrent)) as conn:
-        assert conn.execute("SELECT version FROM schema_migrations ORDER BY version").fetchall() == [(1,), (2,)]
+    with storage_view.open_database(concurrent) as conn:
+        assert rows(conn, "SELECT version FROM schema_migrations ORDER BY version") == [(1,), (2,)]
         assert conn.execute("SELECT COUNT(*) FROM first_table").fetchone()[0] == 1
     print("CONCURRENT_STARTUP_SERIALIZED=PASS")
 
@@ -74,8 +77,8 @@ with tempfile.TemporaryDirectory(prefix="jarvis-migration-check-") as directory:
         raise AssertionError("transaction control unexpectedly accepted")
     except database.MigrationStateError:
         pass
-    with closing(sqlite3.connect(existing)) as conn:
-        assert conn.execute("SELECT version FROM schema_migrations ORDER BY version").fetchall() == [(1,), (2,)]
+    with storage_view.open_database(existing) as conn:
+        assert rows(conn, "SELECT version FROM schema_migrations ORDER BY version") == [(1,), (2,)]
     third.unlink()
     second.rename(migrations / "0002_renamed.sql")
     try:
@@ -98,7 +101,7 @@ with tempfile.TemporaryDirectory(prefix="jarvis-migration-check-") as directory:
     print("CHANGED_HISTORY_REJECTED=PASS")
 
     legacy = temp / "legacy.sqlite3"
-    with closing(sqlite3.connect(legacy)) as conn:
+    with storage_view.open_database(legacy) as conn:
         conn.execute("CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, name TEXT NOT NULL, applied_at TEXT NOT NULL)")
         conn.execute("CREATE TABLE first_table(value TEXT)")
         conn.execute("INSERT INTO first_table VALUES ('legacy')")
@@ -109,24 +112,24 @@ with tempfile.TemporaryDirectory(prefix="jarvis-migration-check-") as directory:
         raise AssertionError("legacy history silently baselined")
     except database.MigrationStateError as exc:
         assert "explicit synthetic baseline" in str(exc)
-    with closing(sqlite3.connect(legacy)) as conn:
+    with storage_view.open_database(legacy) as conn:
         assert "sha256" not in {row[1] for row in conn.execute("PRAGMA table_info(schema_migrations)")}
-        assert conn.execute("SELECT value FROM first_table").fetchone() == ('legacy',)
+        assert rows(conn, "SELECT value FROM first_table") == [('legacy',)]
     second.write_text("CREATE TABLE second_table(value TEXT); INSERT INTO missing_table VALUES ('error');", encoding="utf-8")
     try:
         database.apply_migrations(legacy, allow_legacy_baseline=True)
         raise AssertionError("invalid upgrade unexpectedly succeeded")
-    except sqlite3.OperationalError:
+    except storage_view.OPERATIONAL_ERRORS:
         pass
-    with closing(sqlite3.connect(legacy)) as conn:
+    with storage_view.open_database(legacy) as conn:
         assert "sha256" not in {row[1] for row in conn.execute("PRAGMA table_info(schema_migrations)")}
-        assert conn.execute("SELECT version FROM schema_migrations").fetchall() == [(1,)]
+        assert rows(conn, "SELECT version FROM schema_migrations") == [(1,)]
     second.write_text("CREATE TABLE second_table(value TEXT); INSERT INTO second_table VALUES ('ok');", encoding="utf-8")
     database.apply_migrations(legacy, allow_legacy_baseline=True)
     database.apply_migrations(legacy)
-    with closing(sqlite3.connect(legacy)) as conn:
+    with storage_view.open_database(legacy) as conn:
         assert conn.execute("SELECT count(*) FROM schema_migrations WHERE length(sha256)=64").fetchone()[0] == 2
-        assert conn.execute("SELECT value FROM first_table").fetchone() == ('legacy',)
+        assert rows(conn, "SELECT value FROM first_table") == [('legacy',)]
     print("EXPLICIT_LEGACY_BASELINE_AND_ATOMIC_UPGRADE=PASS")
 
 print("MIGRATION_ATOMICITY_VERIFICATION=PASS")

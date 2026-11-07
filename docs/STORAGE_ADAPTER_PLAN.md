@@ -28,12 +28,53 @@
 
 ## 分阶段推进
 
-1. 为现有 sqlite3 实现建立上述行为合同和失败注入，不变更现有默认存储。
-2. 在实验目录实现并测试对应 APSW 适配，先验证小范围虚构工作流，再扩展到整个合成服务测试集。
+1. ✅ **已完成（2026-11-07）**：为现有 sqlite3 实现建立行为合同和失败注入（`verify_storage_contract.py` + `verify_storage_transactions.py`），未变更默认存储。
+2. 🟡 **进行中**：实验目录已实现 APSW SQLite3MC 适配器并跑通同一套合同（见下节）；**尚未**扩展到整个合成服务测试集，也没有迁移运行器和密钥生命周期。
 3. 单独设计经过验证的备份和换机恢复、设备撤销、可信本机会话与产品迁移体验。
 4. 独立安全评审和发布准备完成后，才与用户讨论导入真实资料或连接服务。
 
 当前 DPAPI 实验只绑定本机 Windows 用户；没有恢复材料时不能承诺换机恢复。已解锁设备上的同用户恶意程序不在单靠磁盘加密可解决的范围内。
+
+## 适配器实验：APSW SQLite3MC（2026-11-07）
+
+**实现：** `backend/experimental/apswmc_storage.py`，提供与 `app.database.connect` 同形的上下文管理器：
+
+- `connect(path, key, create=True)`：32 字节原始密钥，`PRAGMA cipher=chacha20` + `PRAGMA key=raw:<hex>`，强制 `temp_store=MEMORY`、`foreign_keys=1`；打开时读一次 schema，因此错误密钥在打开阶段即失败，不会静默降级为明文；拒绝通过符号链接打开。
+- 事务语义与 sqlite3 实现对齐：**第一条写语句前自动 `BEGIN IMMEDIATE`**，正常退出提交、异常回滚、关闭前若仍有事务则回滚。
+- 行对象补齐 `sqlite3.Row` 的子集：按名/按位置取值、`keys()`、`dict(row)`、缺列抛 `IndexError`；`rowcount` 由 `changes()` 派生，`lastrowid` 对应 `last_insert_rowid()`；游标提供 `fetchone/fetchall/fetchmany/迭代`。
+- **本构建的限制**：`apsw-sqlite3mc` 4.x 只暴露模块级 `apsw.mc_version`，**没有** `PRAGMA cipher_version`；因此加密是否生效由“cipher 回显 + 文件头非明文 + 错误密钥被拒 + 明文 sqlite 被拒”实测确认，而不是读一个不存在的 pragma。
+
+**验证：** `backend/verification/verify_apswmc_adapter.py`（注册为 `apswmc_adapter`），9 组断言全部 PASS：
+
+1. 门禁拒绝且不创建数据库文件；2. 反复开关后 `integrity_check` 为 ok；3. 未提交内容对另一连接不可见；4. 首写持 `BEGIN IMMEDIATE`，零超时写者被拒；5. `busy_timeout` 会等待（实测 ≥250 ms）；6. 陈旧写入被 `rowcount=0` 检出而非覆盖；7. 行对象/keys/dict/NULL 与空串/中文与 emoji/rowcount/游标；8. 关闭后拒绝使用；9. 密文、错误密钥、明文 SQLite 三重拒绝。
+
+**明确未做：** 密钥生命周期与恢复、备份/换机、WAL 与并发压力、许可证与发布审查、独立安全评审。这些完成前不得替换默认存储。
+
+### 注入点与开关（2026-11-07 新增）
+
+`app/database.py` 现在把连接选择显式化，**默认行为不变**：
+
+- `connect_sqlite(path)`：原实现，默认路径；
+- `connect(path)`：按 `JARVIS_STORAGE_ADAPTER` 选择后端（未设置时走 sqlite3）；
+- 只有 `JARVIS_STORAGE_ADAPTER=apswmc` + `JARVIS_APSWMC_KEY`（64 位 hex）同时存在时才导入 `experimental.apswmc_storage`，并把它所在的 `backend` 与探针目录按需加入 `sys.path`；密钥缺失或非法时抛 `StorageAdapterError` 失败关闭，不会回落到明文。
+- 服务在导入期绑定 `..database.connect` 这个**名字**，因此不需要改 22 个服务模块；开关按调用解析，同一进程内可切换。
+
+### 服务层验证（2026-11-07 新增）
+
+`backend/verification/verify_apswmc_services.py`（注册为 `apswmc_services`）在**加密库**上跑真实领域服务，9 组断言全部 PASS：
+
+1. 开关被识别并完成 17 个迁移；2. 迁移后的库是密文，明文 sqlite3 无法读取；3. 待办创建/幂等键/状态流转；4. 待办归属隔离 + 只读分享 + 撤销（都在密文上进行）；5. 知识收集项 → 笔记；6. 会话消息历史；7. 续聊快照接受并开新会话；8. 审计行与领域数据在同一加密库；9. 跨连接重开仍能读到数据（持久性）。
+
+**整套回归已可在加密后端运行（2026-11-07）：** `backend/verification/verify_adapter_suite.py` 用随机密钥以 `JARVIS_STORAGE_ADAPTER=apswmc` 启动 `verify_all.py`，整套 **49 项全部通过**（0 FAIL / 0 SKIP），默认后端同样 49/0/0。为做到这一点改了三处验证脚本：
+
+- 新增 `backend/verification/storage_view.py`：`open_database()` / `rows()` / `table_names()` 统一走注入的连接，并按后端合成异常元组（`DATABASE_ERRORS` / `CONSTRAINT_ERRORS` / `OPERATIONAL_ERRORS`）；探针目录只在 3.14 + win32 且模块完整时才加入 `sys.path`。
+- `verify_migrations.py`：全部 `sqlite3.connect(...)` 检查改为 `storage_view.open_database(...)`，行比较改为 `tuple`，异常改抓后端无关元组。
+- `verify_storage_contract.py`：约束异常改抓 `CONSTRAINT_ERRORS`。
+- `verify_storage_transactions.py`：隔离/丢失更新改走注入连接；两项“零超时原始连接”探针在加密后端下显式标记 `SKIPPED_ON_ADAPTER`（等价覆盖在 `verify_apswmc_adapter.py`）。
+
+**适配器侧顺带修的问题：** 语句未释放导致 `COMMIT` 报 `BusyError`（改为提交前 finalize 所有游标）；默认 DELETE journal 下读锁阻塞写提交（改为 WAL + `busy_timeout` + 切换重试）；`Row` 需要与 tuple 按值相等（迁移与业务断言依赖）；父目录不存在时无法建库（补 `mkdir`）。
+
+**仍未覆盖：** 备份/换机恢复、密钥生命周期与轮换、WAL 并发压力测试、许可证与发布审查、独立安全评审。这些完成前不得把默认存储切到加密后端。
 
 ## 已验证的基线
 

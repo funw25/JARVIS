@@ -113,6 +113,20 @@ def _read_meta(root):
     return payload
 
 
+def write_key_file(root, key):
+    """Wrap ``key`` with DPAPI into ``root/dek.dpapi`` (atomic rename)."""
+    root = Path(root)
+    wrapped = protect_synthetic_key(key)
+    temporary = root / (KEYFILE + ".tmp")
+    temporary.write_bytes(wrapped)
+    os.replace(temporary, root / KEYFILE)
+
+
+def write_meta(root, key_id):
+    """Write ``meta.json`` atomically for ``key_id``."""
+    _write_json(Path(root) / META, _meta_payload(key_id))
+
+
 def create_vault(root, *, key_id=None):
     """Create an empty vault and return its metadata (key material stays wrapped)."""
     require_synthetic_storage()
@@ -128,8 +142,7 @@ def create_vault(root, *, key_id=None):
     try:
         key = secrets.token_bytes(32)
         identifier = key_id or secrets.token_hex(8)
-        wrapped = protect_synthetic_key(key)
-        (staging / KEYFILE).write_bytes(wrapped)
+        write_key_file(staging, key)
         with apswmc_storage.connect(staging / DBFILE, key, create=True) as connection:
             connection.execute("CREATE TABLE vault_meta(name TEXT PRIMARY KEY, value TEXT NOT NULL)")
             connection.execute("INSERT INTO vault_meta VALUES ('format', ?)", (FORMAT,))
@@ -137,7 +150,7 @@ def create_vault(root, *, key_id=None):
             connection.execute("INSERT INTO vault_meta VALUES ('created_at', ?)", (_now(),))
         if apswmc_storage.plaintext_header(staging / DBFILE):
             raise DbCorrupt("created vault is not encrypted")
-        _write_json(staging / META, _meta_payload(identifier))
+        write_meta(staging, identifier)
         if os.path.lexists(root):
             raise VaultError("vault target appeared during creation")
         os.replace(staging, root)

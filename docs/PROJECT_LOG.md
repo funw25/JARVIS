@@ -27,6 +27,9 @@
 
 ## 本轮新增/变更
 
+- **S2 备份核心已实现（2026-11-07）**：新增 `backend/experimental/vault_backup.py` —— `.jvault` 归档（`vault.db` 用一次性随机备份密钥重新加密 + `key.bkwrap` 两份包装 + 带哈希与 HMAC 的清单）、口令（≥12 位 + 常见口令拒绝）与恢复码（160 位熵、base32 分组）两条解包路径、KDF 下限校验（拒降级）、归档条目白名单与上传守卫、恢复到新目录且不覆盖已有 vault。
+- 新增 `verify_vault_backup_restore.py` 并注册为 `vault_backup_restore`：B1（口令与恢复码两条恢复路径）、B2（备份独立密钥 + 明文 SQLite 拒绝）、B3/B4（单字节篡改与清单错配拒绝）、B8（口令策略）、B9（KDF 降级拒绝）、B10（包装缺失/损坏/错误口令分类）、上传守卫、拒绝覆盖。回归升至 **51 PASS / 0 FAIL / 0 SKIP**（3.14），3.13 对照 42 PASS / 9 SKIP。
+- 待办：B5（备份期间并发写的一致性快照）、B6/B7（R2 真实上传守卫与远端恢复演练）——需要 R2 凭据；凭据模板已放在仓库外的 `%USERPROFILE%\.jarvis\r2.env`。
 - **S1 密钥生命周期已实现（2026-11-07）**：新增 `backend/experimental/vault_keys.py` —— `create_vault` / `open_vault` / `destroy_vault` / `vault_status`，每个 vault 一个随机 DEK 并由用户范围 DPAPI 包装，`meta.json` 记录 `format` 与 16 位十六进制 `key_id`；打开按设计的 fail-closed 路径执行（门禁 → meta → 解包 → 加密打开 → `vault_meta.format`/`key_id` 比对 → `integrity_check`），错误统一映射到稳定分类（`KEY_MISSING`/`KEYWRAP_MISSING`/`KEY_UNWRAP_FAILED`/`KEY_MISMATCH`/`FORMAT_UNKNOWN`/`DB_CORRUPT`/`DRIVER_UNAVAILABLE`）；销毁需按目录名二次确认。
 - 新增 `verify_vault_key_lifecycle.py` 并注册为 `vault_key_lifecycle`：K1 创建/打开/密文、K2 五类缺失或损坏材料、K3 错误密钥与 `key_id` 错配、K6 销毁确认与不可逆、门禁与创建守卫、关闭后连接不可用。一键回归升至 **50 PASS / 0 FAIL / 0 SKIP**（3.14），3.13 对照 42 PASS / 0 FAIL / 8 SKIP。
 - 实现中修掉两个真实问题：`open_vault` 是生成器，异常只在 `__enter__` 触发（测试助手需真正进入上下文）；错误密钥时驱动在 `connect` 阶段的 WAL pragma 就抛 `NotADBError`，需在打开外层统一分类，否则会漏出驱动异常而非 `KEY_MISMATCH`。

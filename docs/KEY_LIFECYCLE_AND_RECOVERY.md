@@ -1,6 +1,6 @@
 # 密钥生命周期、备份与恢复设计
 
-**状态：** S1 已实现（`backend/experimental/vault_keys.py`，实验目录）；S2–S5 为设计提案  
+**状态：** S1、S2 核心已实现（`backend/experimental/vault_keys.py`、`vault_backup.py`）；上传与远端恢复待 R2 凭据；S3–S5 为设计提案  
 **更新：** 2026-11-07  
 **范围：** 加密存储正式启用前的最后一段设计：密钥生成/解锁/轮换/销毁、备份与换机恢复、崩溃与并发恢复  
 **关联文档：** [数据保护与恢复方案](DATA_SECURITY_DESIGN.md)（威胁模型与候选调研）、[存储适配计划](STORAGE_ADAPTER_PLAN.md)（适配层与合同）、[多设备同步草案](SYNC_DESIGN_DRAFT.md)（跨设备传输）
@@ -313,7 +313,7 @@ KEK：不由用户记忆，派生或系统托管；绝不与 DEK 同存明文
 | 阶段 | 交付 | 出口条件 |
 |---|---|---|
 | **S1 密钥与打开** | ✅ 已交付：`experimental/vault_keys.py`（create/open/destroy、meta、`key_id`、错误分类）+ `verify_vault_key_lifecycle.py`（K1–K3、K6 + 门禁守卫） | 打开流程可测；失败分类稳定（`KEY_MISSING` / `KEYWRAP_MISSING` / `KEY_UNWRAP_FAILED` / `KEY_MISMATCH` / `FORMAT_UNKNOWN` / `DB_CORRUPT` / `DRIVER_UNAVAILABLE`） |
-| **S2 备份与恢复** | 归档格式（库 + `key.bkwrap` + 清单）、离线可用的恢复材料、本地目录 sink、S3 sink（默认）、可选 GitHub Release sink、保留策略 + B1–B10 | 往返一致、篡改必拒、换机可解、上传守卫拒绝恢复材料、KDF 参数不可降级 |
+| **S2 备份与恢复** | 🟡 核心已交付：`.jvault` 归档（密文库 + `key.bkwrap` + 清单）、口令/恢复码两条解包、KDF 下限与上传守卫、`FolderSink` 式的本地目录；**上传（R2）与远端恢复演练待凭据** | 已过：B1（两种恢复路径）、B2、B3、B4、B8、B9、B10、上传守卫、不覆盖；待办：B5 并发快照、B6 真实上传守卫、B7 远端恢复演练 |
 | **S3 轮换** | rekey 流程、退役包装、回滚 + K4、K5、C2 | 无"库新包装旧"中间态 |
 | **S4 并发与压力** | 连接池/超时策略、压力脚本 + S1 | 压力下无丢更新、无死锁 |
 | **S5 切换准备** | 迁移到默认存储的切换脚本、回滚演练、许可证与发布审查清单 | 独立安全评审通过后才允许真实数据 |

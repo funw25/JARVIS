@@ -27,6 +27,7 @@
 
 ## 本轮新增/变更
 
+- **密钥与恢复设计（2026-11-07）**：新增[密钥生命周期、备份与恢复设计](KEY_LIFECYCLE_AND_RECOVERY.md)。定义两层密钥（DPAPI 本机包装 + 口令派生恢复 KEK 包装同一 DEK）、`meta.json`/`key_id` 文件布局、8 步 fail-closed 打开流程与错误分类、创建/解锁/轮换/销毁的操作语义与回滚、备份包格式（独立备份密钥 + 清单 + HMAC）、换机恢复材料的三方案对比、崩溃/并发口径，以及 15 项可执行验收矩阵（K/B/C/S/M 编号）与 S1–S5 分阶段出口条件。仍为设计提案，未实现。
 - **整套回归跑在加密后端上（2026-11-07）**：新增 `verify_adapter_suite.py`（以随机密钥 + `JARVIS_STORAGE_ADAPTER=apswmc` 启动 `verify_all.py`），整套 **49 PASS / 0 FAIL / 0 SKIP**；默认后端同为 49/0/0，3.13 对照 42/0/7。为此新增 `storage_view.py`（统一走注入连接 + 后端无关异常元组），并改造 `verify_migrations.py`（去掉全部 `sqlite3.connect` 直连、按 tuple 比较）、`verify_storage_contract.py`（约束异常按后端）、`verify_storage_transactions.py`（隔离与丢失更新走注入连接；两项原始连接探针在加密后端显式标记 SKIPPED_ON_ADAPTER）。
 - 适配器侧同时修掉四个真实问题：未释放语句导致 `COMMIT` busy（提交前 finalize 所有游标）、DELETE journal 下读锁阻塞写提交（改用 WAL + `busy_timeout` + 切换重试）、`Row` 需与 tuple 按值相等（迁移与业务断言依赖）、父目录不存在时无法建库（补 `mkdir`）。
 - **服务注入与加密库业务回归（2026-11-07）**：`app/database.py` 增加可替换连接选择——`connect_sqlite` 保持默认，`connect()` 按 `JARVIS_STORAGE_ADAPTER=apswmc` + `JARVIS_APSWMC_KEY` 切到实验适配器（密钥缺失/非法时失败关闭，绝不回落明文；按需把 `backend` 与探针目录加入 `sys.path`）。服务在导入期绑定 `connect` 这个名字，因此 22 个服务模块无需改动。

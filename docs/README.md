@@ -17,6 +17,7 @@
 - [Gmail 只读接入设计](GMAIL_READONLY_DESIGN.md)
 - [Jarvis 收集与知识工作流](JARVIS_KNOWLEDGE_WORKFLOW.md)
 - [本地数据保护与恢复方案](DATA_SECURITY_DESIGN.md)
+- [密钥生命周期、备份与恢复设计](KEY_LIFECYCLE_AND_RECOVERY.md)
 - [存储适配与安全迁移计划](STORAGE_ADAPTER_PLAN.md)
 - [独立合成加密库实验](EXPERIMENTAL_SYNTHETIC_VAULT.md)
 - [Python 3.14 隔离兼容性实验](ISOLATED_PYTHON_314.md)

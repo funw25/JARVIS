@@ -27,6 +27,9 @@
 
 ## 本轮新增/变更
 
+- **修复恢复缺口并定稿备份方案（2026-11-07）**：原设计"远端只放 `vault.db` 与 `manifest`"会让换机恢复缺少解开备份密钥的包装材料，已废止。归档改为自包含 `jarvis-backup-*.jvault` = 密文库 + `key.bkwrap`（口令包装 + 恢复码包装，均为包装态）+ 清单；明文密钥、口令、恢复码、vault 的 DPAPI 包装一律不上传。
+- 因包装数据可离线爆破，口令要求由 8 位提高到 **12 位**并拒绝常见口令，默认推荐 ≥128 位熵的恢复码；新增 `bench_argon2_cost.py` 实测本机成本：Argon2id（m=64 MiB,t=3,p=2）约 174 ms/次（≈5.8 次/秒/核），8 位常见词在 1000 核下约 3 分钟，12 位随机则不可行。验收新增 B8（爆破上限）、B9（KDF 参数降级拒绝）、B10（包装缺失/损坏）。
+- 备份目的地定稿：**每日本地目录（7 份）+ 每周 S3 兼容对象存储（4 份，版本控制 + Object Lock）**；外置盘到手后补离线副本；GitHub Release 作为零成本替代。明确本地同盘不防磁盘故障与勒索软件。
 - **密钥与恢复设计（2026-11-07）**：新增[密钥生命周期、备份与恢复设计](KEY_LIFECYCLE_AND_RECOVERY.md)。定义两层密钥（DPAPI 本机包装 + 口令派生恢复 KEK 包装同一 DEK）、`meta.json`/`key_id` 文件布局、8 步 fail-closed 打开流程与错误分类、创建/解锁/轮换/销毁的操作语义与回滚、备份包格式（独立备份密钥 + 清单 + HMAC）、换机恢复材料的三方案对比、崩溃/并发口径，以及 15 项可执行验收矩阵（K/B/C/S/M 编号）与 S1–S5 分阶段出口条件。仍为设计提案，未实现。
 - **整套回归跑在加密后端上（2026-11-07）**：新增 `verify_adapter_suite.py`（以随机密钥 + `JARVIS_STORAGE_ADAPTER=apswmc` 启动 `verify_all.py`），整套 **49 PASS / 0 FAIL / 0 SKIP**；默认后端同为 49/0/0，3.13 对照 42/0/7。为此新增 `storage_view.py`（统一走注入连接 + 后端无关异常元组），并改造 `verify_migrations.py`（去掉全部 `sqlite3.connect` 直连、按 tuple 比较）、`verify_storage_contract.py`（约束异常按后端）、`verify_storage_transactions.py`（隔离与丢失更新走注入连接；两项原始连接探针在加密后端显式标记 SKIPPED_ON_ADAPTER）。
 - 适配器侧同时修掉四个真实问题：未释放语句导致 `COMMIT` busy（提交前 finalize 所有游标）、DELETE journal 下读锁阻塞写提交（改用 WAL + `busy_timeout` + 切换重试）、`Row` 需与 tuple 按值相等（迁移与业务断言依赖）、父目录不存在时无法建库（补 `mkdir`）。

@@ -276,7 +276,7 @@ KEK：不由用户记忆，派生或系统托管；绝不与 DEK 同存明文
 | 备份中断 | 预存在的临时目标不被破坏；正式目标只在完成时出现 | `verify_apswmc_backup_probe.py` 通过 |
 | 轮换中断 | 下次打开必须报 `KEY_MISMATCH`/`ROTATE_INCOMPLETE`，不得猜测密钥 | 待实现 |
 | 页面损坏 | 打开时 `integrity_check` 拒绝；单页篡改应被 HMAC 拒绝 | 单页篡改验证通过 |
-| 并发读写 | 多连接 WAL；写者 `busy_timeout`，超时后报明确错误而不是死等 | 适配器合同已验证基础行为 |
+| 并发读写 | 多连接 WAL；写者 `busy_timeout`（5000 ms，实测确实等待）；`BEGIN IMMEDIATE` 前释放旧语句，避免 `SQLITE_BUSY_SNAPSHOT` 立即失败 | 160 次并发自增无丢失，读者单调可见（最高 160） |
 | 并发压力 | N 写 × M 读 × T 秒，无丢更新、无死锁、无静默错误 | 待实现（S4） |
 
 ---
@@ -305,7 +305,7 @@ KEK：不由用户记忆，派生或系统托管；绝不与 DEK 同存明文
 | B10 | 包装缺失/损坏 | 归档缺 `key.bkwrap` 或包装损坏 → `KEYWRAP_MISSING` / `KEY_UNWRAP_FAILED`，不得尝试无密钥打开 | 同上 |
 | C1 | 崩溃恢复 | 终止后已提交保留、未提交回滚、`integrity_check` ok | 已有 `verify_apswmc_crash_probe.py` |
 | C2 | 轮换中断 | 重开报明确错误并指向恢复路径 | `verify_vault_rotation.py` |
-| S1 | 并发压力 | 无丢更新、无死锁、错误可分类、临时文件清理干净 | `verify_vault_concurrency.py` |
+| S1 | 并发压力 | ✅ 4×40 自增 160/160、读者单调、无死锁、无残留文件 | `verify_vault_concurrency.py` |
 
 **2026-11-07 实测：** B5（备份期间并发写，快照 329 行全部成对一致）、B6（真实 R2 上传、上传守卫、桶锁拒绝覆盖与删除，错误码 ObjectLockedByBucketPolicy）、B7（从 R2 下载后分别用口令与恢复码恢复到新目录）均通过。B6/B7 需要凭据与网络，因此独立于离线套件运行；S1（并发压力）尚未实现。
 | M1 | 加密库上迁移 | 旧 schema 备份 → 恢复 → 升级 → 回滚 | 复用 `verify_migrations.py`（已支持加密后端） |
@@ -319,7 +319,7 @@ KEK：不由用户记忆，派生或系统托管；绝不与 DEK 同存明文
 | **S1 密钥与打开** | ✅ 已交付：`experimental/vault_keys.py`（create/open/destroy、meta、`key_id`、错误分类）+ `verify_vault_key_lifecycle.py`（K1–K3、K6 + 门禁守卫） | 打开流程可测；失败分类稳定（`KEY_MISSING` / `KEYWRAP_MISSING` / `KEY_UNWRAP_FAILED` / `KEY_MISMATCH` / `FORMAT_UNKNOWN` / `DB_CORRUPT` / `DRIVER_UNAVAILABLE`） |
 | **S2 备份与恢复** | ✅ 已交付：`.jvault` 归档、口令/恢复码包装、KDF 下限、上传守卫、本地目录 sink、S3 sink（Cloudflare R2 实测）、远端恢复；`verify_vault_backup_restore.py` + `verify_vault_backup_upload.py` | B1–B10 全部通过；R2 实测 `ObjectLockedByBucketPolicy` 阻止覆盖与删除；保留策略、定时任务与远端清单巡检仍是后续工作 |
 | **S3 轮换** | ✅ 已交付：`rotate_vault` / `resume_rotation`（pending 标记、双向验证、失败回滚、中断自动续做）+ `verify_vault_rotation.py`（K4/K5/C2） | 新密钥可读、旧包装必失效、失败后包装与 `key_id` 保持一致、中断后下次打开自动完成 |
-| **S4 并发与压力** | 连接池/超时策略、压力脚本 + S1 | 压力下无丢更新、无死锁 |
+| **S4 并发与压力** | ✅ 已交付：`verify_vault_concurrency.py`（4 写 × 40 次 + 3 读并发，实测 160/160 无丢失、读者观测到 160、无死锁、无残留 WAL） | 压力下无丢更新、无死锁、快照可见 |
 | **S5 切换准备** | 迁移到默认存储的切换脚本、回滚演练、许可证与发布审查清单 | 独立安全评审通过后才允许真实数据 |
 
 **跨阶段约束**：S5 之前，任何阶段都不得把 `JARVIS_DATA_MODE` 的 synthetic 门禁降级，也不得把加密后端设为默认。

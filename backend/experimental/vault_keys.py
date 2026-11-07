@@ -376,7 +376,7 @@ def open_vault(root):
             raise FormatUnknown("vault_meta format is unsupported")
         if stored.get("key_id") != meta["key_id"]:
             raise KeyMismatch("meta.json and database key_id differ")
-        if connection.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
+        if connection.execute("PRAGMA integrity_check").fetchall()[0][0] != "ok":
             raise DbCorrupt("vault database failed integrity_check")
     except VaultError:
         connection_cm.__exit__(None, None, None)

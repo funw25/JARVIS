@@ -27,6 +27,9 @@
 
 ## 本轮新增/变更
 
+- **S4 并发验证通过并修掉两个适配器缺陷（2026-11-07）**：新增 `verify_vault_concurrency.py` —— 4 个写线程 × 40 次自增 + 3 个读线程并发，实测 **160/160 无丢失**、读者观测到单调递增（最高 160）、无死锁、WAL/SHM 清理干净。
+- 缺陷一：`BEGIN IMMEDIATE` 前不释放旧语句。SQLite 对 `SQLITE_BUSY_SNAPSHOT` 不调用 busy handler，导致“先读后写”在 20 ms 内直接 `BusyError`；修法是在 `begin_immediate()` 里先 finalize 游标。
+- 缺陷二：连接用**强引用**保存活跃游标，一次性查询（`PRAGMA integrity_check`、单行 `fetchone()`）被丢弃后语句不释放，读快照永不结束——同一连接永远读到旧值。改为 `weakref.WeakSet` 后，读者能看到 0→1→2→3→4→5 的提交。这个缺陷比第一个严重：任何“读一次、再写”的服务代码都会拿到陈旧数据。
 - **S3 密钥轮换已实现并验收（2026-11-07）**：`vault_keys.rotate_vault` 用 `PRAGMA rekey = raw:<hex>`（实机确认：新密钥可读、旧密钥 `NotADBError`），并以 `pending.json` + `dek.next.dpapi` + `meta.next.json` 三件套保证可恢复；成功后双向验证（新开得动、旧开不动）、旧包装退役到 `retired/dek.<old_id>.dpapi`、原子换入新包装与新 meta；失败尝试 rekey 回旧密钥并清理标记；进程在 rekey 后被杀死时，下次 `open_vault` 调用 `resume_rotation` 自动完成或放弃并回到旧密钥。
 - 新增 `verify_vault_rotation.py`（K4 轮换后数据完整与 key_id 更新、旧包装不再能开、K5 失败回滚保持包装与 key_id 一致、C2 中断后下次打开自动续做、轮换后备份/恢复仍可用）。回归 **52 PASS / 0 FAIL / 0 SKIP**（3.14），3.13 对照 42 PASS / 10 SKIP。
 - 决定：仓库历史里的截图 `批注 2026-11-08 014134.png` **保留**，不改写历史；备份口令改存 **Windows 凭据管理器**（自动化阶段实现），不再依赖环境变量。

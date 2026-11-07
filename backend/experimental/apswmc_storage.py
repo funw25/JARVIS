@@ -15,6 +15,7 @@ import os
 import re
 import sys
 import time
+import weakref
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -217,7 +218,9 @@ class Connection:
         self.raw = raw
         self.driver = driver
         self.key = key
-        self._live = set()
+        # Weak references only: a dropped one-row query must not keep a read
+        # snapshot alive on the connection (that hid every later commit).
+        self._live = weakref.WeakSet()
 
     # -- statement bookkeeping --------------------------------------------
     def _register(self, cursor):
@@ -237,6 +240,9 @@ class Connection:
         return bool(self.raw.in_transaction)
 
     def begin_immediate(self):
+        # SQLite skips the busy handler for SQLITE_BUSY_SNAPSHOT, so a statement
+        # left open from an earlier read would make this fail immediately.
+        self._finalize_statements()
         self.raw.execute("BEGIN IMMEDIATE")
 
     def commit(self):

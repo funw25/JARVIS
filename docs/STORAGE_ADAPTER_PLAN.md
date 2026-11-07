@@ -74,6 +74,11 @@
 
 **适配器侧顺带修的问题：** 语句未释放导致 `COMMIT` 报 `BusyError`（改为提交前 finalize 所有游标）；默认 DELETE journal 下读锁阻塞写提交（改为 WAL + `busy_timeout` + 切换重试）；`Row` 需要与 tuple 按值相等（迁移与业务断言依赖）；父目录不存在时无法建库（补 `mkdir`）。
 
+**S4 并发阶段又发现并修掉两个更严重的问题（2026-11-07）：**
+
+1. `BEGIN IMMEDIATE` 之前不释放旧语句。SQLite 对 `SQLITE_BUSY_SNAPSHOT` **不调用** busy handler，所以任何“先读一行、再写”的用法都会在 20 ms 内直接 `BusyError`。修法：`begin_immediate()` 先 finalize 所有游标再开事务。
+2. 连接的活跃游标集合用的是强引用，一次性查询（如 `PRAGMA integrity_check`、`SELECT ... fetchone()`）被丢弃后语句不会释放，读快照永不结束——读者会**永远读到旧值**。修法：改为 `weakref.WeakSet`，让被丢弃的游标随垃圾回收释放语句；实测修复后读者能看到 0→1→2→3→4→5 的提交流。
+
 **仍未覆盖：** 备份/换机恢复、密钥生命周期与轮换、WAL 并发压力测试、许可证与发布审查、独立安全评审。这些完成前不得把默认存储切到加密后端。
 
 ## 已验证的基线

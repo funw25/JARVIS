@@ -1,0 +1,2 @@
+# Isolated CPython 3.14 Windows candidate; provenance and security review required.
+rotki-pysqlcipher3==2026.8.3 --hash=sha256:7fb50da57201cb3b3cb3fa3e10505d905bafd8e4d6c3ca6a1387eea2b5231fda

@@ -1,0 +1,2 @@
+# Isolated Windows CPython 3.13 test candidate; not a production dependency.
+sqlcipher3==0.6.5 --hash=sha256:c3b5f2afc45a64d987dde007c8ef7d21f47014dcf85633c29cccdd764cdedec3

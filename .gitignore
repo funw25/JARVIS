@@ -1,0 +1,17 @@
+# Machine-local assets (never committed: interpreters, wheels, virtualenvs)
+.venv/
+.venv314/
+.jarvis-*/
+.jarvis-tmp/
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Local reference mirror synced from the ChatGPT project (read-only, not project source)
+sources/
+
+# Local scratch and logs
+*.log
+*.tmp
+.DS_Store

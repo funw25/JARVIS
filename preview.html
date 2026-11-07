@@ -1,0 +1,1180 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jarvis · 个人工作台预览</title>
+<style>
+:root{--bg:#f7f8f5;--side:#f0f3ee;--ink:#1b2b22;--muted:#7b887f;--line:#e7ebe5;--green:#2e664d;--pale:#e8efe8;--gold:#d4a75e;--white:#fff}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:'DM Sans','Noto Sans SC',sans-serif;font-size:14px}button,input,textarea,select{font:inherit}button{cursor:pointer}.layout{display:flex;min-height:100vh}.sidebar{width:238px;background:var(--side);border-right:1px solid #e3e9e2;padding:25px 17px;position:fixed;inset:0 auto 0 0}.brand{font-weight:700;font-size:23px;letter-spacing:-.8px;padding:4px 11px}.brand b{color:var(--green)}.tagline{font-size:12px;color:var(--muted);padding:3px 12px 26px}.nav-label,.kicker{font-size:10px;text-transform:uppercase;letter-spacing:1.3px;color:#829087;font-weight:700;padding:0 12px 9px}.nav button{width:100%;border:0;background:transparent;text-align:left;color:#637168;padding:11px 12px;border-radius:10px;margin:2px 0;font-size:13px}.nav button.active,.nav button:hover{background:#e1e9e0;color:#244b36;font-weight:600}.nav .icon{display:inline-block;width:26px;color:#748178}.side-bottom{position:absolute;bottom:22px;left:18px;right:18px;border-top:1px solid #dfe6de;padding:16px 8px 0;color:var(--muted);font-size:11px;line-height:1.65}.status{color:#3f7653;font-weight:600}.main{margin-left:238px;width:calc(100% - 238px);padding:31px 42px 55px;max-width:1500px}.topline{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;margin:0 0 14px}.profile{border:1px solid var(--line);border-radius:30px;padding:7px 12px;background:#fff;color:#59675e}.hero{position:relative;overflow:hidden;border:1px solid #dce6dc;border-radius:19px;background:var(--pale);padding:24px 29px;margin-bottom:19px}.hero h1{font-size:28px;letter-spacing:-1.2px;margin:8px 0 5px}.hero p{color:#69786e;margin:0;font-size:13px}.spark{position:absolute;right:31px;top:-11px;font-size:105px;color:#c6d6c6;line-height:1}.kicker{padding:0;color:#568064}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 22px}.metric,.panel,.card,.post,.note{background:var(--white);border:1px solid var(--line);border-radius:15px}.metric{padding:14px 16px}.metric small{font-size:11px;color:var(--muted)}.metric strong{display:block;font-size:25px;letter-spacing:-.7px;margin:4px 0 2px}.metric em{font-style:normal;font-size:10px;color:#528064}.cols{display:grid;grid-template-columns:1.12fr .88fr;gap:25px}.section{margin:21px 0 10px;display:flex;align-items:center;justify-content:space-between}.section h2{font-size:16px;margin:0;letter-spacing:-.3px}.hint{font-size:11px;color:var(--muted)}.panel{padding:8px 17px}.mail{padding:12px 0;border-bottom:1px solid #eff1ed;display:flex;gap:12px}.mail:last-child{border:0}.avatar{width:34px;height:34px;border-radius:11px;background:#edf2ec;color:#416c51;display:grid;place-items:center;font-weight:700;font-size:12px;flex:none}.subject{font-weight:600;font-size:12px}.from{font-size:10px;color:var(--muted);margin:3px 0}.summary{font-size:11px;color:#68756c;line-height:1.5}.pill{display:inline-block;font-size:9px;border-radius:30px;padding:3px 8px;background:#f0f3ef;color:#647168;margin:5px 4px 0 0}.pill.hot{background:#fff0e7;color:#a5613c}.todos{padding:9px 15px}.todo{padding:10px 0;border-bottom:1px solid #eff1ed;display:flex;gap:10px;align-items:flex-start}.todo:last-child{border:0}.todo input{accent-color:var(--green);margin-top:3px}.todo-title{font-size:12px;font-weight:500}.todo-title.done{text-decoration:line-through;color:#a0a8a1}.todo-meta{font-size:10px;color:#89948b;margin-top:3px}.approval{background:#fff;border:1px solid #eadfca;border-left:3px solid var(--gold);border-radius:12px;padding:11px 14px;margin:8px 0}.approval .type{font-size:9px;letter-spacing:.7px;color:#98723c;font-weight:700}.approval b{display:block;font-size:12px;margin:5px 0 3px}.approval small{font-size:10px;color:var(--muted)}.posts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.post{padding:14px;min-height:128px}.author{font-size:10px;color:var(--muted);margin-bottom:7px}.copy{font-size:12px;line-height:1.55;color:#344139}.post-meta{font-size:10px;color:#89938c;margin-top:9px}.footer{font-size:10px;color:#9aa39b;margin-top:17px}.page-title{font-size:26px;letter-spacing:-.8px;margin:5px 0}.intro{font-size:12px;color:var(--muted);margin:4px 0 18px}.toolbar{display:flex;gap:10px;margin:15px 0}.toolbar input,.toolbar select,.formbox input,.formbox textarea,.search{border:1px solid var(--line);background:white;border-radius:9px;padding:10px 12px;color:var(--ink)}.toolbar input{flex:1}.list{display:grid;gap:9px}.card{padding:15px 17px}.card h3{font-size:13px;margin:0 0 5px}.card p{font-size:11px;color:#66736a;line-height:1.6;margin:0}.card .actions{margin-top:10px;display:flex;gap:7px}.btn{border:1px solid #dfe6de;background:white;color:#4c6553;border-radius:8px;padding:7px 10px;font-size:11px}.btn:hover{background:#f2f6ef}.btn.primary{background:var(--green);color:white;border-color:var(--green)}.note{padding:15px 17px;margin:9px 0}.note h3{margin:0 0 5px;font-size:13px}.note small{color:var(--muted);font-size:10px}.note p{font-size:11px;color:#66736a;line-height:1.6;margin-bottom:0}.formbox{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px;margin:12px 0}.formbox input,.formbox textarea{display:block;width:100%;margin:8px 0}.formbox textarea{min-height:90px;resize:vertical}.demo-warning{background:#fff8e9;border:1px solid #f1e1bd;border-radius:9px;padding:10px 12px;color:#806433;font-size:11px;margin:12px 0}.hidden{display:none!important}.modal{position:fixed;inset:0;background:#17251f66;display:grid;place-items:center;padding:20px;z-index:5}.modal-box{background:#fff;border-radius:17px;padding:22px;max-width:480px;width:100%;box-shadow:0 20px 60px #14261b2b}.modal-box h2{font-size:18px;margin:0 0 9px}.modal-box p{font-size:12px;line-height:1.6;color:#627068}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:17px}.toast{position:fixed;bottom:22px;right:22px;background:#203b2c;color:white;border-radius:10px;padding:12px 15px;font-size:12px;z-index:10;box-shadow:0 10px 30px #203b2c22}
+@media(max-width:950px){.sidebar{width:195px}.main{margin-left:195px;width:calc(100% - 195px);padding:26px 24px}.metrics{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr;gap:5px}}
+@media(max-width:650px){.sidebar{width:65px;padding:18px 8px}.brand{font-size:0;padding:7px}.brand:after{content:'✦';font-size:22px;color:var(--green)}.tagline,.nav-label,.nav button .label,.side-bottom{display:none}.nav button{font-size:0;text-align:center;padding:12px 5px}.nav .icon{font-size:17px;width:auto}.main{margin-left:65px;width:calc(100% - 65px);padding:19px 14px}.metrics{gap:8px}.metric{padding:11px}.metric strong{font-size:21px}.hero{padding:20px}.hero h1{font-size:23px}.spark{right:13px;font-size:75px}.posts{grid-template-columns:1fr}.topline{font-size:10px}}
+</style>
+<style id="hud-theme">
+:root{--bg:#050b12;--side:#07121d;--ink:#e8f3f6;--muted:#8ba5b4;--line:rgba(100,190,219,.18);--green:#67e2e8;--pale:#0a1c28;--white:rgba(7,20,31,.88);--gold:#ffb04c}
+body{background:radial-gradient(ellipse at 50% 36%,#0c2636 0%,#07131e 38%,#040910 78%);color:var(--ink);letter-spacing:.01em}.sidebar{background:rgba(4,13,21,.94);border-right:1px solid rgba(83,202,225,.2);box-shadow:4px 0 35px #00d9ff08}.brand{color:#dffcff;text-shadow:0 0 20px #4be9ff3b}.brand b{color:#63e8f4}.tagline{color:#7d9dab}.nav-label,.kicker{color:#65ddeb;letter-spacing:1.8px}.nav button{color:#8aa8b5;border:1px solid transparent;border-radius:5px}.nav button.active,.nav button:hover{background:linear-gradient(90deg,#0a3343aa,#0b263300);border-color:#38d2eb33;color:#c4faff;box-shadow:inset 2px 0 #60eaff;text-shadow:0 0 12px #6eeeff55}.nav .icon{color:#49c8df}.side-bottom{border-color:#193a49;color:#70909e}.status{color:#69e6c2}.main{max-width:none;padding:23px 32px 45px}.topline{color:#7795a3;border-bottom:1px solid #1b3a48;padding-bottom:13px}.profile{background:#071722;border-color:#245061;color:#b6eaf0}.hero,.metric,.panel,.card,.post,.note,.formbox,.modal-box{background:linear-gradient(145deg,rgba(9,28,41,.94),rgba(5,16,26,.92));border-color:rgba(81,187,216,.22);box-shadow:0 8px 28px #0003}.metric{border-radius:4px;position:relative;overflow:hidden}.metric:before{content:'';position:absolute;inset:0 auto 0 0;width:2px;background:#49dff2;box-shadow:0 0 12px #3adcf5}.metric small,.hint,.intro,.summary,.card p,.note p,.from,.author,.post-meta,.todo-meta,.approval small,.mail .from{color:#88a5b1}.metric strong{color:#e9fbff;text-shadow:0 0 14px #48cce52a}.metric em{color:#61dfc2}.section h2,.subject,.card h3,.note h3{color:#dff8fc}.section{border-bottom:1px solid #173744;padding-bottom:7px}.panel,.post,.note,.card{border-radius:6px}.panel{padding:8px 15px}.mail{border-color:#183846}.avatar{border:1px solid #2a7a8c;background:#0a2634;color:#80edf2;border-radius:4px}.pill{border:1px solid #265565;background:#0a2633;color:#92dce5;border-radius:2px}.pill.hot{background:#2b1b0d;border-color:#9c5f25;color:#ffbd76}.todo{border-color:#173744}.todo input{accent-color:#51deec}.todo-title{color:#cde4e9}.todo-title.done{color:#68828d}.approval{background:linear-gradient(90deg,#21180e,#111820);border:1px solid #8f5d2b;border-left:3px solid #ffb04c;border-radius:4px}.approval .type{color:#ffc174}.approval b{color:#f4e5d3}.demo-warning{background:#251b10;border-color:#8f5d2b;color:#ffd295}.toolbar input,.toolbar select,.formbox input,.formbox textarea,.search,.card textarea{color:#d9edf1;background:#06141e;border-color:#245061;border-radius:4px}.toolbar input::placeholder,.formbox input::placeholder,.formbox textarea::placeholder{color:#668391}.btn{background:#0a202c;border-color:#2c6576;color:#a5edf4;border-radius:3px}.btn:hover{background:#103747}.btn.primary{background:#0b6678;border-color:#3adbed;color:#eaffff;box-shadow:0 0 16px #35d8ea25}.footer{color:#65808e}.modal{background:#02070dc9}.modal-box h2{color:#def8ff}.modal-box p{color:#9ab5c0}.toast{background:#0b3542;border:1px solid #42ccdf;color:#eaffff}
+.command-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin:20px 0 16px}.command-title{font-size:24px;letter-spacing:1px;margin:7px 0 3px;text-transform:uppercase;font-weight:500}.command-sub{font-size:11px;color:#87a6b2}.sim-badge{border:1px solid #31a78b;color:#73e7c6;background:#071d1d;padding:7px 10px;font:10px monospace;letter-spacing:1px;white-space:nowrap}.metrics{gap:8px}.hud-grid{display:grid;grid-template-columns:minmax(260px,1fr) minmax(300px,1.08fr) minmax(260px,1fr);gap:13px;align-items:stretch}.hud-panel{min-height:305px;padding:12px 13px;border:1px solid #235163;background:linear-gradient(150deg,#0a1b28ee,#07131dee);position:relative}.hud-panel:before,.hud-panel:after{content:'';position:absolute;width:13px;height:13px;pointer-events:none}.hud-panel:before{top:-1px;left:-1px;border-top:2px solid #5eeaff;border-left:2px solid #5eeaff}.hud-panel:after{right:-1px;bottom:-1px;border-right:2px solid #5eeaff;border-bottom:2px solid #5eeaff}.hud-panel .section{margin:3px 0 8px}.hud-panel .panel{background:transparent;border:0;box-shadow:none;padding:0}.hud-panel .mail{gap:8px}.hud-panel .mail .summary{font-size:10px}.core-wrap{min-height:305px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;border:1px solid #25586b;background:radial-gradient(ellipse at center,#0a344699 0,#0618259c 54%,#06111b 100%);clip-path:polygon(5% 0,95% 0,100% 6%,100% 94%,95% 100%,5% 100%,0 94%,0 6%)}.core-wrap:before{content:'';position:absolute;inset:12px;border:1px solid #34cde522;clip-path:polygon(4% 0,96% 0,100% 7%,100% 93%,96% 100%,4% 100%,0 93%,0 7%)}.core-inner{text-align:center;z-index:1;position:relative}.core-label{font:10px monospace;letter-spacing:2.5px;color:#7bdae7}.core-name{font:500 15px monospace;letter-spacing:3px;color:#d7fbff;margin:4px 0 0}.core-state{font:9px monospace;letter-spacing:2px;color:#76e7c9;margin-top:7px}.core-ring{width:178px;height:178px;margin:9px auto;position:relative;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#0d3b4c 0,#071c29 44%,transparent 45%)}.core-ring:before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 5deg,transparent 0 8%,#59e9ff 9% 10%,transparent 11% 29%,#3089bd 30% 31%,transparent 32% 57%,#5ceaff 58% 60%,transparent 61% 77%,#f4a84b 78% 79%,transparent 80%);mask:radial-gradient(farthest-side,transparent calc(100% - 1px),#000 calc(100% - 1px) calc(100% - 3px),transparent calc(100% - 3px))}.core-ring:after{content:'';position:absolute;inset:15px;border-radius:50%;border:1px dashed #52d9ed77;animation:rotate 35s linear infinite}.core-orb{width:93px;height:93px;border-radius:50%;background:radial-gradient(circle at 37% 32%,#a8fbff,#33bad5 18%,#0a526b 49%,#07141d 77%);box-shadow:0 0 14px #4deaffb0,0 0 40px #17d5f566,0 0 78px #147aac33,inset 0 0 19px #a3fcff77;animation:breathe 5s ease-in-out infinite}.core-axis{position:absolute;width:214px;height:1px;background:linear-gradient(90deg,transparent,#3addf599,transparent);transform:rotate(-29deg)}.core-data{position:absolute;inset:9px 6px;display:flex;justify-content:space-between;align-items:center;font:8px monospace;color:#82cad4;pointer-events:none}.core-data span{writing-mode:vertical-rl;letter-spacing:1px}.core-readout{display:flex;justify-content:center;gap:16px;color:#8fb5c0;font:9px monospace;margin-top:7px}.core-readout b{color:#d2fbff;font-weight:500}.hud-grid .section h2{font:10px monospace;letter-spacing:1.5px;text-transform:uppercase}.hud-grid .hint{font:9px monospace}.lower-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.lower-panel{padding:5px 13px 13px;border:1px solid #235163;background:linear-gradient(150deg,#0a1b28ee,#07131dee);position:relative}.lower-panel .section{margin:10px 0}.lower-panel .post{background:#071722;border-color:#214756}.lower-panel .posts{gap:8px}.lower-panel .post{min-height:90px;padding:11px}.lower-panel .copy{font-size:11px;color:#b3d1d8}.lower-panel .approval{margin:6px 0}.micro-status{color:#61ddc7;font:9px monospace;letter-spacing:1px}.scan-line{height:1px;background:linear-gradient(90deg,transparent,#4be9ff88,transparent);animation:scan 5s ease-in-out infinite;position:absolute;left:12%;right:12%;top:22px}.page-title{color:#e4f8fc;font-weight:500;letter-spacing:.3px}.eyebrow{color:#66e0ec}.card summary{cursor:pointer;color:#c4e8ee;padding:8px}.list .card{border-left:2px solid #38bcd4}.list .actions{margin-top:10px}@keyframes rotate{to{transform:rotate(360deg)}}@keyframes breathe{50%{transform:scale(1.06);filter:brightness(1.15)}}@keyframes scan{0%,100%{opacity:.15;transform:translateY(0)}50%{opacity:.65;transform:translateY(10px)}}
+@media(max-width:1000px){.hud-grid{grid-template-columns:1fr 1fr}.core-wrap{grid-column:1/-1;grid-row:1;min-height:280px}.hud-panel{min-height:260px}.lower-grid{grid-template-columns:1fr}}
+@media(max-width:650px){.main{padding:15px 10px}.command-head{align-items:flex-start;flex-direction:column}.command-title{font-size:18px}.sim-badge{font-size:8px}.hud-grid{grid-template-columns:1fr}.core-wrap{grid-column:auto;grid-row:auto;min-height:240px}.core-ring{width:150px;height:150px}.core-panel{order:-1}.hud-panel{min-height:auto}.metrics{grid-template-columns:repeat(2,1fr)}.lower-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="layout"><aside class="sidebar"><div class="brand">✦ <b>Jarvis</b></div><div class="tagline">你的个人 AI 工作台</div><div class="nav-label">工作空间</div><nav class="nav" id="nav"></nav><div class="side-bottom"><span class="status">● 演示环境</span><br>使用模拟数据<br>未连接任何账户</div></aside>
+<main class="main"><div class="topline"><span>个人工作台　/　<span id="crumb">总览</span></span><span class="profile">✦　我的空间</span></div><div id="view"></div></main></div><div id="overlay"></div><div id="toast" class="toast hidden"></div>
+<script id="legacy-v0">
+/* 历史版本（M0 单助手原型）· 已被文件末尾 app-v3 取代，仅保留对照，勿在此处修改 */
+const pages=[['总览','⌂'],['邮件','✉'],['X 收藏与点赞','♡'],['知识库','▤'],['待办','✓'],['待审批','◷']];let current='总览';let done=new Set();let extraTodos=[];let notes=[['Jarvis MVP：先建议，后执行','产品设计 · 11 月 5 日','首版应先完成分类、摘要、搜索与待办关联。发送、删除和发布操作要走逐项审批。'],['邮件分级规则草案','工作流程 · 11 月 4 日','按截止时间、是否需要回复、是否来自重要联系人进行初步分级；低置信度项目交给用户判断。'],['AI 助手界面参考','产品灵感 · 11 月 2 日','减少同时出现的信息量。首页只呈现今天要处理的事，并提供返回来源的入口。']];
+const emails=[['M','Maya Chen','关于周五产品评审的材料','请在周四下班前补上用户访谈的关键发现，评审会需要用到。','需要回复','高优先'],['N','Notion','你的每周工作摘要','本周有 3 个页面更新，包含 Jarvis 竞品调研和用户访谈记录。','摘要','工作'],['L','Leo Wang','Re: 会议时间确认','周三下午 3 点可以，我会提前把议程发给你。','待确认','日程']];
+const posts=[['@designsystems','好的产品界面会让复杂的事情变得简单。先把用户最常做的三件事做顺，再慢慢扩展。','产品设计 · 2 小时前','产品'],['@linh_builds','用小步迭代做 AI 工具：每次只让模型给建议，把最终决定留给用户。','AI 工具 · 昨天','AI 开发']];
+const baseTodos=[['整理用户访谈的 5 条关键发现','今天 · 来自 Maya 的邮件','高优先'],['完成 Jarvis 首页低保真草图','明天 · 产品规划','进行中'],['阅读 OAuth 权限申请说明','11 月 10 日 · 技术调研','普通'],['把喜欢的产品案例归入知识库','11 月 12 日 · X 收藏','普通']];
+function initNav(){document.querySelector('#nav').innerHTML=pages.map(([n,i])=>`<button data-page="${n}" class="${n===current?'active':''}"><span class="icon">${i}</span><span class="label">${n}</span></button>`).join('');document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>go(b.dataset.page))}function go(p){current=p;document.querySelector('#crumb').textContent=p;initNav();render()}
+function section(t,h=''){return `<div class="section"><h2>${t}</h2><span class="hint">${h}</span></div>`}function mailRows(items=emails){return `<div class="panel">${items.map(e=>`<div class="mail"><div class="avatar">${e[0]}</div><div><div class="subject">${e[2]}</div><div class="from">${e[1]}　<span class="pill">${e[4]}</span>${e[5]==='高优先'?'<span class="pill hot">高优先</span>':''}</div><div class="summary">${e[3]}</div></div></div>`).join('')}</div>`}function todoRows(){let all=[...baseTodos,...extraTodos];return `<div class="panel todos">${all.map((t,i)=>`<label class="todo"><input type="checkbox" data-todo="${i}" ${done.has(i)?'checked':''}><span><span class="todo-title ${done.has(i)?'done':''}">${t[0]}</span><div class="todo-meta">${t[1]} · ${t[2]}</div></span></label>`).join('')}</div>`}function approvalCards(){return `<div class="approval"><div class="type">邮件草稿 · 等待确认</div><b>回复 Maya：周五产品评审材料</b><small>收件人、主题和正文将在发送前完整展示</small></div><div class="approval"><div class="type">整理建议 · 等待确认</div><b>为 6 条收藏添加「产品灵感」标签</b><small>仅影响 Jarvis 内部分类，不会修改 X</small></div>`}function postCards(arr=posts){return `<div class="posts">${arr.map(p=>`<div class="post"><div class="author">${p[0]}　·　${p[2]}</div><div class="copy">${p[1]}</div><div class="post-meta">♡　已点赞　　<span class="pill">${p[3]}</span></div></div>`).join('')}</div>`}
+function home(){return `<div class="command-head"><div><div class="kicker">PERSONAL OPERATIONS SYSTEM　/　06 NOV 2026</div><h1 class="command-title">今日态势 · 任务总览</h1><div class="command-sub">信息已整理就绪。所有动作均等待你的指令。</div></div><div class="sim-badge">● SIMULATION MODE　/　NO ACCOUNTS LINKED</div></div><div class="metrics"><div class="metric"><small>INBOX / 待处理邮件</small><strong>08</strong><em>2 封建议优先处理</em></div><div class="metric"><small>任务队列 / 今日待办</small><strong>${baseTodos.length+extraTodos.length-done.size}</strong><em>1 项来自邮件</em></div><div class="metric"><small>确认队列 / 等待审批</small><strong>02</strong><em>外部动作锁定</em></div><div class="metric"><small>知识信号 / 新收集</small><strong>12</strong><em>本地索引 · 模拟值</em></div></div><div class="hud-grid"><section class="hud-panel">${section('INCOMING SIGNALS','MAIL / 03')}${mailRows()}</section><section class="core-wrap"><div class="scan-line"></div><div class="core-data"><span>LOCAL INDEX　·　STANDBY</span><span>TRUST BOUNDARY　/　ON</span></div><div class="core-inner"><div class="core-label">PERSONAL AI SYSTEM</div><div class="core-name">J.A.R.V.I.S.</div><div class="core-ring"><div class="core-axis"></div><div class="core-orb"></div></div><div class="core-state">● READY　/　AWAITING INPUT</div><div class="core-readout"><span>SYNC <b>LOCAL</b></span><span>AI <b>IDLE</b></span><span>WRITE <b>LOCKED</b></span></div></div></section><section class="hud-panel">${section('MISSION QUEUE','TASKS / TODAY')}${todoRows()}<div class="micro-status" style="margin:10px 2px">${baseTodos.length+extraTodos.length-done.size} ACTIVE ITEMS　·　1 LINKED TO EMAIL</div></section></div><div class="lower-grid"><section class="lower-panel">${section('CAPTURED DATA','X / KNOWLEDGE')}${postCards()}</section><section class="lower-panel">${section('AUTHORIZATION QUEUE','HUMAN APPROVAL REQUIRED')}${approvalCards()}</section></div><div class="footer">HUD CONCEPT PREVIEW　·　SIMULATED CONTENT ONLY　·　NO EXTERNAL SERVICE CONNECTION</div>`}
+function mailPage(){return `<div class="kicker">邮件工作区</div><h1 class="page-title">把收件箱理出头绪。</h1><p class="intro">摘要和优先级仅供参考；回复发送前必须由你确认。</p><div class="toolbar"><input id="mailq" placeholder="搜索发件人、主题或内容…"><select id="mailfilter"><option>全部邮件</option><option>需要回复</option><option>高优先</option></select></div><div id="mailresults" class="list"></div>${section('回复草稿预览（模拟）')}<div class="formbox"><input value="maya@example.com" aria-label="收件人"><input value="Re: 关于周五产品评审的材料" aria-label="主题"><textarea aria-label="邮件正文">Hi Maya，收到。我会在周四下班前补充用户访谈的关键发现，并提前发给你。</textarea><div class="demo-warning">这是本地演示草稿。发送功能未连接；真实邮件发送需要逐封审批。</div><button class="btn" onclick="toast('演示草稿已保留在本地页面')">保存草稿</button></div>`}
+function renderMails(){let q=(document.querySelector('#mailq')?.value||'').toLowerCase(),f=document.querySelector('#mailfilter')?.value;let arr=emails.filter(e=>(!q||e.join(' ').toLowerCase().includes(q))&&(f==='全部邮件'||(f==='需要回复'?e[4]==='需要回复':e[5]==='高优先')));document.querySelector('#mailresults').innerHTML=arr.map((e,i)=>`<div class="card"><h3>${e[2]}　<span class="pill">${e[5]}</span></h3><p>${e[1]}　·　${e[3]}</p><div class="actions"><button class="btn" onclick="toast('已生成本地模拟草稿')">生成回复草稿</button><button class="btn" onclick="toast('已加入演示待办')">转为待办</button></div></div>`).join('')||'<div class="card">没有匹配的邮件</div>'}
+function xPage(){return `<div class="kicker">个人内容收藏</div><h1 class="page-title">把好内容留在手边。</h1><p class="intro">下面是模拟内容。标签只保存在 Jarvis，不会回写 X。</p><div class="toolbar"><input id="postq" placeholder="搜索内容、作者或标签…"><select><option>全部来源</option><option>书签</option><option>点赞</option></select><select><option>全部主题</option><option>产品</option><option>AI 开发</option></select></div><div id="postresults">${postCards()}</div><div class="demo-warning">官方 X API 的连接、同步和费用统计尚未启用。</div>`}
+function renderPosts(){let q=(document.querySelector('#postq')?.value||'').toLowerCase();document.querySelector('#postresults').innerHTML=postCards(posts.filter(p=>p.join(' ').toLowerCase().includes(q)))}
+function kbPage(){return `<div class="kicker">个人知识库</div><h1 class="page-title">收集、连接、再利用。</h1><p class="intro">先从手动笔记和本地文件开始；当前内容均为模拟数据。</p><div class="toolbar"><input id="noteq" placeholder="搜索笔记内容或主题…"><button class="btn primary" onclick="document.querySelector('#newnote').classList.toggle('hidden')">＋ 新建笔记</button></div><div id="newnote" class="formbox hidden"><input id="notetitle" placeholder="笔记标题"><textarea id="notebody" placeholder="写下你的想法…"></textarea><button class="btn primary" onclick="saveNote()">保存到知识库</button></div><div id="noteresults"></div>`}
+function renderNotes(){let q=(document.querySelector('#noteq')?.value||'').toLowerCase();document.querySelector('#noteresults').innerHTML=notes.filter(n=>n.join(' ').toLowerCase().includes(q)).map(n=>`<div class="note"><h3>${n[0]}</h3><small>${n[1]}</small><p>${n[2]}</p><button class="btn" onclick="toast('演示：可将内容转成待办')">提取待办</button></div>`).join('')}
+function saveNote(){let t=document.querySelector('#notetitle').value,b=document.querySelector('#notebody').value;if(!t)return toast('请填写笔记标题');notes.unshift([t,'刚刚 · 本地演示',b]);render();toast('笔记已加入当前演示列表')}
+function todoPage(){return `<div class="kicker">任务管理</div><h1 class="page-title">一步一步推进。</h1><p class="intro">每条任务都可以回到它的来源。</p><div class="formbox"><input id="newtodo" placeholder="接下来要做什么？"><button class="btn primary" onclick="addTodo()">添加待办</button></div>${section('全部待办','按紧急程度排列')}${todoRows()}`}
+function addTodo(){let x=document.querySelector('#newtodo').value.trim();if(!x)return toast('先写下待办内容');extraTodos.push([x,'明天 · Jarvis','普通']);render();toast('待办已添加')}
+function approvalsPage(){return `<div class="kicker">安全控制</div><h1 class="page-title">每个动作，都由你拍板。</h1><p class="intro">此原型只演示审批交互，不会连接服务或执行任何外部操作。</p>${section('等待确认','请逐项查看操作内容')}<div class="approval"><div class="type">邮件草稿 · 模拟</div><b>回复 Maya Chen：关于周五产品评审的材料</b><small>收件人：maya@example.com · 主题和正文需在发送前确认</small></div><details class="card"><summary>查看完整邮件草稿</summary><div class="formbox"><p>收件人：maya@example.com</p><p>主题：Re: 关于周五产品评审的材料</p><textarea>Hi Maya，收到。我会在周四下班前补充用户访谈的关键发现，并提前发给你。</textarea></div><div class="demo-warning">模拟演示：点击确认也不会发送邮件。真实版本会再次核对收件人与正文。</div></details><p><label><input id="confirm" type="checkbox"> 我已检查完整内容，理解真实操作会产生外部影响</label></p><button class="btn primary" id="approve" disabled onclick="toast('这是演示页面，没有执行任何外部操作')">确认并继续</button>${section('整理建议','只改变 Jarvis 内部数据')}<div class="approval"><div class="type">本地标签建议</div><b>为 6 条收藏添加「产品灵感」标签</b><small>不会修改 X 上的收藏或点赞状态</small><div class="actions"><button class="btn" onclick="toast('已接受本地整理建议')">接受建议</button><button class="btn" onclick="toast('已忽略建议')">忽略</button></div></div>`}
+function toast(s){let t=document.querySelector('#toast');t.textContent=s;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),2300)}
+function bind(){document.querySelectorAll('[data-todo]').forEach(x=>x.onchange=()=>{let i=+x.dataset.todo;x.checked?done.add(i):done.delete(i);render()});let mq=document.querySelector('#mailq');if(mq){mq.oninput=renderMails;document.querySelector('#mailfilter').onchange=renderMails;renderMails()}let pq=document.querySelector('#postq');if(pq)pq.oninput=renderPosts;let nq=document.querySelector('#noteq');if(nq){nq.oninput=renderNotes;renderNotes()}let c=document.querySelector('#confirm');if(c)c.onchange=()=>document.querySelector('#approve').disabled=!c.checked}
+function render(){let v=document.querySelector('#view');v.innerHTML=current==='总览'?home():current==='邮件'?mailPage():current==='X 收藏与点赞'?xPage():current==='知识库'?kbPage():current==='待办'?todoPage():approvalsPage();bind()}initNav();render();
+</script>
+<style id="v3-styles">
+/* ==== v0.3 增量 A 原型：只新增 v3- 命名空间组件，复用 HUD 既有 token ==== */
+.v3-sysbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font:10px/1.2 ui-monospace,Consolas,monospace;letter-spacing:.6px;color:#8fb3c0}
+.v3-chip{border:1px solid #245061;background:#071722;color:#9fd6e0;padding:5px 8px;border-radius:2px;font:inherit}
+button.v3-chip{cursor:pointer}
+.v3-chip.gold{border-color:#9c5f25;background:#2b1b0d;color:#ffbd76}
+.v3-asw{display:inline-flex;border:1px solid #2f6a7d;border-radius:3px;overflow:hidden}
+.v3-asw button{background:#06141f;border:0;color:#8fb3c0;padding:6px 11px;font:10px ui-monospace,monospace;letter-spacing:1px;cursor:pointer}
+.v3-asw button[aria-pressed="true"]{background:#0e3b4b;color:#c9fbff;box-shadow:inset 0 0 0 1px #57e6f5}
+.v3-asw button:last-child[aria-pressed="true"]{box-shadow:inset 0 0 0 1px #57e6f5}
+.v3-list{display:flex;flex-direction:column;gap:9px}
+.v3-list .card{padding:12px 14px}
+.v3-row{display:flex;gap:10px;align-items:flex-start}
+.v3-grow{flex:1;min-width:0}
+.v3-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.v3-meta{font:10px ui-monospace,Consolas,monospace;color:#87a6b2;letter-spacing:.4px;line-height:1.7}
+.v3-empty{padding:14px;border:1px dashed #245061;color:#7f9dab;font-size:12px;background:#06142055}
+.v3-gate{border:1px solid #9c5f25;background:linear-gradient(150deg,#1f1508,#0c0b06);padding:18px 20px;color:#ffcf9a}
+.v3-gate strong{color:#ffd8a6;font-size:14px}
+.v3-gate p{margin:8px 0 0;font-size:12px;line-height:1.7;color:#d9b98f}
+.v3-input{width:100%;background:#06131d;border:1px solid #245061;color:#dff8fc;padding:9px 10px;font-size:13px;border-radius:2px;font-family:inherit}
+.v3-input:focus{outline:2px solid #57e6f5;outline-offset:1px}
+select.v3-input{appearance:none}
+textarea.v3-input{min-height:74px;resize:vertical;line-height:1.6}
+.v3-modal{position:fixed;inset:0;background:#02080dc4;display:flex;align-items:center;justify-content:center;z-index:60;padding:22px}
+.v3-modal.hidden{display:none}
+.v3-sheet{width:min(660px,96vw);max-height:86vh;overflow:auto;background:linear-gradient(150deg,#0a1f2c,#06131d);border:1px solid #2f7f95;padding:18px 20px;box-shadow:0 30px 80px #000a}
+.v3-sheet h2{font-size:15px;letter-spacing:1px;margin:0 0 6px;color:#dff8fc}
+.v3-sheet .v3-sub{font-size:11px;color:#87a6b2;margin:0 0 12px}
+.v3-kv{display:grid;grid-template-columns:104px 1fr;gap:6px 10px;font-size:12px;margin:12px 0;align-items:baseline}
+.v3-kv dt{color:#7f9dab;font:10px ui-monospace,monospace;letter-spacing:.5px}
+.v3-kv dd{margin:0;color:#dff8fc;word-break:break-word}
+.v3-rowline{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0 0}
+.v3-grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.v3-mem{border:1px solid var(--line);border-left:2px solid #3adcf5;background:rgba(9,28,41,.72);padding:11px 13px}
+.v3-mem.forgotten{opacity:.55;border-left-color:#9c5f25}
+.v3-mem p{margin:6px 0 0;font-size:13px;line-height:1.65;color:#dff8fc}
+.v3-tag{display:inline-block;border:1px solid #265565;background:#0a2633;color:#92dce5;border-radius:2px;padding:3px 7px;font:9px ui-monospace,monospace;letter-spacing:.6px;margin:3px 4px 0 0}
+.v3-tag.gold{border-color:#9c5f25;background:#2b1b0d;color:#ffbd76}
+.v3-chat{display:flex;flex-direction:column;gap:10px;max-height:50vh;overflow:auto;padding:13px;border:1px solid var(--line);background:rgba(5,17,26,.62)}
+.v3-msg{max-width:84%;padding:9px 12px;border:1px solid #245061;background:#0a1e2b;font-size:13px;line-height:1.65;color:#dff8fc}
+.v3-msg.me{align-self:flex-end;border-color:#2f7f6a;background:#0a2630}
+.v3-msg .v3-src{display:block;margin-top:7px;padding-top:5px;border-top:1px dashed #1c4a56;font:9px ui-monospace,monospace;color:#6fb0a0;letter-spacing:.4px}
+.v3-composer{display:flex;gap:8px;align-items:flex-end;margin-top:10px}
+.v3-snap{border:1px solid #2f6a7d;background:#07202b;padding:11px 13px;margin:10px 0}
+.v3-snap b{color:#c9fbff;font-size:12px}
+.v3-lock{color:#ffbd76}
+.v3-core.companion{background:radial-gradient(ellipse at center,#2a1c0d99 0,#1a1206 54%,#0a0703 100%);border-color:#9c5f25}
+.v3-core.companion .core-state{color:#ffbd76}
+.v3-core.companion .core-name{color:#ffe3bd}
+.v3-audit{font:11px ui-monospace,Consolas,monospace;color:#8fb3c0;border-top:1px solid var(--line);padding:7px 0;display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.v3-audit b{color:#c9fbff;font-weight:500}
+.v3-hint{font-size:11px;color:#87a6b2;line-height:1.7;margin:10px 0 0}
+.v3-setrow{display:flex;justify-content:space-between;align-items:center;gap:14px;border-bottom:1px solid var(--line);padding:11px 0}
+.v3-setrow span{font-size:13px;color:#dff8fc}
+.v3-setrow small{display:block;color:#87a6b2;font-size:11px;margin-top:3px}
+.v3-onoff{font:10px ui-monospace,monospace;letter-spacing:1px;border:1px solid #2f6a7d;background:#07202b;color:#79e6c4;padding:6px 10px;cursor:pointer}
+.v3-onoff.off{color:#87a6b2;border-color:#2a4a58;background:#061420}
+body.v3-reduced *{animation:none!important;transition:none!important}
+/* 桌面宽屏校正：工具栏下拉不占满整行、发送按钮不被拉高、长段落限宽 */
+.toolbar select.v3-input{width:auto;min-width:170px;flex:0 0 auto}
+.v3-composer textarea.v3-input{min-height:62px}
+.v3-composer .btn{flex:0 0 auto;white-space:nowrap;align-self:flex-end}
+.v3-gate p{max-width:82ch}
+.v3-hint{max-width:110ch}
+@media(max-width:820px){.v3-kv{grid-template-columns:1fr}.v3-grid2{grid-template-columns:1fr}}
+</style>
+<script id="app-v3">
+/* =====================================================================
+   Jarvis v0.3 · 增量 A 原型
+   双助手切换 / 独立会话 / 记忆分区与续聊卡 / 统一收集箱 / 设置与隐私
+   纯模拟：不连接任何账号、不调用任何模型，数据只存在本浏览器的 localStorage
+   上一段 script#legacy-v0 为历史版本；本段是唯一状态源
+   ===================================================================== */
+(function () {
+'use strict';
+
+var STORE_KEY = 'jarvis.preview.v3';
+var PAGES = [['总览','⌂'],['对话','✦'],['邮件','✉'],['收藏','♡'],['知识','▤'],['任务','✓'],['审批','◷'],['记忆','❖'],['收集','＋']];
+var RESTRICTED = { '邮件':1, '收藏':1, '知识':1, '审批':1 };
+var NS_LABEL = { shared:'个人资料（共享）', companion:'陪伴记忆', work:'工作记忆', raw:'会话原文' };
+var METHOD_LABEL = { official_api:'官方 API', extension:'浏览器剪藏', share:'系统分享', clipboard_hotkey:'快捷键/剪贴板', file_import:'文件导入', manual:'手动录入' };
+var PRI_ORDER = { '高':0, '普通':1, '低':2 };
+var STATE_LABEL = { pending:'等待确认', changed:'载荷已变更', approved:'已批准', rejected:'已拒绝', expired:'已过期', executed:'已执行（模拟）', failed:'执行失败' };
+
+/* ---------- 基础工具 ---------- */
+function nowIso(){ return new Date().toISOString(); }
+function iso(days, hours){ var d=new Date(); d.setDate(d.getDate()+(days||0)); d.setHours(d.getHours()+(hours||0)); return d.toISOString(); }
+function pad2(n){ return n<10 ? '0'+n : String(n); }
+function todayLabel(){ var d=new Date(); return d.getFullYear()+'.'+pad2(d.getMonth()+1)+'.'+pad2(d.getDate()); }
+function uid(p){ return p+'_'+Math.random().toString(36).slice(2,8); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function nl(s){ return esc(s).replace(/\n/g,'<br>'); }
+function clip(s,n){ s=String(s==null?'':s); n=n||16; return s.length>n ? s.slice(0,n)+'…' : s; }
+function hash(o){ var s=JSON.stringify(o), h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619)>>>0; } return 'h'+h.toString(16); }
+function rel(isoStr){ var t=new Date(isoStr).getTime(); if(isNaN(t)) return ''; var m=Math.round((Date.now()-t)/60000); if(m<1) return '刚刚'; if(m<60) return m+' 分钟前'; if(m<1440) return Math.round(m/60)+' 小时前'; return Math.round(m/1440)+' 天前'; }
+function left(isoStr){ var m=Math.round((new Date(isoStr).getTime()-Date.now())/60000); if(m<=0) return '已过期'; if(m<60) return m+' 分钟后过期'; return Math.round(m/60)+' 小时后过期'; }
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function mailAddr(name){ return String(name).toLowerCase().replace(/[^a-z]+/g,'.')+'@example.com'; }
+
+/* ---------- 种子数据（唯一假数据入口） ---------- */
+function seedData(){
+  return {
+    version:3,
+    assistant:'jarvis',
+    page:'总览',
+    noticeSeen:false,
+    settings:{ noticeEvery:true, reduced:false, companionName:'陪伴助手', jarvisName:'JARVIS' },
+    ui:{ mailQ:'', mailFilter:'全部邮件', postQ:'', postSource:'全部来源', postTopic:'全部主题', kbQ:'', memNs:'全部', capQ:'' },
+    draft:null,
+    emails:[
+      { id:'m1', init:'M', from:'Maya Chen', subject:'关于周五产品评审的材料', summary:'请在周四下班前补上用户访谈的关键发现，评审会需要用到。', tag:'需要回复', hot:true, unread:true, body:'Hi，麻烦在周四下班前补上用户访谈的关键发现，周五评审会要用。谢谢！' },
+      { id:'m2', init:'N', from:'Notion', subject:'你的每周工作摘要', summary:'本周有 3 个页面更新，包含 Jarvis 竞品调研和用户访谈记录。', tag:'摘要', hot:false, unread:true, body:'本周更新：竞品调研、用户访谈记录、HUD 视觉参考。' },
+      { id:'m3', init:'L', from:'Leo Wang', subject:'Re: 会议时间确认', summary:'周三下午 3 点可以，我会提前把议程发给你。', tag:'待确认', hot:false, unread:false, body:'周三下午 3 点可以，我提前把议程发你。' },
+      { id:'m4', init:'G', from:'GitHub', subject:'依赖安全提醒：1 个中等风险更新', summary:'项目依赖中有 1 个中等风险更新，建议本周内处理。', tag:'待处理', hot:false, unread:true, body:'依赖安全提醒：1 个中等风险更新，建议本周内处理。' }
+    ],
+    posts:[
+      { id:'p1', author:'@designsystems', copy:'好的产品界面会让复杂的事情变得简单。先把用户最常做的三件事做顺，再慢慢扩展。', meta:'产品设计 · 2 小时前', topic:'产品', source:'书签', tags:['产品'] },
+      { id:'p2', author:'@linh_builds', copy:'用小步迭代做 AI 工具：每次只让模型给建议，把最终决定留给用户。', meta:'AI 工具 · 昨天', topic:'AI 开发', source:'点赞', tags:['AI 开发'] },
+      { id:'p3', author:'@hudlab', copy:'把系统状态做得可读，比做得炫更重要：每个动效都应该回答“系统现在在做什么”。', meta:'界面设计 · 3 天前', topic:'产品', source:'书签', tags:[] }
+    ],
+    todos:[
+      { id:'t1', title:'整理用户访谈的 5 条关键发现', due:'今天', priority:'高', status:'open', source:'邮件 · Maya Chen', owner:'jarvis' },
+      { id:'t2', title:'完成 Jarvis 首页低保真草图', due:'明天', priority:'普通', status:'open', source:'产品规划', owner:'jarvis' },
+      { id:'t3', title:'阅读 OAuth 权限申请说明', due:'11 月 10 日', priority:'普通', status:'open', source:'技术调研', owner:'jarvis' },
+      { id:'t4', title:'把喜欢的产品案例归入知识库', due:'11 月 12 日', priority:'低', status:'done', source:'X 收藏', owner:'jarvis' }
+    ],
+    notes:[
+      { id:'n1', title:'Jarvis MVP：先建议，后执行', meta:'产品设计 · 11 月 5 日', body:'首版应先完成分类、摘要、搜索与待办关联。发送、删除和发布操作要走逐项审批。' },
+      { id:'n2', title:'邮件分级规则草案', meta:'工作流程 · 11 月 4 日', body:'按截止时间、是否需要回复、是否来自重要联系人进行初步分级；低置信度项目交给用户判断。' },
+      { id:'n3', title:'AI 助手界面参考', meta:'产品灵感 · 11 月 2 日', body:'减少同时出现的信息量。首页只呈现今天要处理的事，并提供返回来源的入口。' }
+    ],
+    captures:[
+      { id:'c1', sourceApp:'微信', method:'share', url:'', title:'聊天里提到的一篇关于连续性的笔记', selectedText:'记忆要保存关系脉络，不只保存事实。', scope:'标题 + 选中片段', capturedAt:iso(0,-5), state:'待整理' },
+      { id:'c2', sourceApp:'浏览器', method:'extension', url:'https://example.com/design-systems', title:'Design Systems 笔记', selectedText:'', scope:'链接 + 标题', capturedAt:iso(-1), state:'待整理' }
+    ],
+    memories:[
+      { id:'mem1', ns:'shared', cls:'基础资料', content:'称呼用「你」；时区 Asia/Shanghai；偏好先结论后细节。', sources:['设置 · 首次配置'], confidence:1, approvedAt:iso(-40), visible:['companion','jarvis'] },
+      { id:'mem2', ns:'companion', cls:'共同经历', content:'上周聊到你在做一个个人工作台，把「先建议、后执行」当作底线。', sources:['陪伴会话 · 11 月 3 日'], confidence:0.9, approvedAt:iso(-3), visible:['companion'] },
+      { id:'mem3', ns:'companion', cls:'未完话题', content:'你想让助手记住「连续性」而不只是事实，下次接着讨论怎么把它体现在界面上。', sources:['陪伴会话 · 11 月 5 日'], confidence:0.8, approvedAt:iso(-1), visible:['companion'] },
+      { id:'mem4', ns:'work', cls:'项目约束', content:'Jarvis 首版分两次增量：先双助手与连续性基础，再邮件与待办完整流程。', sources:['产品文档 · 11 月 4 日'], confidence:1, approvedAt:iso(-2), visible:['jarvis'] },
+      { id:'mem5', ns:'raw', cls:'会话原文', content:'（演示摘录）陪伴会话 11 月 5 日：你不希望助手使用「别离开我」这类话术。', sources:['原文摘录 · 11 月 5 日'], confidence:1, approvedAt:iso(-1), visible:['companion'] }
+    ],
+    snapshots:[
+      { id:'sn1', assistant:'companion', topics:['连续性记忆','工作台原型'], open:['怎么让记忆来源看得见'], status:'accepted', createdAt:iso(-1) }
+    ],
+    proposals:[
+      { id:'ap1', kind:'email_draft', title:'回复 Maya Chen：关于周五产品评审的材料', payload:{ to:'maya.chen@example.com', subject:'Re: 关于周五产品评审的材料', body:'Hi Maya，收到。我会在周四下班前补充用户访谈的关键发现，并提前发给你。' }, status:'pending', createdAt:iso(0,-2), expiresAt:iso(0,4) },
+      { id:'ap2', kind:'local_tag', title:'为 3 条收藏添加「产品灵感」标签', payload:{ label:'产品灵感', count:3, scope:'仅 Jarvis 本地，不回写 X' }, status:'pending', createdAt:iso(0,-3), expiresAt:iso(1,6) }
+    ],
+    audit:[
+      { id:'a1', at:iso(-1), event:'memory.created', detail:'陪伴会话生成候选记忆 1 条，已由用户确认' },
+      { id:'a2', at:iso(0,-2), event:'proposal.created', detail:'邮件草稿进入审批队列（未发送）' }
+    ],
+    chat:{
+      companion:[ { id:'cm1', role:'ai', text:'（演示）我在。上次我们停在「怎么让记忆来源看得见」，要不要接着聊？', at:iso(-1) } ],
+      jarvis:[ { id:'jm1', role:'ai', text:'（演示）今日 4 项待办、3 封未读邮件，2 个动作等你确认。要我先展开哪一项？', at:iso(0,-1) } ]
+    }
+  };
+}
+
+/* ---------- 持久化 ---------- */
+function normalize(state){
+  (state.proposals||[]).forEach(function(p){ if(!p.hash) p.hash=hash(p.payload); });
+  return state;
+}
+function load(){
+  try{
+    var raw=localStorage.getItem(STORE_KEY);
+    if(raw){ var o=JSON.parse(raw); if(o && o.version===3) return normalize(o); }
+  }catch(err){}
+  return normalize(seedData());
+}
+var S = load();
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(err){} }
+
+/* ---------- 派生 ---------- */
+function asName(a){ return a==='companion' ? (S.settings.companionName||'陪伴助手') : (S.settings.jarvisName||'JARVIS'); }
+function asKey(a){ return a==='companion' ? 'COMPANION RUNTIME' : 'PERSONAL AI SYSTEM'; }
+function memVisible(m, a){ return !m.forgotten && m.visible.indexOf(a)>=0; }
+function memFor(a){ return S.memories.filter(function(m){ return memVisible(m,a); }); }
+function openTodos(){ return S.todos.filter(function(t){ return t.status!=='done'; }); }
+function pendingProposals(){ return S.proposals.filter(function(p){ var st=pState(p); return st==='pending'||st==='changed'||st==='approved'; }); }
+function pState(p){
+  if(p.status==='pending'){
+    if(new Date(p.expiresAt).getTime()<Date.now()) return 'expired';
+    if(p.hash && p.hash!==hash(p.payload)) return 'changed';
+  }
+  return p.status;
+}
+function allowed(page){ if(S.assistant==='jarvis') return true; return !RESTRICTED[page] || sessionGrants[page]===true; }
+function audit(event, detail){ S.audit.unshift({ id:uid('a'), at:nowIso(), event:event, detail:detail }); if(S.audit.length>60) S.audit.length=60; }
+function toast(msg){
+  var t=document.getElementById('toast'); if(!t) return;
+  t.textContent=msg; t.classList.remove('hidden');
+  clearTimeout(toast._h); toast._h=setTimeout(function(){ t.classList.add('hidden'); },2600);
+}
+function recall(a, text){
+  var t=String(text||''), list=memFor(a);
+  return list.map(function(m){
+    var score=m.confidence||0.5, hit=false;
+    for(var i=0;i<t.length-1;i++){ if(m.content.indexOf(t.substr(i,2))>=0){ hit=true; break; } }
+    if(hit) score+=0.25;
+    return { m:m, score:score };
+  }).sort(function(x,y){ return y.score-x.score; }).slice(0,2).map(function(x){ return x.m; });
+}
+var sessionGrants = {};
+
+/* ---------- 页面骨架 ---------- */
+function head(title, sub){
+  return '<div class="command-head"><div><div class="kicker">'+esc(asKey(S.assistant))+'　/　'+esc(todayLabel())+
+    '</div><h1 class="command-title">'+esc(title)+'</h1><div class="command-sub">'+esc(sub)+'</div></div>'+
+    '<div class="sim-badge">● SIMULATION MODE　/　NO ACCOUNTS LINKED</div></div>';
+}
+function sec(t,h){ return '<div class="section"><h2>'+esc(t)+'</h2><span class="hint">'+esc(h||'')+'</span></div>'; }
+function metric(label, value, note){
+  return '<div class="metric"><small>'+esc(label)+'</small><strong>'+esc(value)+'</strong><em>'+esc(note)+'</em></div>';
+}
+function empty(t){ return '<div class="v3-empty">'+esc(t)+'</div>'; }
+function opts(list, cur){
+  return list.map(function(o){ return '<option'+(o===cur?' selected':'')+'>'+esc(o)+'</option>'; }).join('');
+}
+function renderNav(){
+  var nav=document.getElementById('nav'); if(!nav) return;
+  nav.innerHTML=PAGES.map(function(p){
+    var lock=!allowed(p[0]);
+    return '<button data-act="go" data-id="'+p[0]+'" class="'+(S.page===p[0]?'active':'')+'" aria-current="'+(S.page===p[0]?'page':'false')+'">'+
+      '<span class="icon">'+p[1]+'</span><span class="label">'+p[0]+(lock?'<span class="v3-lock"> •</span>':'')+'</span></button>';
+  }).join('');
+}
+function renderTopbar(){
+  var top=document.querySelector('.topline'); if(!top) return;
+  var pend=pendingProposals().length;
+  top.innerHTML='<span>个人工作台　/　<span id="crumb">'+esc(S.page)+'</span></span>'+
+    '<span class="v3-sysbar">'+
+      '<span class="v3-asw" role="group" aria-label="切换助手">'+
+        '<button class="gold" data-act="assistant" data-id="companion" aria-pressed="'+(S.assistant==='companion')+'">陪伴</button>'+
+        '<button data-act="assistant" data-id="jarvis" aria-pressed="'+(S.assistant==='jarvis')+'">JARVIS</button>'+
+      '</span>'+
+      '<span class="v3-chip">SYNC / LOCAL</span>'+
+      '<span class="v3-chip">MIC / OFF</span>'+
+      '<span class="v3-chip'+(pend?' gold':'')+'">APPROVAL / '+pend+'</span>'+
+      '<button class="v3-chip" data-act="go" data-id="设置" aria-label="设置">⚙ 设置</button>'+
+    '</span>';
+}
+function render(){
+  S.page = S.page || '总览';
+  renderNav(); renderTopbar();
+  var v=document.getElementById('view'); if(!v) return;
+  v.innerHTML = allowed(S.page) ? (VIEWS[S.page]||home)() : gatePage(S.page);
+  document.body.classList.toggle('v3-reduced', !!S.settings.reduced);
+}
+function gatePage(page){
+  return head(page+' · 需要授权','当前助手无法读取这类资料：这是记忆分区与权限边界的演示。')+
+    '<div class="v3-gate"><strong>'+esc(asName('companion'))+' 默认不可读取「'+esc(page)+'」。</strong>'+
+    '<p>设计意图：陪伴记忆与工作资料分区隔离，跨助手访问必须由你明确批准。正式版本中该限制由 Memory Gateway 与连接器策略强制执行，模型无法自行绕过；界面上的授权按钮只作用于本次会话。</p>'+
+    '<div class="v3-rowline">'+
+      '<button class="btn primary" data-act="switch-jarvis">切换到 Jarvis</button>'+
+      '<button class="btn" data-act="grant" data-id="'+esc(page)+'">本次授权查看（仅本次会话）</button>'+
+    '</div></div>'+
+    '<p class="v3-hint">这条限制本身也是产品的一部分：默认拒绝跨助手读取，分享必须落到单条记忆。</p>';
+}
+
+/* ---------- 总览 ---------- */
+function home(){
+  var a=S.assistant, unread=S.emails.filter(function(e){ return e.unread; }).length;
+  var open=openTodos().length, pend=pendingProposals().length, mems=memFor(a).length;
+  return head('今日态势 · 任务总览','信息已整理就绪；所有动作都等待你的指令。')+
+    '<div class="metrics">'+
+      metric('INBOX / 待处理邮件','0'+unread,'未读邮件 · 本地演示')+
+      metric('任务队列 / 未完成',String(open),'来源可回溯')+
+      metric('确认队列 / 等待审批',pad2(pend),'外部动作锁定')+
+      metric('MEMORY / '+a.toUpperCase(),String(mems),'当前助手可召回')+
+    '</div>'+
+    '<div class="hud-grid">'+
+      '<section class="hud-panel">'+sec('INCOMING SIGNALS', a==='jarvis'?'MAIL / 0'+unread:'MEMORY / '+mems)+(a==='jarvis'?mailRowsHTML(S.emails.slice(0,3)):memPeekHTML(a))+'</section>'+
+      coreHTML()+
+      '<section class="hud-panel">'+sec('MISSION QUEUE','TASKS / TODAY')+todoRowsHTML(5)+'<div class="micro-status" style="margin:10px 2px">'+open+' ACTIVE ITEMS　·　'+S.todos.filter(function(t){return t.source&&t.source.indexOf('邮件')===0;}).length+' LINKED TO EMAIL</div></section>'+
+    '</div>'+
+    '<div class="lower-grid">'+
+      '<section class="lower-panel">'+sec('CAPTURED DATA','CAPTURE / X / KNOWLEDGE')+
+        (a==='jarvis'?postRowsHTML(S.posts.slice(0,2)):'<div class="v3-empty">'+esc(asName('companion'))+' 不读取收藏、邮件与知识库。需要时由你在「记忆」页逐条分享。</div>')+'</section>'+
+      '<section class="lower-panel">'+sec('AUTHORIZATION QUEUE','HUMAN APPROVAL REQUIRED')+
+        (a==='jarvis'?proposalQueueHTML():'<div class="v3-empty">陪伴助手没有对外发送能力，也不参与审批队列。</div>')+'</section>'+
+    '</div>'+
+    '<div class="footer">HUD CONCEPT PREVIEW　·　SIMULATED CONTENT ONLY　·　NO EXTERNAL SERVICE CONNECTION</div>';
+}
+function coreHTML(){
+  var a=S.assistant;
+  return '<section class="core-wrap v3-core '+(a==='companion'?'companion':'jarvis')+'">'+
+    '<div class="scan-line"></div>'+
+    '<div class="core-data"><span>LOCAL INDEX　·　STANDBY</span><span>TRUST BOUNDARY　/　ON</span></div>'+
+    '<div class="core-inner">'+
+      '<div class="core-label">'+esc(asKey(a))+'</div>'+
+      '<div class="core-name">'+esc(a==='companion'?asName('companion'):'J.A.R.V.I.S.')+'</div>'+
+      '<div class="core-ring"><div class="core-axis"></div><div class="core-orb"></div></div>'+
+      '<div class="core-state">● READY　/　AWAITING INPUT</div>'+
+      '<div class="core-readout"><span>SYNC <b>LOCAL</b></span><span>MEMORY <b>'+memFor(a).length+'</b></span><span>WRITE <b>'+(a==='companion'?'NONE':'LOCKED')+'</b></span></div>'+
+    '</div></section>';
+}
+function mailRowsHTML(items){
+  if(!items.length) return empty('没有需要处理的邮件');
+  return '<div class="panel">'+items.map(function(e){
+    return '<div class="mail"><div class="avatar">'+esc(e.init)+'</div><div><div class="subject">'+esc(e.subject)+(e.unread?' <span class="v3-tag">未读</span>':'')+'</div>'+
+      '<div class="from">'+esc(e.from)+'　<span class="pill">'+esc(e.tag)+'</span>'+(e.hot?'<span class="pill hot">高优先</span>':'')+'</div>'+
+      '<div class="summary">'+esc(e.summary)+'</div></div></div>';
+  }).join('')+'</div>';
+}
+function todoRowsHTML(limit){
+  var arr=S.todos.slice().sort(function(x,y){
+    if(x.status!==y.status) return x.status==='done'?1:-1;
+    return (PRI_ORDER[x.priority]===undefined?1:PRI_ORDER[x.priority])-(PRI_ORDER[y.priority]===undefined?1:PRI_ORDER[y.priority]);
+  }).slice(0, limit||99);
+  if(!arr.length) return empty('还没有待办');
+  return '<div class="panel todos">'+arr.map(function(t){
+    var done=t.status==='done';
+    return '<label class="todo"><input type="checkbox" data-act="todo-toggle" data-id="'+t.id+'" '+(done?'checked':'')+' aria-label="完成 '+esc(t.title)+'">'+
+      '<span><span class="todo-title'+(done?' done':'')+'">'+esc(t.title)+'</span>'+
+      '<div class="todo-meta">'+esc(t.due||'无截止')+' · '+esc(t.priority||'普通')+(t.source?' · 来源：'+esc(t.source):'')+(t.owner==='companion'?' · 陪伴建议':'')+'</div></span></label>';
+  }).join('')+'</div>';
+}
+function postRowsHTML(items){
+  if(!items.length) return empty('暂无收藏');
+  return '<div class="posts">'+items.map(function(p){
+    return '<div class="post"><div class="author">'+esc(p.author)+'　·　'+esc(p.meta)+'</div><div class="copy">'+esc(p.copy)+'</div>'+
+      '<div class="post-meta">'+esc(p.source)+'　'+(p.tags||[]).map(function(t){ return '<span class="pill">'+esc(t)+'</span>'; }).join('')+'</div></div>';
+  }).join('')+'</div>';
+}
+function memPeekHTML(a){
+  var list=memFor(a).slice(0,2);
+  if(!list.length) return empty('还没有可召回的记忆');
+  return '<div class="panel">'+list.map(function(m){
+    return '<div class="mail" style="gap:9px"><div class="avatar">❖</div><div>'+
+      '<div class="subject">'+esc(m.cls)+'</div>'+
+      '<div class="from">'+esc(NS_LABEL[m.ns])+'　<span class="pill">置信度 '+esc(Math.round((m.confidence||0.8)*100))+'%</span></div>'+
+      '<div class="summary">'+esc(clip(m.content,58))+'<br><span class="v3-meta">来源：'+esc((m.sources||[]).join('、'))+'</span></div>'+
+      '</div></div>';
+  }).join('')+'</div>';
+}
+function proposalQueueHTML(){
+  var arr=pendingProposals();
+  if(!arr.length) return empty('没有等待确认的动作');
+  return arr.map(function(p){
+    var st=pState(p);
+    return '<div class="approval"><div class="type">'+esc(kindLabel(p.kind))+' · '+esc(STATE_LABEL[st]||st)+'</div><b>'+esc(p.title)+'</b>'+
+      '<small>载荷 '+esc(String(p.hash||'').slice(0,10))+'　·　'+esc(left(p.expiresAt))+'</small></div>';
+  }).join('');
+}
+
+/* ---------- 对话 ---------- */
+function chatPage(){
+  var a=S.assistant, msgs=S.chat[a]||[];
+  var snap=S.snapshots.filter(function(s){ return s.assistant===a; })[0];
+  return head('与'+asName(a)+'的对话','本地模拟：不会调用任何模型，也不会把内容发送给外部服务。')+
+    (snap && snap.status==='accepted' ?
+      '<div class="v3-snap"><b>上次续聊卡 · '+esc(snap.status==='accepted'?'已接受':'草案')+'</b>'+
+      '<div class="v3-meta">话题：'+esc(snap.topics.join('、'))+'　·　未完：'+esc(snap.open.join('、'))+'　·　'+esc(rel(snap.createdAt))+'</div>'+
+      '<div class="v3-actions"><button class="btn" data-act="snapshot-start" data-id="'+snap.id+'">以续聊卡开始新会话</button></div></div>' : '')+
+    '<div class="v3-chat" id="chat-log" aria-live="polite">'+msgs.map(bubbleHTML).join('')+'</div>'+
+    '<div class="v3-composer">'+
+      '<textarea class="v3-input" id="chat-input" placeholder="对'+esc(asName(a))+'说点什么…（Enter 发送，Shift+Enter 换行）" aria-label="对话输入"></textarea>'+
+      '<button class="btn primary" data-act="send-chat">发送（模拟）</button>'+
+    '</div>'+
+    '<div class="v3-rowline">'+
+      '<button class="btn" data-act="snapshot-new">生成续聊卡（待审阅）</button>'+
+      '<span class="v3-meta">当前助手可召回 '+memFor(a).length+' 条记忆；未确认的候选记忆不会长期保存</span>'+
+    '</div>'+
+    '<p class="v3-hint">演示要点：'+(a==='companion'
+      ? '陪伴助手只能读陪伴记忆与共享资料；它无法打开邮件、知识或审批，也不会对外发送任何消息。'
+      : 'Jarvis 只能读工作记忆与共享资料；它不读取陪伴记忆，除非你在记忆页对某一条执行「分享」。')+'</p>';
+}
+function bubbleHTML(m){
+  var mems=(m.mem||[]).map(findMem).filter(Boolean);
+  return '<div class="v3-msg'+(m.role==='me'?' me':'')+'">'+nl(m.text)+
+    (mems.length?'<span class="v3-src">我记得：'+esc(mems.map(function(x){ return clip(x.content,26)+'（来源：'+x.sources[0]+'）'; }).join('；'))+'</span>':'')+
+    '<span class="v3-src">'+esc(rel(m.at))+(m.role==='me'?' · 你':' · '+asName(S.assistant))+'</span></div>';
+}
+function sendChat(){
+  var box=document.getElementById('chat-input'); if(!box) return;
+  var text=box.value.trim(); if(!text) return toast('先输入内容');
+  if(S.settings.noticeEvery || !S.noticeSeen){ pendingSend=text; openNotice(); return; }
+  doSend(text);
+}
+function doSend(text){
+  var a=S.assistant;
+  S.chat[a]=S.chat[a]||[];
+  S.chat[a].push({ id:uid('c'), role:'me', text:text, at:nowIso() });
+  var hit=recall(a,text);
+  var reply = a==='companion'
+    ? '（模拟回复）我在。你刚说的「'+clip(text,18)+'」，我想先确认：这件事最让你在意的是哪一部分？'
+    : '（模拟回复）收到。我会把它整理成待办，等你确认后再进入任务队列；外部动作仍然不会自动执行。';
+  S.chat[a].push({ id:uid('c'), role:'ai', text:reply, at:nowIso(), mem:hit.map(function(m){ return m.id; }) });
+  S.noticeSeen=true; save(); render();
+  var log=document.getElementById('chat-log'); if(log) log.scrollTop=log.scrollHeight;
+}
+function genSnapshot(){
+  var a=S.assistant, msgs=S.chat[a]||[];
+  var topics=[], seen={};
+  msgs.filter(function(m){ return m.role==='me'; }).slice(-4).forEach(function(m){
+    var t=clip(m.text,14); if(!seen[t]){ seen[t]=1; topics.push(t); }
+  });
+  S.snapshots.unshift({ id:uid('sn'), assistant:a, topics:topics.length?topics:['（本次会话尚未展开话题）'], open:['待你确认的下一步'], status:'draft', createdAt:nowIso() });
+  save(); render(); toast('续聊卡草案已生成，请逐条审阅');
+}
+function acceptSnapshot(id){
+  var sn=S.snapshots.filter(function(s){ return s.id===id; })[0]; if(!sn) return;
+  sn.status='accepted'; audit('snapshot.accepted', asName(sn.assistant)+' 续聊卡已接受：'+sn.topics.join('、'));
+  save(); render(); toast('已接受：新会话只会带入选中的话题与来源');
+}
+function discardSnapshot(id){
+  S.snapshots=S.snapshots.filter(function(s){ return s.id!==id; });
+  audit('snapshot.discarded','续聊卡草案被丢弃，未写入长期记忆');
+  save(); render(); toast('已丢弃，未写入长期记忆');
+}
+function startFromSnapshot(id){
+  var sn=S.snapshots.filter(function(s){ return s.id===id; })[0]; if(!sn) return;
+  S.assistant=sn.assistant;
+  S.chat[sn.assistant]=[{
+    id:uid('c'), role:'ai', at:nowIso(),
+    text:'（新会话，已按续聊卡恢复）上次停在：'+sn.topics.join('、')+'。你想接着哪一条聊？',
+    mem: memFor(sn.assistant).slice(0,1).map(function(m){ return m.id; })
+  }];
+  S.noticeSeen=true; save(); render(); toast('新会话已按续聊卡恢复');
+}
+
+/* ---------- 邮件 ---------- */
+function mailPage(){
+  return head('邮件工作区','摘要与优先级是建议；草稿保存后进入审批队列，发送始终保持关闭。')+
+    '<div class="toolbar">'+
+      '<input class="v3-input" id="mail-q" data-field="mail-q" value="'+esc(S.ui.mailQ)+'" placeholder="搜索发件人、主题或内容…" aria-label="搜索邮件">'+
+      '<select class="v3-input" id="mail-filter" data-field="mail-filter" aria-label="邮件视图">'+opts(['全部邮件','需要回复','高优先'], S.ui.mailFilter)+'</select>'+
+    '</div>'+
+    '<div id="mail-list" class="v3-list">'+mailListHTML()+'</div>'+
+    draftBlock()+
+    '<p class="v3-hint">本页所有写操作只改本地演示数据：生成草稿会创建 ActionProposal（带载荷哈希），转待办会带上邮件来源。</p>';
+}
+function mailListHTML(){
+  var q=(S.ui.mailQ||'').toLowerCase(), f=S.ui.mailFilter||'全部邮件';
+  var arr=S.emails.filter(function(e){
+    var hitQ=!q || (e.from+' '+e.subject+' '+e.summary+' '+e.tag).toLowerCase().indexOf(q)>=0;
+    var hitF= f==='全部邮件' || (f==='需要回复' ? e.tag==='需要回复' : e.hot===true);
+    return hitQ && hitF;
+  });
+  if(!arr.length) return empty('没有匹配的邮件');
+  return arr.map(function(e){
+    return '<div class="card"><div class="v3-row"><div class="avatar">'+esc(e.init)+'</div><div class="v3-grow">'+
+      '<h3 class="subject">'+esc(e.subject)+(e.unread?' <span class="v3-tag">未读</span>':'')+'</h3>'+
+      '<div class="from">'+esc(e.from)+'　<span class="pill">'+esc(e.tag)+'</span>'+(e.hot?'<span class="pill hot">高优先</span>':'')+'</div>'+
+      '<p class="summary">'+esc(e.summary)+'</p></div></div>'+
+      '<div class="v3-actions">'+
+        '<button class="btn" data-act="mail-draft" data-id="'+e.id+'">生成回复草稿</button>'+
+        '<button class="btn" data-act="mail-todo" data-id="'+e.id+'">转为待办</button>'+
+        '<button class="btn" data-act="mail-read" data-id="'+e.id+'">'+(e.unread?'标记已读':'标为未读')+'</button>'+
+      '</div></div>';
+  }).join('');
+}
+function draftBlock(){
+  if(!S.draft) return '<div class="formbox"><div class="v3-empty">选择一封邮件并点「生成回复草稿」，草稿会显示在这里，并固定绑定那封邮件。</div></div>';
+  return '<div class="formbox">'+
+    '<div class="v3-meta">草稿绑定：'+esc(S.draft.source)+'　·　地址为示例值（未验证收件人）</div>'+
+    '<input class="v3-input" id="draft-to" value="'+esc(S.draft.to)+'" aria-label="收件人" placeholder="收件人">'+
+    '<input class="v3-input" id="draft-subject" value="'+esc(S.draft.subject)+'" aria-label="主题" placeholder="主题">'+
+    '<textarea class="v3-input" id="draft-body" aria-label="正文">'+esc(S.draft.body)+'</textarea>'+
+    '<div class="demo-warning">发送能力关闭。保存后只会变成待审批动作，不会产生任何外部请求。</div>'+
+    '<div class="v3-actions"><button class="btn primary" data-act="draft-save">保存为待审批草稿</button>'+
+    '<button class="btn" data-act="draft-cancel">取消</button></div></div>';
+}
+function mailDraft(id){
+  var e=S.emails.filter(function(x){ return x.id===id; })[0]; if(!e) return;
+  S.draft={ id:uid('d'), emailId:e.id, source:e.from+' · '+e.subject, to:mailAddr(e.from), subject:'Re: '+e.subject,
+    body:'Hi '+e.from.split(' ')[0]+'，收到。我会按你的要求在截止前补齐内容，并在提交前再和你确认一次。' };
+  e.unread=false; save(); render(); toast('草稿已绑定这封邮件，可继续编辑');
+}
+function saveDraft(){
+  var to=(document.getElementById('draft-to')||{}).value||'', sub=(document.getElementById('draft-subject')||{}).value||'', body=(document.getElementById('draft-body')||{}).value||'';
+  if(!to.trim()||!sub.trim()||!body.trim()) return toast('收件人、主题、正文都不能为空');
+  var payload={ to:to.trim(), subject:sub.trim(), body:body };
+  var p={ id:uid('ap'), kind:'email_draft', title:'回复：'+clip(sub.replace(/^Re:\s*/,''),26), payload:payload, status:'pending', createdAt:nowIso(), expiresAt:iso(0,4), hash:hash(payload) };
+  S.proposals.unshift(p);
+  audit('proposal.created','邮件草稿进入审批队列：'+p.title);
+  S.draft=null; save(); render(); toast('已保存为待审批动作（不会发送）');
+}
+
+/* ---------- 收藏 ---------- */
+function xPage(){
+  var src=S.ui.postSource||'全部来源', topic=S.ui.postTopic||'全部主题';
+  return head('个人内容收藏','标签只保存在 Jarvis 本地，不会回写 X。')+
+    '<div class="toolbar">'+
+      '<input class="v3-input" id="post-q" data-field="post-q" value="'+esc(S.ui.postQ)+'" placeholder="搜索内容、作者或标签…" aria-label="搜索收藏">'+
+      '<select class="v3-input" id="post-source" data-field="post-source" aria-label="来源">'+opts(['全部来源','书签','点赞'], src)+'</select>'+
+      '<select class="v3-input" id="post-topic" data-field="post-topic" aria-label="主题">'+opts(['全部主题','产品','AI 开发'], topic)+'</select>'+
+    '</div>'+
+    '<div id="post-list" class="v3-list">'+postListHTML()+'</div>'+
+    '<p class="v3-hint">官方 X API 未连接：这里没有同步、没有费用统计，也没有任何回写能力。</p>';
+}
+function postListHTML(){
+  var q=(S.ui.postQ||'').toLowerCase(), src=S.ui.postSource||'全部来源', topic=S.ui.postTopic||'全部主题';
+  var arr=S.posts.filter(function(p){
+    var hitQ=!q || (p.author+' '+p.copy+' '+p.topic+' '+(p.tags||[]).join(' ')).toLowerCase().indexOf(q)>=0;
+    return hitQ && (src==='全部来源'||p.source===src) && (topic==='全部主题'||p.topic===topic);
+  });
+  if(!arr.length) return empty('没有匹配的收藏');
+  return arr.map(function(p){
+    return '<div class="card"><div class="v3-meta">'+esc(p.author)+'　·　'+esc(p.meta)+'　·　'+esc(p.source)+'</div>'+
+      '<p class="summary" style="font-size:13px;margin:7px 0 0">'+esc(p.copy)+'</p>'+
+      '<div class="v3-rowline">'+((p.tags||[]).map(function(t){ return '<span class="v3-tag">'+esc(t)+'</span>'; }).join('')||'<span class="v3-meta">还没有本地标签</span>')+'</div>'+
+      '<div class="v3-actions"><input class="v3-input" id="tag-'+p.id+'" placeholder="添加 Jarvis 标签" aria-label="添加标签" style="max-width:220px">'+
+      '<button class="btn" data-act="post-tag" data-id="'+p.id+'">添加标签</button></div></div>';
+  }).join('');
+}
+function addPostTag(id){
+  var el=document.getElementById('tag-'+id), v=el?el.value.trim():'';
+  if(!v) return toast('先输入标签内容');
+  var p=S.posts.filter(function(x){ return x.id===id; })[0]; if(!p) return;
+  p.tags=p.tags||[]; if(p.tags.indexOf(v)<0) p.tags.push(v);
+  save(); render(); toast('标签已保存在本地（未回写 X）');
+}
+
+/* ---------- 知识库 ---------- */
+function kbPage(){
+  return head('个人知识库','先从手动笔记与本地文件开始；当前内容均为模拟数据。')+
+    '<div class="toolbar"><input class="v3-input" id="kb-q" data-field="kb-q" value="'+esc(S.ui.kbQ)+'" placeholder="搜索笔记内容或主题…" aria-label="搜索知识"></div>'+
+    '<div class="formbox"><input class="v3-input" id="note-title" placeholder="笔记标题" aria-label="笔记标题">'+
+      '<textarea class="v3-input" id="note-body" placeholder="写下你的想法…" aria-label="笔记内容"></textarea>'+
+      '<div class="v3-actions"><button class="btn primary" data-act="kb-add">保存到知识库</button></div></div>'+
+    '<div id="note-list" class="v3-list">'+noteListHTML()+'</div>';
+}
+function noteListHTML(){
+  var q=(S.ui.kbQ||'').toLowerCase();
+  var arr=S.notes.filter(function(n){ return !q || (n.title+' '+n.meta+' '+n.body).toLowerCase().indexOf(q)>=0; });
+  if(!arr.length) return empty('没有匹配的笔记');
+  return arr.map(function(n){
+    return '<div class="note"><h3>'+esc(n.title)+'</h3><small>'+esc(n.meta)+'</small><p>'+esc(n.body)+'</p>'+
+      '<div class="v3-actions"><button class="btn" data-act="kb-todo" data-id="'+n.id+'">提取待办</button>'+
+      '<button class="btn" data-act="kb-del" data-id="'+n.id+'">删除</button></div></div>';
+  }).join('');
+}
+
+/* ---------- 任务 ---------- */
+function todoPage(){
+  return head('任务管理','每条任务都能回到它的来源；完成与修改只发生在 Jarvis 内部。')+
+    '<div class="formbox"><input class="v3-input" id="todo-title" placeholder="接下来要做什么？" aria-label="待办标题">'+
+      '<div class="v3-grid2"><select class="v3-input" id="todo-pri" aria-label="优先级">'+opts(['高','普通','低'],'普通')+'</select>'+
+      '<input class="v3-input" id="todo-due" placeholder="截止（如：明天 / 11 月 12 日）" aria-label="截止时间"></div>'+
+      '<div class="v3-actions"><button class="btn primary" data-act="todo-add">'+(S.assistant==='companion'?'建议一条待办':'添加待办')+'</button>'+
+      (S.assistant==='companion'?'<span class="v3-meta">陪伴助手只能建议；正式版本需要你确认才会写入任务</span>':'')+'</div></div>'+
+    '<div id="todo-list" class="v3-list">'+todoListHTML()+'</div>'+
+    '<p class="v3-hint">已完成 '+S.todos.filter(function(t){return t.status==='done';}).length+' 项 / 共 '+S.todos.length+' 项。勾选状态与新增顺序无关（旧版以下标记录，已修复）。</p>';
+}
+function todoListHTML(){
+  var arr=S.todos.slice().sort(function(x,y){
+    if(x.status!==y.status) return x.status==='done'?1:-1;
+    return (PRI_ORDER[x.priority]===undefined?1:PRI_ORDER[x.priority])-(PRI_ORDER[y.priority]===undefined?1:PRI_ORDER[y.priority]);
+  });
+  if(!arr.length) return empty('还没有待办');
+  return '<div class="panel todos">'+arr.map(function(t){
+    var done=t.status==='done';
+    return '<div class="todo"><input type="checkbox" data-act="todo-toggle" data-id="'+t.id+'" '+(done?'checked':'')+' aria-label="完成 '+esc(t.title)+'">'+
+      '<span class="v3-grow"><span class="todo-title'+(done?' done':'')+'">'+esc(t.title)+'</span>'+
+      '<div class="todo-meta">'+esc(t.due||'无截止')+' · '+esc(t.priority||'普通')+(t.source?' · 来源：'+esc(t.source):'')+(t.owner==='companion'?' · 陪伴建议':'')+'</div></span>'+
+      '<button class="btn" data-act="todo-del" data-id="'+t.id+'" aria-label="删除待办">删除</button></div>';
+  }).join('')+'</div>';
+}
+function addTodo(title, priority, due, source){
+  S.todos.unshift({ id:uid('t'), title:title, due:due||'未设置', priority:priority||'普通', status:'open', source:source||'', owner:S.assistant });
+  audit('todo.created','创建待办：'+title);
+}
+function newTodoFromForm(){
+  var t=(document.getElementById('todo-title')||{}).value||'';
+  var p=(document.getElementById('todo-pri')||{}).value||'普通';
+  var d=(document.getElementById('todo-due')||{}).value||'未设置';
+  if(!t.trim()) return toast('先写下待办内容');
+  addTodo(t.trim(), p, d.trim(), '');
+  save(); render(); toast('待办已加入本地列表');
+}
+
+/* ---------- 审批 ---------- */
+function kindLabel(kind){
+  return kind==='email_draft' ? '邮件草稿' : kind==='local_tag' ? '本地整理' : kind;
+}
+function approvalsPage(){
+  var open=pendingProposals(), done=S.proposals.filter(function(p){ var st=pState(p); return ['rejected','executed','expired','failed'].indexOf(st)>=0; });
+  return head('审批与记录','每个动作都由你拍板：先看完整载荷，再决定批准或拒绝。')+
+    sec('等待确认','共 '+open.length+' 项待处理')+
+    (open.length ? open.map(function(p){
+      var st=pState(p);
+      return '<div class="card"><div class="v3-meta">'+esc(kindLabel(p.kind))+'　·　<span class="'+(st==='changed'?'v3-lock':'')+'">'+esc(STATE_LABEL[st]||st)+'</span>　·　'+esc(left(p.expiresAt))+'</div>'+
+        '<h3 class="subject">'+esc(p.title)+'</h3>'+
+        '<div class="v3-meta">载荷哈希 '+esc(p.hash||'-')+'　·　创建于 '+esc(rel(p.createdAt))+'</div>'+
+        '<div class="v3-actions"><button class="btn primary" data-act="proposal-open" data-id="'+p.id+'">查看完整载荷</button>'+
+        '<button class="btn" data-act="proposal-reject" data-id="'+p.id+'">拒绝</button></div></div>';
+    }).join('') : empty('没有等待确认的动作'))+
+    sec('已处理','保留结果供回溯')+
+    (done.length ? done.map(function(p){
+      var st=pState(p);
+      return '<div class="card"><div class="v3-meta">'+esc(kindLabel(p.kind))+'　·　'+esc(STATE_LABEL[st]||st)+'　·　'+esc(rel(p.approvedAt||p.createdAt))+'</div><h3 class="subject">'+esc(p.title)+'</h3></div>';
+    }).join('') : empty('暂无已处理动作'))+
+    sec('审计记录','只追加、不记录正文与凭据')+
+    (S.audit.length ? S.audit.slice(0,12).map(function(a){
+      return '<div class="v3-audit"><b>'+esc(a.event)+'</b><span>'+esc(a.detail)+'</span><span>'+esc(rel(a.at))+'</span></div>';
+    }).join('') : empty('暂无审计记录'));
+}
+function openProposal(id){
+  var p=S.proposals.filter(function(x){ return x.id===id; })[0]; if(!p) return;
+  var st=pState(p), body='';
+  if(p.kind==='email_draft'){
+    body='<div class="v3-meta">收件人 / 主题 / 正文都会进入载荷哈希；任何改动都会让已批准的记录失效。</div>'+
+      '<div class="v3-kv"><dt>收件人</dt><dd>'+esc(p.payload.to)+'</dd><dt>主题</dt><dd>'+esc(p.payload.subject)+'</dd></div>'+
+      '<textarea class="v3-input" id="pl-body" data-edit="payload-body" data-id="'+p.id+'" aria-label="正文">'+esc(p.payload.body)+'</textarea>';
+  } else {
+    body='<div class="v3-kv"><dt>标签</dt><dd>'+esc(p.payload.label)+'</dd><dt>影响范围</dt><dd>'+esc(p.payload.count)+' 条</dd><dt>作用域</dt><dd>'+esc(p.payload.scope||'本地')+'</dd></div>';
+  }
+  showSheet('<h2>'+esc(p.title)+'</h2>'+
+    '<p class="v3-sub">'+esc(kindLabel(p.kind))+'　·　'+esc(STATE_LABEL[st]||st)+'　·　'+esc(left(p.expiresAt))+'</p>'+
+    body+
+    '<div class="v3-kv"><dt>载荷哈希</dt><dd><span id="hashv-'+p.id+'">'+esc(p.hash||'-')+'</span></dd>'+
+      '<dt>状态</dt><dd><span id="stt-'+p.id+'">'+esc(STATE_LABEL[st]||st)+'</span></dd>'+
+      '<dt>创建时间</dt><dd>'+esc(rel(p.createdAt))+'</dd></div>'+
+    '<label class="v3-meta" style="display:block;margin-top:8px"><input type="checkbox" id="chk-'+p.id+'"> 我已核对完整载荷，理解批准后的外部影响</label>'+
+    '<div class="v3-rowline">'+
+      '<button class="btn primary" data-act="proposal-approve" data-id="'+p.id+'" '+(st==='expired'?'disabled':'')+'>批准（模拟）</button>'+
+      '<button class="btn" data-act="proposal-execute" data-id="'+p.id+'" '+(st==='approved'?'':'disabled')+'>模拟执行</button>'+
+      '<button class="btn" data-act="proposal-reject" data-id="'+p.id+'">拒绝</button>'+
+      '<button class="btn" data-act="close-modal">关闭</button>'+
+    '</div>'+
+    '<div class="demo-warning">演示环境：批准与执行只写本地审计记录，不会发送邮件、不会修改 X。</div>');
+}
+function approveProposal(id){
+  var p=S.proposals.filter(function(x){ return x.id===id; })[0]; if(!p) return;
+  if(pState(p)==='expired') return toast('该动作已过期，需重新生成');
+  var chk=document.getElementById('chk-'+id);
+  if(!chk || !chk.checked) return toast('请先核对完整载荷并勾选确认');
+  p.status='approved'; p.approvedAt=nowIso(); p.hash=hash(p.payload);
+  audit('proposal.approved','已批准（模拟）：'+p.title);
+  save(); closeModal(); render(); toast('已批准（模拟）：真实版本会在此刻重新校验授权与载荷');
+}
+function rejectProposal(id){
+  var p=S.proposals.filter(function(x){ return x.id===id; })[0]; if(!p) return;
+  p.status='rejected'; p.rejectedAt=nowIso();
+  audit('proposal.rejected','已拒绝：'+p.title);
+  save(); closeModal(); render(); toast('已拒绝，未执行任何操作');
+}
+function executeProposal(id){
+  var p=S.proposals.filter(function(x){ return x.id===id; })[0]; if(!p) return;
+  if(p.status!=='approved') return toast('只有已批准的动作才能执行');
+  p.status='executed'; p.executedAt=nowIso();
+  if(p.kind==='local_tag'){
+    S.posts.sort(function(a,b){ return (b.tags||[]).length-(a.tags||[]).length; }).slice(0, p.payload.count).forEach(function(post){
+      post.tags=post.tags||[]; if(post.tags.indexOf(p.payload.label)<0) post.tags.push(p.payload.label);
+    });
+  }
+  audit('proposal.executed','已执行（模拟）：'+p.title);
+  save(); closeModal(); render();
+  toast(p.kind==='email_draft' ? '已标记执行（模拟），未发送任何邮件' : '本地标签已更新，X 上的状态没有变化');
+}
+
+/* ---------- 记忆 ---------- */
+function memoryPage(){
+  var a=S.assistant;
+  var list=memFor(a);
+  return head('记忆与连续性','每条记忆都能看到类别、来源、时间与可见助手；默认拒绝跨助手读取。')+
+    '<div class="toolbar"><select class="v3-input" id="mem-ns" data-field="mem-ns" aria-label="记忆分区">'+
+      opts(['全部','个人资料（共享）','陪伴记忆','工作记忆','会话原文'], S.ui.memNs)+'</select>'+
+      '<span class="v3-meta">当前助手：'+esc(asName(a))+'　·　可召回 '+list.length+' 条</span></div>'+
+    '<div id="mem-list" class="v3-list">'+memListHTML()+'</div>'+
+    sec('新增记忆','写了才会被召回；候选内容在未经确认前不会长期保存')+
+    '<div class="formbox"><div class="v3-grid2">'+
+      '<select class="v3-input" id="mem-new-ns" aria-label="分区">'+opts(['个人资料（共享）','陪伴记忆','工作记忆','会话原文'],'陪伴记忆')+'</select>'+
+      '<input class="v3-input" id="mem-new-src" placeholder="来源，例如：陪伴会话 · 11 月 6 日" aria-label="来源"></div>'+
+      '<textarea class="v3-input" id="mem-new-body" placeholder="要记住的一条内容…" aria-label="记忆内容"></textarea>'+
+      '<div class="v3-actions"><button class="btn primary" data-act="mem-new">保存记忆</button></div></div>'+
+    sec('续聊卡','新会话只按卡上确认过的内容恢复')+
+    snapListHTML(a);
+}
+function memListHTML(){
+  var a=S.assistant, ns=S.ui.memNs||'全部';
+  var arr=S.memories.filter(function(m){
+    if(ns!=='全部' && NS_LABEL[m.ns]!==ns) return false;
+    return m.visible.indexOf(a)>=0;
+  });
+  if(!arr.length) return empty('这个分区里没有当前助手可读的记忆');
+  return arr.map(function(m){
+    var other=a==='companion'?'jarvis':'companion';
+    return '<div class="v3-mem'+(m.forgotten?' forgotten':'')+'">'+
+      '<div class="v3-meta">'+esc(NS_LABEL[m.ns])+'　·　'+esc(m.cls)+'　·　置信度 '+esc(Math.round((m.confidence||0.8)*100))+'%'+
+        '　·　'+esc(rel(m.approvedAt))+'　·　可见：'+esc(m.visible.map(function(v){ return v==='companion'?'陪伴':v==='jarvis'?'Jarvis':v; }).join(' / '))+
+        (m.forgotten?'　·　<span class="v3-lock">已禁记</span>':'')+'</div>'+
+      '<p>'+esc(m.content)+'</p>'+
+      '<div class="v3-rowline"><span class="v3-tag">来源：'+esc((m.sources||[]).join('、')||'未标注')+'</span></div>'+
+      '<div class="v3-actions">'+
+        '<button class="btn" data-act="mem-edit" data-id="'+m.id+'">编辑</button>'+
+        '<button class="btn" data-act="mem-forget" data-id="'+m.id+'">'+(m.forgotten?'恢复召回':'禁记')+'</button>'+
+        '<button class="btn" data-act="mem-share" data-id="'+m.id+'">分享给 '+(other==='companion'?'陪伴助手':'Jarvis')+'</button>'+
+        '<button class="btn" data-act="mem-delete" data-id="'+m.id+'">删除</button>'+
+      '</div></div>';
+  }).join('');
+}
+function snapListHTML(a){
+  var arr=S.snapshots.filter(function(s){ return s.assistant===a; });
+  if(!arr.length) return empty('还没有续聊卡：在「对话」页生成一份草案');
+  return arr.map(function(s){
+    return '<div class="v3-snap"><b>'+esc(s.status==='accepted'?'已接受':'草案')+'　·　'+esc(rel(s.createdAt))+'</b>'+
+      '<div class="v3-meta">话题：'+esc(s.topics.join('、'))+'<br>未完：'+esc(s.open.join('、'))+'</div>'+
+      '<div class="v3-actions">'+
+        (s.status==='draft' ? '<button class="btn primary" data-act="snapshot-accept" data-id="'+s.id+'">接受</button><button class="btn" data-act="snapshot-discard" data-id="'+s.id+'">丢弃</button>' : '<span class="v3-tag">已写入长期记忆（演示）</span>')+
+      '</div></div>';
+  }).join('');
+}
+function addMemory(nsLabel, content, source){
+  var ns = nsLabel==='个人资料（共享）'?'shared' : nsLabel==='陪伴记忆'?'companion' : nsLabel==='工作记忆'?'work' : 'raw';
+  var visible = ns==='shared' ? ['companion','jarvis'] : ns==='work' ? ['jarvis'] : ['companion'];
+  S.memories.unshift({ id:uid('mem'), ns:ns, cls:'用户新增', content:content, sources:[source||'手动新增'], confidence:1, approvedAt:nowIso(), visible:visible });
+  audit('memory.created','新增记忆：'+clip(content,18));
+}
+function editMemory(id){
+  var m=findMem(id); if(!m) return;
+  showSheet('<h2>编辑这条记忆</h2><p class="v3-sub">修改会保留来源，不会反向改写原始会话。</p>'+
+    '<textarea class="v3-input" id="mem-edit-body" aria-label="记忆内容">'+esc(m.content)+'</textarea>'+
+    '<div class="v3-rowline"><button class="btn primary" data-act="mem-save" data-id="'+m.id+'">保存</button>'+
+    '<button class="btn" data-act="close-modal">取消</button></div>');
+}
+function shareMemory(id){
+  var m=findMem(id); if(!m) return;
+  var other=S.assistant==='companion'?'jarvis':'companion';
+  showSheet('<h2>分享这条记忆给 '+(other==='companion'?'陪伴助手':'Jarvis')+'</h2>'+
+    '<p class="v3-sub">分享会创建一份受限副本，原记忆的可见范围不变。</p>'+
+    '<div class="v3-kv"><dt>内容摘要</dt><dd>'+esc(m.content)+'</dd><dt>来源</dt><dd>'+esc((m.sources||[]).join('、'))+'</dd><dt>接收方</dt><dd>'+esc(asName(other))+'</dd></div>'+
+    '<div class="v3-rowline"><button class="btn primary" data-act="mem-share-ok" data-id="'+m.id+'">确认分享</button>'+
+    '<button class="btn" data-act="close-modal">取消</button></div>'+
+    '<div class="demo-warning">分享后对方助手才可召回该条；你可以随时删除这份副本。</div>');
+}
+
+/* ---------- 收集 ---------- */
+function capturePage(){
+  var srcs=['微信','小红书','X','浏览器','文件','剪贴板','手动'];
+  return head('统一收集箱','先快速收集、稍后整理；每条都保留来源与捕获方式。')+
+    '<div class="formbox"><div class="v3-grid2">'+
+      '<select class="v3-input" id="cap-source" aria-label="来源">'+opts(srcs,'微信')+'</select>'+
+      '<input class="v3-input" id="cap-title" placeholder="标题（可留空）" aria-label="标题"></div>'+
+      '<input class="v3-input" id="cap-url" placeholder="链接（可留空）" aria-label="链接">'+
+      '<textarea class="v3-input" id="cap-text" placeholder="选中文本或要保留的内容（可留空）" aria-label="内容"></textarea>'+
+      '<div class="v3-actions"><button class="btn primary" data-act="cap-add">收进收集箱</button>'+
+      '<button class="btn" data-act="cap-clip">从剪贴板读取（尝试）</button></div></div>'+
+    '<div id="cap-list" class="v3-list">'+capListHTML()+'</div>'+
+    '<p class="v3-hint">不能读取任何应用的私有数据库或登录态：微信 / 小红书只支持你主动分享或复制的内容；X 的 API 未连接。</p>';
+}
+function capListHTML(){
+  var q=(S.ui.capQ||'').toLowerCase();
+  var arr=S.captures.filter(function(c){ return !q || (c.sourceApp+' '+c.title+' '+c.selectedText+' '+c.url).toLowerCase().indexOf(q)>=0; });
+  if(!arr.length) return empty('收集箱是空的');
+  return arr.map(function(c){
+    return '<div class="card"><div class="v3-meta">'+esc(c.sourceApp)+'　·　'+esc(METHOD_LABEL[c.method]||c.method)+'　·　'+esc(c.scope)+'　·　'+esc(rel(c.capturedAt))+'</div>'+
+      '<h3 class="subject">'+esc(c.title||'(无标题)')+'</h3>'+
+      (c.selectedText?'<p class="summary">'+esc(clip(c.selectedText,90))+'</p>':'')+
+      (c.url?'<div class="v3-meta">'+esc(c.url)+'</div>':'')+
+      '<div class="v3-actions"><button class="btn" data-act="cap-todo" data-id="'+c.id+'">转为待办</button>'+
+      '<button class="btn" data-act="cap-note" data-id="'+c.id+'">归档到知识库</button>'+
+      '<button class="btn" data-act="cap-del" data-id="'+c.id+'">删除</button></div></div>';
+  }).join('');
+}
+function addCapture(){
+  var sourceApp=(document.getElementById('cap-source')||{}).value||'手动';
+  var title=((document.getElementById('cap-title')||{}).value||'').trim();
+  var url=((document.getElementById('cap-url')||{}).value||'').trim();
+  var text=((document.getElementById('cap-text')||{}).value||'').trim();
+  if(!title && !url && !text) return toast('至少填写标题、链接或内容中的一项');
+  var method = sourceApp==='浏览器'?'extension' : sourceApp==='剪贴板'?'clipboard_hotkey' : sourceApp==='文件'?'file_import' : sourceApp==='手动'?'manual' : 'share';
+  var scope = text ? (url?'链接 + 标题 + 选中片段':'标题 + 选中片段') : (url?(title?'链接 + 标题':'仅链接'):'仅文字');
+  S.captures.unshift({ id:uid('c'), sourceApp:sourceApp, method:method, url:url, title:title, selectedText:text, scope:scope, capturedAt:nowIso(), state:'待整理' });
+  audit('capture.created', sourceApp+' / '+METHOD_LABEL[method]+' / '+scope);
+  save(); render(); toast('已收进收集箱，来源与捕获范围已记录');
+}
+
+/* ---------- 设置 ---------- */
+function settingsPage(){
+  return head('设置与隐私','当前没有任何外部连接；所有演示数据只存在这台设备的浏览器里。')+
+    sec('助手身份','两个助手共用账户与 HUD，但人格、会话、记忆分区与工具权限分开')+
+    '<div class="formbox"><div class="v3-grid2">'+
+      '<div><div class="v3-meta" style="margin-bottom:4px">陪伴助手名称</div><input class="v3-input" id="set-companion" value="'+esc(S.settings.companionName)+'" aria-label="陪伴助手名称"></div>'+
+      '<div><div class="v3-meta" style="margin-bottom:4px">Jarvis 名称</div><input class="v3-input" id="set-jarvis" value="'+esc(S.settings.jarvisName)+'" aria-label="Jarvis 名称"></div>'+
+    '</div><div class="v3-actions"><button class="btn primary" data-act="settings-names">保存名称</button></div></div>'+
+    sec('隐私与模型','两项默认都偏向保护：不常驻、不静默发送')+
+    '<div class="v3-setrow"><span>每次模型调用前提示<small>显示将发送的数据类别、接收方与目的；取消则不产生请求</small></span>'+
+      '<button class="v3-onoff'+(S.settings.noticeEvery?'':' off')+'" data-act="toggle" data-id="noticeEvery">'+(S.settings.noticeEvery?'ON':'OFF')+'</button></div>'+
+    '<div class="v3-setrow"><span>减弱动效<small>关闭粒子与过渡，只保留静态状态环</small></span>'+
+      '<button class="v3-onoff'+(S.settings.reduced?'':' off')+'" data-act="toggle" data-id="reduced">'+(S.settings.reduced?'ON':'OFF')+'</button></div>'+
+    '<div class="v3-setrow"><span>模型提供方<small>未配置：本原型没有任何模型调用</small></span><span class="v3-tag gold">未配置</span></div>'+
+    '<div class="v3-setrow"><span>外部连接<small>Gmail / X / 微信 / 小红书 均未连接</small></span><span class="v3-tag">0 个连接</span></div>'+
+    sec('本地数据','可导出、可清空；清空后回到初始演示数据')+
+    '<div class="v3-rowline"><button class="btn" data-act="export">导出 JSON</button>'+
+      '<button class="btn" data-act="reset">清空本地演示数据</button>'+
+      '<button class="btn" data-act="selftest">运行自检</button>'+
+      '<span class="v3-meta">存储键 '+esc(STORE_KEY)+'　·　版本 3</span></div>'+
+    '<p class="v3-hint">正式版本这里还会有：Jarvis 账户、可信设备列表、密钥恢复与设备撤销、连接器授权范围、审计查询与导出。</p>';
+}
+
+/* ---------- 顶栏动作 / 汇总视图 ---------- */
+var VIEWS = { '总览':home, '对话':chatPage, '邮件':mailPage, '收藏':xPage, '知识':kbPage, '任务':todoPage, '审批':approvalsPage, '记忆':memoryPage, '收集':capturePage, '设置':settingsPage };
+
+/* ---------- 弹窗 ---------- */
+var pendingSend=null;
+function showSheet(html){
+  var el=document.getElementById('v3-modal');
+  if(!el){ el=document.createElement('div'); el.id='v3-modal'; el.className='v3-modal hidden'; el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true'); document.body.appendChild(el); }
+  el.innerHTML='<div class="v3-sheet">'+html+'</div>';
+  el.classList.remove('hidden');
+}
+function closeModal(){
+  var el=document.getElementById('v3-modal'); if(el){ el.classList.add('hidden'); el.innerHTML=''; }
+}
+function openNotice(){
+  showSheet('<h2>发送前提示（云模型调用）</h2>'+
+    '<p class="v3-sub">这一步在正式版本里每次都会出现，除非你在设置里关闭。</p>'+
+    '<div class="v3-kv"><dt>将发送</dt><dd>当前会话最近若干条消息；命中时附 1–2 条记忆摘要与来源</dd>'+
+      '<dt>发送给</dt><dd>你配置的模型提供方（当前未配置）</dd>'+
+      '<dt>不会发送</dt><dd>邮件正文、知识库全文、审计记录、凭据</dd>'+
+      '<dt>可撤回性</dt><dd>发送后本地无法撤回，这一点必须让你先知道</dd></div>'+
+    '<div class="v3-rowline"><button class="btn primary" data-act="notice-ok">继续（模拟发送）</button>'+
+    '<button class="btn" data-act="notice-cancel">取消</button></div>');
+}
+
+/* ---------- 事件 ---------- */
+document.addEventListener('click', function(e){
+  var t=e.target.closest ? e.target.closest('[data-act]') : null;
+  if(!t) return;
+  var act=t.dataset.act, id=t.dataset.id;
+  if(t.tagName==='INPUT') return;
+  switch(act){
+    case 'go': S.page=id||'总览'; save(); render(); break;
+    case 'assistant': S.assistant=id; sessionGrants={}; save(); render(); toast('已切换到 '+asName(id)+'（临时授权已清空）'); break;
+    case 'switch-jarvis': S.assistant='jarvis'; sessionGrants={}; save(); render(); break;
+    case 'grant': sessionGrants[id]=true; render(); toast('已授权本次会话查看「'+id+'」'); break;
+    case 'notice-ok': closeModal(); if(pendingSend){ var txt=pendingSend; pendingSend=null; doSend(txt);} break;
+    case 'notice-cancel': pendingSend=null; closeModal(); toast('已取消：没有产生任何请求'); break;
+    case 'send-chat': sendChat(); break;
+    case 'snapshot-new': genSnapshot(); break;
+    case 'snapshot-accept': acceptSnapshot(id); break;
+    case 'snapshot-discard': discardSnapshot(id); break;
+    case 'snapshot-start': startFromSnapshot(id); break;
+    case 'mail-draft': mailDraft(id); break;
+    case 'mail-todo': (function(){ var e=S.emails.filter(function(x){return x.id===id;})[0]; if(e){ addTodo('处理邮件：'+e.subject,'高','今天','邮件 · '+e.from); save(); render(); toast('已生成待办并关联来源'); } })(); break;
+    case 'mail-read': (function(){ var e=S.emails.filter(function(x){return x.id===id;})[0]; if(e){ e.unread=!e.unread; save(); paintMail(); } })(); break;
+    case 'draft-save': saveDraft(); break;
+    case 'draft-cancel': S.draft=null; save(); render(); toast('已取消草稿'); break;
+    case 'post-tag': addPostTag(id); break;
+    case 'kb-add': (function(){
+        var title=(document.getElementById('note-title')||{}).value||'', body=(document.getElementById('note-body')||{}).value||'';
+        if(!title.trim()) return toast('先填写笔记标题');
+        S.notes.unshift({ id:uid('n'), title:title.trim(), meta:'刚刚 · 本地演示', body:body.trim() });
+        save(); render(); toast('笔记已保存到本地知识库');
+      })(); break;
+    case 'kb-todo': (function(){ var n=S.notes.filter(function(x){return x.id===id;})[0]; if(n){ addTodo(clip(n.title,40),'普通','明天','知识库 · '+n.title); save(); render(); toast('已从笔记生成待办'); } })(); break;
+    case 'kb-del': S.notes=S.notes.filter(function(x){ return x.id!==id; }); save(); render(); toast('笔记已删除'); break;
+    case 'todo-add': newTodoFromForm(); break;
+    case 'todo-del': S.todos=S.todos.filter(function(x){ return x.id!==id; }); save(); render(); toast('待办已删除'); break;
+    case 'proposal-open': openProposal(id); break;
+    case 'proposal-approve': approveProposal(id); break;
+    case 'proposal-reject': rejectProposal(id); break;
+    case 'proposal-execute': executeProposal(id); break;
+    case 'mem-new': (function(){
+        var ns=(document.getElementById('mem-new-ns')||{}).value||'陪伴记忆';
+        var body=(document.getElementById('mem-new-body')||{}).value||'';
+        var src=(document.getElementById('mem-new-src')||{}).value||'';
+        if(!body.trim()) return toast('先写下要记住的内容');
+        addMemory(ns, body.trim(), src.trim());
+        save(); render(); toast('记忆已保存，仅对许可的助手可见');
+      })(); break;
+    case 'mem-edit': editMemory(id); break;
+    case 'mem-save': (function(){
+        var m=findMem(id); var v=(document.getElementById('mem-edit-body')||{}).value||'';
+        if(!m || !v.trim()) return toast('内容不能为空');
+        m.content=v.trim(); m.approvedAt=nowIso();
+        audit('memory.edited','改写记忆：'+clip(v,18));
+        save(); closeModal(); render(); toast('已更新，来源保留');
+      })(); break;
+    case 'mem-forget': (function(){
+        var m=findMem(id); if(!m) return;
+        m.forgotten=!m.forgotten;
+        audit(m.forgotten?'memory.forgotten':'memory.restored', clip(m.content,18));
+        save(); render(); toast(m.forgotten?'已禁记：检索与续聊卡不再返回':'已恢复召回');
+      })(); break;
+    case 'mem-delete': (function(){
+        var m=findMem(id); if(!m) return;
+        S.memories=S.memories.filter(function(x){ return x.id!==id; });
+        audit('memory.deleted','删除记忆：'+clip(m.content,18));
+        save(); render(); toast('已删除，检索与续聊卡不再引用');
+      })(); break;
+    case 'mem-share': shareMemory(id); break;
+    case 'mem-share-ok': (function(){
+        var m=findMem(id); if(!m) return;
+        var other=S.assistant==='companion'?'jarvis':'companion';
+        S.memories.push({ id:uid('mem'), ns:m.ns, cls:(m.cls||'')+' · 分享副本', content:m.content, sources:(m.sources||[]).concat(['分享自 '+asName(S.assistant)]), confidence:m.confidence, approvedAt:nowIso(), visible:[other], sharedFrom:m.id });
+        audit('memory.shared','分享「'+clip(m.content,16)+'」给 '+asName(other));
+        save(); closeModal(); render(); toast('已创建受限副本，仅 '+asName(other)+' 可读');
+      })(); break;
+    case 'cap-add': addCapture(); break;
+    case 'cap-clip': (function(){
+        if(!navigator.clipboard || !navigator.clipboard.readText) return toast('当前浏览器不允许读取剪贴板，请手动粘贴');
+        navigator.clipboard.readText().then(function(txt){
+          var el=document.getElementById('cap-text'); if(el){ el.value=txt; }
+          toast('已读入剪贴板内容，确认后再收集');
+        }).catch(function(){ toast('读取剪贴板失败（file:// 常被限制），请手动粘贴'); });
+      })(); break;
+    case 'cap-todo': (function(){ var c=findCap(id); if(c){ addTodo(clip(c.title||c.selectedText||'收集项',40),'普通','明天',c.sourceApp+' · 收集'); save(); render(); toast('已转成待办'); } })(); break;
+    case 'cap-note': (function(){ var c=findCap(id); if(!c) return; S.notes.unshift({ id:uid('n'), title:c.title||clip(c.selectedText,20), meta:c.sourceApp+' · 收集于'+rel(c.capturedAt), body:c.selectedText||c.url||'' }); S.captures=S.captures.filter(function(x){ return x.id!==id; }); save(); render(); toast('已归档到知识库'); })(); break;
+    case 'cap-del': S.captures=S.captures.filter(function(x){ return x.id!==id; }); save(); render(); toast('收集项已删除'); break;
+    case 'toggle': S.settings[id]=!S.settings[id]; save(); render(); toast((id==='noticeEvery'?'发送前提示':'减弱动效')+'：'+(S.settings[id]?'开启':'关闭')); break;
+    case 'settings-names': (function(){
+        var c=(document.getElementById('set-companion')||{}).value||'', j=(document.getElementById('set-jarvis')||{}).value||'';
+        if(!c.trim()||!j.trim()) return toast('名称不能为空');
+        S.settings.companionName=c.trim(); S.settings.jarvisName=j.trim(); save(); render(); toast('助手名称已更新');
+      })(); break;
+    case 'export': exportJSON(); break;
+    case 'selftest': runSelfTest(); break;
+    case 'reset': showSheet('<h2>清空本地演示数据？</h2><p class="v3-sub">会删除本浏览器里的待办、笔记、记忆、收集项与审计记录，并回到初始演示数据。真实账号不受影响（本来也没有连接）。</p><div class="v3-rowline"><button class="btn primary" data-act="reset-ok">确认清空</button><button class="btn" data-act="close-modal">取消</button></div>'); break;
+    case 'reset-ok': S=normalize(seedData()); save(); closeModal(); render(); toast('已重置为初始演示数据'); break;
+    case 'close-modal': closeModal(); break;
+    default: break;
+  }
+});
+document.addEventListener('change', function(e){
+  var t=e.target; if(!t || !t.dataset) return;
+  var act=t.dataset.act;
+  if(act==='todo-toggle'){
+    var todo=S.todos.filter(function(x){ return x.id===t.dataset.id; })[0];
+    if(todo){ todo.status=t.checked?'done':'open'; audit('todo.status', (todo.status==='done'?'完成：':'重开：')+todo.title); save(); render(); }
+    return;
+  }
+  var edit=t.dataset.edit;
+  if(edit==='payload-body'){
+    var p=S.proposals.filter(function(x){ return x.id===t.dataset.id; })[0];
+    if(p){
+      p.payload.body=t.value;
+      p.hash=hash(p.payload);
+      var invalidated=false;
+      if(p.status==='approved'||p.status==='executed'){ p.status='pending'; p.approvedAt=null; invalidated=true; audit('proposal.invalidated','载荷变更，旧批准失效：'+p.title); }
+      save();
+      /* 只更新弹窗里的哈希/状态并清掉确认勾选，避免整块重绘吞掉这次点击 */
+      var hv=document.getElementById('hashv-'+p.id); if(hv) hv.textContent=p.hash;
+      var stv=document.getElementById('stt-'+p.id); if(stv) stv.textContent=STATE_LABEL.pending;
+      var chk=document.getElementById('chk-'+p.id); if(chk) chk.checked=false;
+      toast(invalidated?'载荷变更：旧批准已失效，请重新核对':'载荷已更新，请重新核对后批准');
+    }
+    return;
+  }
+  var f=t.dataset.field;
+  if(f==='mail-filter'){ S.ui.mailFilter=t.value; save(); paintMail(); }
+  else if(f==='post-source'){ S.ui.postSource=t.value; save(); paintPosts(); }
+  else if(f==='post-topic'){ S.ui.postTopic=t.value; save(); paintPosts(); }
+  else if(f==='mem-ns'){ S.ui.memNs=t.value; save(); paintMemories(); }
+});
+document.addEventListener('input', function(e){
+  var t=e.target; if(!t || !t.dataset || !t.dataset.field) return;
+  var f=t.dataset.field;
+  if(f==='mail-q'){ S.ui.mailQ=t.value; save(); paintMail(); }
+  else if(f==='post-q'){ S.ui.postQ=t.value; save(); paintPosts(); }
+  else if(f==='kb-q'){ S.ui.kbQ=t.value; save(); paintNotes(); }
+});
+document.addEventListener('keydown', function(e){
+  var t=e.target;
+  if(t && t.id==='chat-input' && e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); }
+  if(e.key==='Escape'){ closeModal(); }
+});
+
+/* ---------- 局部重绘（不打断输入焦点） ---------- */
+function paintMail(){ var el=document.getElementById('mail-list'); if(el) el.innerHTML=mailListHTML(); }
+function paintPosts(){ var el=document.getElementById('post-list'); if(el) el.innerHTML=postListHTML(); }
+function paintNotes(){ var el=document.getElementById('note-list'); if(el) el.innerHTML=noteListHTML(); }
+function paintMemories(){ var el=document.getElementById('mem-list'); if(el) el.innerHTML=memListHTML(); }
+
+/* ---------- 查找 ---------- */
+function findMem(id){ return S.memories.filter(function(m){ return m.id===id; })[0]; }
+function findCap(id){ return S.captures.filter(function(c){ return c.id===id; })[0]; }
+
+/* ---------- 导出 ---------- */
+function exportJSON(){
+  try{
+    var blob=new Blob([JSON.stringify(S,null,2)],{ type:'application/json' });
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='jarvis-preview-v3.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); },3000);
+    toast('已导出本地演示数据');
+  }catch(err){ toast('当前浏览器不允许导出文件'); }
+}
+
+/* ---------- 自检（在内存副本上跑，不动用户数据与 localStorage） ---------- */
+function runSelfTest(){
+  var backup=S, results=[];
+  function ok(name, cond, detail){ results.push([!!cond, name, detail||'']); }
+  try{
+    S=normalize(seedData());   /* 用初始演示数据做副本，结果不受你当前数据影响 */
+    ok('记忆默认不跨助手可见',
+      memFor('companion').every(function(m){ return m.visible.indexOf('companion')>=0; }) &&
+      memFor('jarvis').every(function(m){ return m.visible.indexOf('jarvis')>=0; }));
+    ok('工作记忆对陪伴助手不可见', memFor('companion').filter(function(m){ return m.ns==='work'; }).length===0);
+    ok('陪伴记忆对 Jarvis 不可见', memFor('jarvis').filter(function(m){ return m.ns==='companion'; }).length===0);
+
+    var m3=findMem('mem3');
+    if(m3) m3.forgotten=true;
+    ok('禁记后检索不再返回',
+      recall('companion','连续性').every(function(x){ return x.id!=='mem3'; }),
+      'mem3 若存在必被排除');
+
+    var before=memFor('jarvis').length;
+    S.memories.push({ id:'mem_selftest', ns:'companion', cls:'分享副本', content:'自检样本', sources:['自检'], confidence:1, approvedAt:nowIso(), visible:['jarvis'] });
+    ok('分享副本只对目标助手可见',
+      memFor('jarvis').length===before+1 && memFor('companion').filter(function(x){ return x.id==='mem_selftest'; }).length===0);
+
+    var p=S.proposals[0];
+    var st0=pState(p);
+    p.payload.body=(p.payload.body||'')+'（改动）';
+    ok('载荷变更使旧批准失效', st0!=='changed' && pState(p)==='changed');
+    var q=S.proposals[1];
+    if(q){ q.expiresAt=new Date(Date.now()-60000).toISOString(); }
+    ok('过期动作被识别', !!q && pState(q)==='expired');
+
+    var open0=openTodos().length;
+    S.todos[1].status='done';
+    ok('完成待办只影响它自己', openTodos().length===open0-1);
+
+    S.ui.mailFilter='需要回复';
+    var html=mailListHTML();
+    ok('邮件筛选只返回需回复', html.indexOf('关于周五产品评审的材料')>=0 && html.indexOf('你的每周工作摘要')<0);
+
+    S.ui.postSource='点赞'; S.ui.postTopic='全部主题';
+    var ph=postListHTML();
+    ok('收藏按来源筛选', ph.indexOf('@linh_builds')>=0 && ph.indexOf('@designsystems')<0);
+
+    var c0=S.chat.companion.length, j0=S.chat.jarvis.length;
+    S.chat.jarvis.push({ id:'selftest', role:'me', text:'t', at:nowIso() });
+    ok('两个助手会话互不影响', S.chat.companion.length===c0 && S.chat.jarvis.length===j0+1);
+
+    var rt=JSON.parse(JSON.stringify(S));
+    ok('状态可序列化往返', !!rt && rt.memories.length===S.memories.length);
+  }catch(err){
+    results.push([false, '自检中断：'+(err && err.message ? err.message : err), '']);
+  }finally{ S=backup; }
+  var pass=results.filter(function(r){ return r[0]; }).length;
+  showSheet('<h2>自检 '+pass+' / '+results.length+'</h2>'+
+    '<p class="v3-sub">基于初始演示数据的副本运行，不改动你的数据与 localStorage。也可直接用 preview.html?selftest=1 打开。</p>'+
+    results.map(function(r){
+      return '<div class="v3-audit"><b'+(r[0]?'':' class="v3-lock"')+'>'+(r[0]?'✓ PASS':'✗ FAIL')+'</b><span>'+esc(r[1])+'</span><span>'+esc(r[2])+'</span></div>';
+    }).join('')+
+    '<div class="v3-rowline"><button class="btn" data-act="close-modal">关闭</button></div>');
+  try{ console.table(results.map(function(r){ return { ok:r[0], test:r[1] }; })); }catch(e){}
+}
+
+/* ---------- 交互自检（在真实浏览器里跑点击链路；preview.html?e2e=1） ---------- */
+function runE2E(){
+  var backup=S, out=[];
+  function ok(name, cond, detail){ out.push([!!cond, name, detail||'']); }
+  function q(sel){ return document.querySelector(sel); }
+  function click(sel){ var el=q(sel); if(!el){ ok('找不到元素 '+sel, false); return false; } el.dispatchEvent(new MouseEvent('click',{ bubbles:true })); return true; }
+  try{
+    S = normalize(seedData()); render();
+
+    click('[data-act="go"][data-id="邮件"]');
+    ok('导航到邮件页', !!q('#mail-q') && !!q('#mail-list'));
+
+    var m1 = S.emails[0].id;
+    click('[data-act="mail-draft"][data-id="'+m1+'"]');
+    ok('草稿绑定该邮件', !!q('#draft-to') && q('#draft-to').value.indexOf('@')>0);
+
+    var before = S.proposals.length;
+    q('#draft-subject').value = 'Re: E2E 草稿';
+    q('#draft-body').value = 'E2E 正文';
+    click('[data-act="draft-save"]');
+    ok('保存草稿进入审批队列', S.proposals.length === before+1 && S.proposals[0].kind === 'email_draft');
+
+    click('[data-act="go"][data-id="审批"]');
+    var pid = S.proposals[0].id;
+    click('[data-act="proposal-open"][data-id="'+pid+'"]');
+    ok('载荷抽屉打开', !!q('#chk-'+pid));
+    q('#chk-'+pid).checked = true;
+    click('[data-act="proposal-approve"][data-id="'+pid+'"]');
+    ok('批准后状态为已批准', S.proposals[0].status === 'approved');
+
+    click('[data-act="go"][data-id="记忆"]');
+    S.ui.memNs = '全部';
+    var victim = memFor(S.assistant)[0].id;
+    click('[data-act="mem-forget"][data-id="'+victim+'"]');
+    ok('禁记后不再可召回', memFor(S.assistant).map(function(m){ return m.id; }).indexOf(victim) < 0);
+
+    click('[data-act="assistant"][data-id="companion"]');
+    click('[data-act="go"][data-id="邮件"]');
+    ok('陪伴助手看到授权门', !!q('[data-act="grant"]'));
+    click('[data-act="grant"][data-id="邮件"]');
+    ok('本次授权后可读邮件', !!q('#mail-q'));
+
+    click('[data-act="go"][data-id="对话"]');
+    var n0 = S.chat.companion.length;
+    q('#chat-input').value = '你好，帮我记住这件事';
+    click('[data-act="send-chat"]');
+    ok('发送前提示出现', !!q('[data-act="notice-cancel"]'));
+    click('[data-act="notice-cancel"]');
+    ok('取消后不产生消息', S.chat.companion.length === n0);
+
+    q('#chat-input').value = '你好，帮我记住这件事';
+    click('[data-act="send-chat"]');
+    click('[data-act="notice-ok"]');
+    ok('继续后新增一问一答', S.chat.companion.length === n0+2);
+
+    click('[data-act="go"][data-id="设置"]');
+    click('[data-act="toggle"][data-id="reduced"]');
+    ok('减弱动效立即生效', document.body.classList.contains('v3-reduced'));
+  }catch(err){
+    out.push([false, '交互自检中断：'+(err && err.message ? err.message : err), '']);
+  }finally{
+    S = backup; render();
+  }
+  var pass = out.filter(function(r){ return r[0]; }).length;
+  showSheet('<h2>交互自检 '+pass+' / '+out.length+'</h2>'+
+    '<p class="v3-sub">在真实浏览器里派发点击事件，验证事件委托链路；结束后恢复原状态与存储。</p>'+
+    out.map(function(r){
+      return '<div class="v3-audit"><b'+(r[0]?'':' class="v3-lock"')+'>'+(r[0]?'✓ PASS':'✗ FAIL')+'</b><span>'+esc(r[1])+'</span><span>'+esc(r[2])+'</span></div>';
+    }).join('')+
+    '<div class="v3-rowline"><button class="btn" data-act="close-modal">关闭</button></div>');
+}
+
+/* ---------- 启动 ---------- */
+/* QA 深链接：?page=记忆&assistant=companion（只影响本次打开，不写回存储） */
+(function deepLink(){
+  var m = /[?&]page=([^&]+)/.exec(location.search);
+  if(m){ try{ S.page = decodeURIComponent(m[1]); }catch(e){ S.page = m[1]; } }
+  var a = /[?&]assistant=([^&]+)/.exec(location.search);
+  if(a && (a[1] === 'companion' || a[1] === 'jarvis')) S.assistant = a[1];
+})();
+render();
+if(/[?&]selftest/.test(location.search)) runSelfTest();
+if(/[?&]e2e/.test(location.search)) runE2E();
+})();
+</script>
+</body></html>

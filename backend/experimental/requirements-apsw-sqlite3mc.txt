@@ -1,0 +1,2 @@
+# Isolated Windows CPython 3.14 experimental candidate only; not a production dependency.
+apsw-sqlite3mc==3.54.0.0 --hash=sha256:ce02879c647746af870ee6081fa1b1882b1bd6b9ab559a31008cb887a7726815

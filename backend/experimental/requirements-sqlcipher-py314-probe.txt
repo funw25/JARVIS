@@ -1,0 +1,2 @@
+# Isolated Windows CPython 3.14 probe; not a production dependency.
+sqlcipher3==0.6.5 --hash=sha256:3e59cf9a4b197e82e96de0f88ae402e9c19c61f649d2f581eb8fbbb42e08a9ef

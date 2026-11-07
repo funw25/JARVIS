@@ -58,6 +58,12 @@ $cli = Join-Path $jarvisRoot 'backend\experimental\backup_cli.py'
 & $jarvisPython $cli run --vault <vault 目录> --local <本地备份目录> [--remote]
 ```
 
+不在仓库目录时，用包装脚本更省事（路径自动解析）：
+
+```powershell
+& 'C:\Users\Admin\.codex\.chatgpt-projects\g-p-6ae96df8f3c48191a4e131d6589494db\tools\backup\backup.cmd' store-passphrase
+```
+
 输出分别列出 PASS、FAIL、SKIP；有跳过项时脚本按设计返回非零，跳过并非通过。**2026-11-07 实测：49 项通过、0 项失败、0 项跳过**（`ALL_SELECTED_CHECKS=PASS`）。为此把 `sqlcipher3-wheels` 装进了 `.jarvis-python314-deps`，并把 `apsw-sqlite3mc` 放在 `.jarvis-python314-apswmc-probe`；这两个目录是本机实验资产，缺失时对应检查会自动 SKIP 而不是误报通过。加密候选仍是独立实验，尚未保护主应用。
 
 项目进度和下一步见 [项目日志](PROJECT_LOG.md)、[路线图](ROADMAP.md) 和 [本地数据保护方案](DATA_SECURITY_DESIGN.md)。

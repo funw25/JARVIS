@@ -104,3 +104,20 @@ exit = 0x80131506
 **Office 授权现状（必须知情）：** `OSPP.VBS /dstatus` 显示 `Office21ProPlus2021VL_KMS_Client_AE`，激活类型 KMS，KMS 主机为 `kms.03k.org:1688`，剩余宽限 178 天。这不是 Microsoft 签发的授权，属于第三方 KMS 激活路径。我没有改动它。若要走正版：Microsoft 365 订阅或单位发放的正版密钥，用 ODT 重装为 Click-to-Run 后登录激活。
 
 **PATH 生效范围：** 安装器已把 Python 写入用户 PATH、PowerShell 7 写入机器 PATH；DSH 进程是安装前启动的，因此**当前会话的子进程仍看不到它们**，需要重启 DSH（或新开会话）才会自动使用 `pwsh` 7.4。在本会话内请用完整路径或自行前置 `$env:Path`。
+
+## 8. GitHub 推送与代理（2026-11-07）
+
+远端仓库：<https://github.com/funw25/JARVIS>。本机实测：`api.github.com:443` 直连可用，但 **`github.com:443` 直连会超时**；系统代理已开启（`127.0.0.1:7890`，Clash 风格），git 默认不走系统代理，所以必须显式指定：
+
+```powershell
+git -c http.proxy=http://127.0.0.1:7890 -c https.proxy=http://127.0.0.1:7890 push origin main
+```
+
+若希望一劳永逸，可只对该仓库设置（不要写全局，避免代理关闭后所有 git 操作失败）：
+
+```powershell
+git config --local http.proxy http://127.0.0.1:7890
+git config --local https.proxy http://127.0.0.1:7890
+```
+
+凭据由 Git Credential Manager 提供（`D:\Program\Git\ucrt64\bin\git-credential-manager.exe`），已缓存可用的 GitHub 凭据；若失效，运行 `git-credential-manager github login` 重新授权。**不要把 token 写进 URL 或提交到仓库。**

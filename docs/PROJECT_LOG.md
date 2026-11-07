@@ -27,6 +27,9 @@
 
 ## 本轮新增/变更
 
+- **S1 密钥生命周期已实现（2026-11-07）**：新增 `backend/experimental/vault_keys.py` —— `create_vault` / `open_vault` / `destroy_vault` / `vault_status`，每个 vault 一个随机 DEK 并由用户范围 DPAPI 包装，`meta.json` 记录 `format` 与 16 位十六进制 `key_id`；打开按设计的 fail-closed 路径执行（门禁 → meta → 解包 → 加密打开 → `vault_meta.format`/`key_id` 比对 → `integrity_check`），错误统一映射到稳定分类（`KEY_MISSING`/`KEYWRAP_MISSING`/`KEY_UNWRAP_FAILED`/`KEY_MISMATCH`/`FORMAT_UNKNOWN`/`DB_CORRUPT`/`DRIVER_UNAVAILABLE`）；销毁需按目录名二次确认。
+- 新增 `verify_vault_key_lifecycle.py` 并注册为 `vault_key_lifecycle`：K1 创建/打开/密文、K2 五类缺失或损坏材料、K3 错误密钥与 `key_id` 错配、K6 销毁确认与不可逆、门禁与创建守卫、关闭后连接不可用。一键回归升至 **50 PASS / 0 FAIL / 0 SKIP**（3.14），3.13 对照 42 PASS / 0 FAIL / 8 SKIP。
+- 实现中修掉两个真实问题：`open_vault` 是生成器，异常只在 `__enter__` 触发（测试助手需真正进入上下文）；错误密钥时驱动在 `connect` 阶段的 WAL pragma 就抛 `NotADBError`，需在打开外层统一分类，否则会漏出驱动异常而非 `KEY_MISMATCH`。
 - **修复恢复缺口并定稿备份方案（2026-11-07）**：原设计"远端只放 `vault.db` 与 `manifest`"会让换机恢复缺少解开备份密钥的包装材料，已废止。归档改为自包含 `jarvis-backup-*.jvault` = 密文库 + `key.bkwrap`（口令包装 + 恢复码包装，均为包装态）+ 清单；明文密钥、口令、恢复码、vault 的 DPAPI 包装一律不上传。
 - 因包装数据可离线爆破，口令要求由 8 位提高到 **12 位**并拒绝常见口令，默认推荐 ≥128 位熵的恢复码；新增 `bench_argon2_cost.py` 实测本机成本：Argon2id（m=64 MiB,t=3,p=2）约 174 ms/次（≈5.8 次/秒/核），8 位常见词在 1000 核下约 3 分钟，12 位随机则不可行。验收新增 B8（爆破上限）、B9（KDF 参数降级拒绝）、B10（包装缺失/损坏）。
 - 备份目的地定稿：**每日本地目录（7 份）+ 每周 S3 兼容对象存储（4 份，版本控制 + Object Lock）**；外置盘到手后补离线副本；GitHub Release 作为零成本替代。明确本地同盘不防磁盘故障与勒索软件。

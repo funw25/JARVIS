@@ -64,6 +64,7 @@ CHECKS = [
     ("apswmc_crash_probe", "verify_apswmc_crash_probe.py", ()),
     ("apswmc_adapter", "verify_apswmc_adapter.py", ()),
     ("apswmc_services", "verify_apswmc_services.py", ()),
+    ("vault_key_lifecycle", "verify_vault_key_lifecycle.py", ()),
     ("sqlcipher_candidate", "verify_sqlcipher_candidate.py", ("sqlcipher3",)),
     ("synthetic_vault", "verify_synthetic_vault.py", ("sqlcipher3",)),
     ("windows_dpapi_candidate", "verify_windows_dpapi_candidate.py", ()),

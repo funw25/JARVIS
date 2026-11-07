@@ -1,6 +1,6 @@
 # 密钥生命周期、备份与恢复设计
 
-**状态：** 设计提案（Proposed），未实现  
+**状态：** S1 已实现（`backend/experimental/vault_keys.py`，实验目录）；S2–S5 为设计提案  
 **更新：** 2026-11-07  
 **范围：** 加密存储正式启用前的最后一段设计：密钥生成/解锁/轮换/销毁、备份与换机恢复、崩溃与并发恢复  
 **关联文档：** [数据保护与恢复方案](DATA_SECURITY_DESIGN.md)（威胁模型与候选调研）、[存储适配计划](STORAGE_ADAPTER_PLAN.md)（适配层与合同）、[多设备同步草案](SYNC_DESIGN_DRAFT.md)（跨设备传输）
@@ -312,7 +312,7 @@ KEK：不由用户记忆，派生或系统托管；绝不与 DEK 同存明文
 
 | 阶段 | 交付 | 出口条件 |
 |---|---|---|
-| **S1 密钥与打开** | `experimental/vault_keys.py`（create/unlock/lock/destroy、meta、错误分类）+ K1–K3、K6 | 打开流程 8 步全部可测；失败分类稳定 |
+| **S1 密钥与打开** | ✅ 已交付：`experimental/vault_keys.py`（create/open/destroy、meta、`key_id`、错误分类）+ `verify_vault_key_lifecycle.py`（K1–K3、K6 + 门禁守卫） | 打开流程可测；失败分类稳定（`KEY_MISSING` / `KEYWRAP_MISSING` / `KEY_UNWRAP_FAILED` / `KEY_MISMATCH` / `FORMAT_UNKNOWN` / `DB_CORRUPT` / `DRIVER_UNAVAILABLE`） |
 | **S2 备份与恢复** | 归档格式（库 + `key.bkwrap` + 清单）、离线可用的恢复材料、本地目录 sink、S3 sink（默认）、可选 GitHub Release sink、保留策略 + B1–B10 | 往返一致、篡改必拒、换机可解、上传守卫拒绝恢复材料、KDF 参数不可降级 |
 | **S3 轮换** | rekey 流程、退役包装、回滚 + K4、K5、C2 | 无"库新包装旧"中间态 |
 | **S4 并发与压力** | 连接池/超时策略、压力脚本 + S1 | 压力下无丢更新、无死锁 |
@@ -355,8 +355,11 @@ KEK：不由用户记忆，派生或系统托管；绝不与 DEK 同存明文
 
 | 已有 | 本设计如何使用 |
 |---|---|
-| `experimental/apswmc_storage.py` | 作为 S1 的连接层；增加 meta/key_id 与错误分类 |
+| `experimental/vault_keys.py` | S1 已实现：create/open/destroy、`meta.json`、`key_id`、错误分类 |
+| `verify_vault_key_lifecycle.py` | S1 验收：K1–K3、K6 + 门禁与创建守卫 |
+| `experimental/apswmc_storage.py` | S1 的连接层；打开时按 §4 校验 cipher/key 与页 1 |
 | `experimental/apswmc_synthetic_vault.py` | 初始化/暂存/rename/DPAPI 包装的既有模式直接复用 |
-| `verify_apswmc_vault.py` / `_backup_probe.py` / `_crash_probe.py` | 作为 K1、B1、C1 的起点，扩展成验收矩阵 |
+| `experimental/windows_dpapi.py` | 用户范围 DPAPI 包装/解包（含附加熵与内存清理） |
+| `verify_apswmc_vault.py` / `_backup_probe.py` / `_crash_probe.py` | 作为 B1、C1 的起点，扩展成验收矩阵 |
 | `app/database.py` 的适配器开关 | S1–S4 继续只走实验开关；S5 才讨论默认切换 |
 | `verify_migrations.py` | 已可在加密后端运行，直接复用 M1 |

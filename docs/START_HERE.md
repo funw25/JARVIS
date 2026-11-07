@@ -42,6 +42,13 @@ $env:TMP = $jarvisTemp
 & $jarvisPython (Join-Path $jarvisRoot 'backend\verification\verify_adapter_suite.py')
 ```
 
+如需验证**备份上传与远端恢复**（需要 Cloudflare R2 凭据，独立于离线套件）：
+
+```powershell
+# 凭据只放在仓库外：%USERPROFILE%\.jarvis\r2.env
+& $jarvisPython (Join-Path $jarvisRoot 'backend\verification\verify_vault_backup_upload.py')
+```
+
 输出分别列出 PASS、FAIL、SKIP；有跳过项时脚本按设计返回非零，跳过并非通过。**2026-11-07 实测：49 项通过、0 项失败、0 项跳过**（`ALL_SELECTED_CHECKS=PASS`）。为此把 `sqlcipher3-wheels` 装进了 `.jarvis-python314-deps`，并把 `apsw-sqlite3mc` 放在 `.jarvis-python314-apswmc-probe`；这两个目录是本机实验资产，缺失时对应检查会自动 SKIP 而不是误报通过。加密候选仍是独立实验，尚未保护主应用。
 
 项目进度和下一步见 [项目日志](PROJECT_LOG.md)、[路线图](ROADMAP.md) 和 [本地数据保护方案](DATA_SECURITY_DESIGN.md)。

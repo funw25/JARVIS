@@ -27,6 +27,10 @@
 
 ## 本轮新增/变更
 
+- **S2 全链路验收通过（2026-11-07）**：新增 `experimental/backup_sink.py`（本地目录 sink + S3 兼容 sink，Cloudflare R2 实测）与 `verify_vault_backup_upload.py`（B6/B7）。真实 R2 结果：上传与列表正常、上传守卫拒绝带恢复材料的归档、覆盖与删除都被桶锁拒绝（`ObjectLockedByBucketPolicy`）、从云端下载后分别用口令与恢复码恢复到新目录成功。
+- B5 补齐：备份期间另一连接持续写入（329 行成对插入），恢复后的快照全部成对一致，无撕裂事务。
+- 修掉 `open_vault` 的一个真实缺陷：异常分类原本包住了 `yield`，调用方代码里的任何异常都会被误报成 `DB_CORRUPT`。改为手动驱动上下文管理器，只分类打开阶段的失败，调用方异常原样传播。
+- 凭据只放在仓库外的 `%USERPROFILE%\.jarvis\r2.env`；`backups/selftest/` 下留了一个被锁定的自检对象，按设计会在保留期内自动到期。
 - **S2 备份核心已实现（2026-11-07）**：新增 `backend/experimental/vault_backup.py` —— `.jvault` 归档（`vault.db` 用一次性随机备份密钥重新加密 + `key.bkwrap` 两份包装 + 带哈希与 HMAC 的清单）、口令（≥12 位 + 常见口令拒绝）与恢复码（160 位熵、base32 分组）两条解包路径、KDF 下限校验（拒降级）、归档条目白名单与上传守卫、恢复到新目录且不覆盖已有 vault。
 - 新增 `verify_vault_backup_restore.py` 并注册为 `vault_backup_restore`：B1（口令与恢复码两条恢复路径）、B2（备份独立密钥 + 明文 SQLite 拒绝）、B3/B4（单字节篡改与清单错配拒绝）、B8（口令策略）、B9（KDF 降级拒绝）、B10（包装缺失/损坏/错误口令分类）、上传守卫、拒绝覆盖。回归升至 **51 PASS / 0 FAIL / 0 SKIP**（3.14），3.13 对照 42 PASS / 9 SKIP。
 - 待办：B5（备份期间并发写的一致性快照）、B6/B7（R2 真实上传守卫与远端恢复演练）——需要 R2 凭据；凭据模板已放在仓库外的 `%USERPROFILE%\.jarvis\r2.env`。

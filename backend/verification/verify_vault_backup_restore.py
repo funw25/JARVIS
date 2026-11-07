@@ -9,6 +9,8 @@ import shutil
 import sqlite3
 import sys
 import tempfile
+import threading
+import time
 import zipfile
 from pathlib import Path
 
@@ -171,7 +173,43 @@ with tempfile.TemporaryDirectory(prefix="jarvis-vault-backup-", ignore_cleanup_e
     expect(backup.RestoreRejected, lambda: backup.restore_backup(archive, base / "restored", passphrase=passphrase), "restore over existing vault")
     print("UPLOAD_GUARD_AND_NO_OVERWRITE=PASS")
 
-    print("B5_CONCURRENT_WRITE_SNAPSHOT=SKIPPED_IN_THIS_STEP")
+    # B5: a backup taken while another connection writes must be a consistent snapshot.
+    concurrent = base / "concurrent"
+    keys.create_vault(concurrent)
+    with keys.open_vault(concurrent) as connection:
+        connection.execute("CREATE TABLE pairs(a INTEGER NOT NULL, b INTEGER NOT NULL)")
+        connection.execute("INSERT INTO pairs VALUES (0, 0)")
+
+    stop = threading.Event()
+    failures = []
+
+    def writer():
+        try:
+            with keys.open_vault(concurrent) as connection:
+                value = 1
+                while not stop.is_set():
+                    connection.begin_immediate()
+                    connection.execute("INSERT INTO pairs VALUES (?, ?)", (value, value))
+                    connection.commit()
+                    value += 1
+        except Exception as exc:  # noqa: BLE001 - surface writer failures
+            failures.append(exc)
+
+    worker = threading.Thread(target=writer, daemon=True)
+    worker.start()
+    time.sleep(0.3)
+    live = backup.create_backup(concurrent, base / "concurrent-backups", passphrase=passphrase)
+    stop.set()
+    worker.join(timeout=15)
+    assert not failures, failures
+    assert not worker.is_alive(), "writer thread did not stop"
+
+    backup.restore_backup(live["archive"], base / "concurrent-restored", passphrase=passphrase)
+    with keys.open_vault(base / "concurrent-restored") as connection:
+        rows = connection.execute("SELECT a, b FROM pairs").fetchall()
+    assert rows, "snapshot contains no rows"
+    assert all(row[0] == row[1] for row in rows), "snapshot contains a torn transaction"
+    print("B5_BACKUP_DURING_CONCURRENT_WRITES_IS_CONSISTENT=PASS rows=%d" % len(rows))
 
 print("VAULT_BACKUP_ARCHIVE_AND_RESTORE=PASS")
-print("S3_UPLOAD_AND_REMOTE_RESTORE=NOT_IMPLEMENTED")
+print("S3_UPLOAD_AND_REMOTE_RESTORE=SEE_verify_vault_backup_upload.py")

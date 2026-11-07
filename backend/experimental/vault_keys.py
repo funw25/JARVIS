@@ -187,26 +187,39 @@ def open_vault(root):
     except (OSError, ValueError) as exc:
         raise KeyUnwrapFailed("wrapped key could not be unwrapped") from exc
 
+    # Only the open sequence itself is classified; exceptions raised by the
+    # caller's body must propagate unchanged, so the context manager is driven
+    # manually instead of wrapping the yield in the same try block.
+    connection_cm = apswmc_storage.connect(db_path, key, create=False)
     try:
-        with apswmc_storage.connect(db_path, key, create=False) as connection:
-            try:
-                stored = dict(connection.execute("SELECT name, value FROM vault_meta").fetchall())
-            except Exception as exc:  # wrong key surfaces here on an existing file
-                message = str(exc).lower()
-                if "not a database" in message or "file is encrypted" in message:
-                    raise KeyMismatch("key does not match the vault database") from exc
-                raise DbCorrupt("vault database is unreadable") from exc
-            if stored.get("format") != FORMAT:
-                raise FormatUnknown("vault_meta format is unsupported")
-            if stored.get("key_id") != meta["key_id"]:
-                raise KeyMismatch("meta.json and database key_id differ")
-            if connection.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
-                raise DbCorrupt("vault database failed integrity_check")
-            yield connection
+        connection = connection_cm.__enter__()
+        try:
+            stored = dict(connection.execute("SELECT name, value FROM vault_meta").fetchall())
+        except Exception as exc:  # wrong key surfaces here on an existing file
+            message = str(exc).lower()
+            if "not a database" in message or "file is encrypted" in message:
+                raise KeyMismatch("key does not match the vault database") from exc
+            raise DbCorrupt("vault database is unreadable") from exc
+        if stored.get("format") != FORMAT:
+            raise FormatUnknown("vault_meta format is unsupported")
+        if stored.get("key_id") != meta["key_id"]:
+            raise KeyMismatch("meta.json and database key_id differ")
+        if connection.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
+            raise DbCorrupt("vault database failed integrity_check")
     except VaultError:
+        connection_cm.__exit__(None, None, None)
         raise
     except Exception as exc:  # noqa: BLE001 - classify driver failures into stable codes
+        try:
+            connection_cm.__exit__(None, None, None)
+        except Exception:  # pragma: no cover - best effort while failing closed
+            pass
         raise _classify_open_error(exc) from exc
+
+    try:
+        yield connection
+    finally:
+        connection_cm.__exit__(None, None, None)
 
 
 def _classify_open_error(exc):

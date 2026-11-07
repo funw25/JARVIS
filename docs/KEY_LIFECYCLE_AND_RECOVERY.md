@@ -1,6 +1,6 @@
 # 密钥生命周期、备份与恢复设计
 
-**状态：** S1、S2 核心已实现（`backend/experimental/vault_keys.py`、`vault_backup.py`）；上传与远端恢复待 R2 凭据；S3–S5 为设计提案  
+**状态：** S1、S2 已实现并验收（`vault_keys.py`、`vault_backup.py`、`backup_sink.py`）；S3 轮换起待做  
 **更新：** 2026-11-07  
 **范围：** 加密存储正式启用前的最后一段设计：密钥生成/解锁/轮换/销毁、备份与换机恢复、崩溃与并发恢复  
 **关联文档：** [数据保护与恢复方案](DATA_SECURITY_DESIGN.md)（威胁模型与候选调研）、[存储适配计划](STORAGE_ADAPTER_PLAN.md)（适配层与合同）、[多设备同步草案](SYNC_DESIGN_DRAFT.md)（跨设备传输）
@@ -216,7 +216,7 @@ KEK：不由用户记忆，派生或系统托管；绝不与 DEK 同存明文
 
 | 维度 | 结论与做法 |
 |---|---|
-| 上传内容 | 归档整体上传；**包装密钥必须在内**，否则异地恢复不可能（本次修正） |
+| 上传内容 | 归档整体上传；**包装密钥必须在内**，否则异地恢复不可能（本次修正）。实测：`backups/` 前缀的桶锁对覆盖与删除都返回 `ObjectLockedByBucketPolicy` |
 | 离线爆破 | 上传 `key.bkwrap` 后，攻击者可离线尝试口令。实测本机 Argon2id（m=64 MiB, t=3, p=2）约 **174 ms/次（≈5.8 次/秒/核）**；8 位常见词口令在 1000 核下约 **3 分钟**破解，8 位随机字符约 1.2×10⁶ 年/核。因此**口令要求提高到 12 位**并拒绝常见口令（见 §7） |
 | 可见性 | 云端只接触密文；备份时间、体积、频率等元数据可见。不宣称"服务端什么都不知道" |
 | 持久性 | 对象存储版本控制与 Git 历史都不易真正删除；任何上传都按"永久留存"对待。怀疑恢复材料泄露时**更换备份密钥**并停用旧归档 |
@@ -304,6 +304,8 @@ KEK：不由用户记忆，派生或系统托管；绝不与 DEK 同存明文
 | C1 | 崩溃恢复 | 终止后已提交保留、未提交回滚、`integrity_check` ok | 已有 `verify_apswmc_crash_probe.py` |
 | C2 | 轮换中断 | 重开报明确错误并指向恢复路径 | `verify_vault_rotation.py` |
 | S1 | 并发压力 | 无丢更新、无死锁、错误可分类、临时文件清理干净 | `verify_vault_concurrency.py` |
+
+**2026-11-07 实测：** B5（备份期间并发写，快照 329 行全部成对一致）、B6（真实 R2 上传、上传守卫、桶锁拒绝覆盖与删除，错误码 ObjectLockedByBucketPolicy）、B7（从 R2 下载后分别用口令与恢复码恢复到新目录）均通过。B6/B7 需要凭据与网络，因此独立于离线套件运行；S1（并发压力）尚未实现。
 | M1 | 加密库上迁移 | 旧 schema 备份 → 恢复 → 升级 → 回滚 | 复用 `verify_migrations.py`（已支持加密后端） |
 
 ---
@@ -313,7 +315,7 @@ KEK：不由用户记忆，派生或系统托管；绝不与 DEK 同存明文
 | 阶段 | 交付 | 出口条件 |
 |---|---|---|
 | **S1 密钥与打开** | ✅ 已交付：`experimental/vault_keys.py`（create/open/destroy、meta、`key_id`、错误分类）+ `verify_vault_key_lifecycle.py`（K1–K3、K6 + 门禁守卫） | 打开流程可测；失败分类稳定（`KEY_MISSING` / `KEYWRAP_MISSING` / `KEY_UNWRAP_FAILED` / `KEY_MISMATCH` / `FORMAT_UNKNOWN` / `DB_CORRUPT` / `DRIVER_UNAVAILABLE`） |
-| **S2 备份与恢复** | 🟡 核心已交付：`.jvault` 归档（密文库 + `key.bkwrap` + 清单）、口令/恢复码两条解包、KDF 下限与上传守卫、`FolderSink` 式的本地目录；**上传（R2）与远端恢复演练待凭据** | 已过：B1（两种恢复路径）、B2、B3、B4、B8、B9、B10、上传守卫、不覆盖；待办：B5 并发快照、B6 真实上传守卫、B7 远端恢复演练 |
+| **S2 备份与恢复** | ✅ 已交付：`.jvault` 归档、口令/恢复码包装、KDF 下限、上传守卫、本地目录 sink、S3 sink（Cloudflare R2 实测）、远端恢复；`verify_vault_backup_restore.py` + `verify_vault_backup_upload.py` | B1–B10 全部通过；R2 实测 `ObjectLockedByBucketPolicy` 阻止覆盖与删除；保留策略、定时任务与远端清单巡检仍是后续工作 |
 | **S3 轮换** | rekey 流程、退役包装、回滚 + K4、K5、C2 | 无"库新包装旧"中间态 |
 | **S4 并发与压力** | 连接池/超时策略、压力脚本 + S1 | 压力下无丢更新、无死锁 |
 | **S5 切换准备** | 迁移到默认存储的切换脚本、回滚演练、许可证与发布审查清单 | 独立安全评审通过后才允许真实数据 |
@@ -356,7 +358,10 @@ KEK：不由用户记忆，派生或系统托管；绝不与 DEK 同存明文
 | 已有 | 本设计如何使用 |
 |---|---|
 | `experimental/vault_keys.py` | S1 已实现：create/open/destroy、`meta.json`、`key_id`、错误分类 |
+| `experimental/vault_backup.py` | S2 已实现：归档、包装、清单 HMAC、恢复、上传守卫 |
+| `experimental/backup_sink.py` | S2 已实现：本地目录与 S3（R2 实测）两个目的地 |
 | `verify_vault_key_lifecycle.py` | S1 验收：K1–K3、K6 + 门禁与创建守卫 |
+| `verify_vault_backup_restore.py` / `verify_vault_backup_upload.py` | S2 验收：B1–B5、B8–B10（离线）+ B6/B7（真实 R2） |
 | `experimental/apswmc_storage.py` | S1 的连接层；打开时按 §4 校验 cipher/key 与页 1 |
 | `experimental/apswmc_synthetic_vault.py` | 初始化/暂存/rename/DPAPI 包装的既有模式直接复用 |
 | `experimental/windows_dpapi.py` | 用户范围 DPAPI 包装/解包（含附加熵与内存清理） |

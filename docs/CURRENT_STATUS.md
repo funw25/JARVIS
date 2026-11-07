@@ -17,13 +17,13 @@
 
 ## 验证情况
 
-- **隔离 Python 3.14 一键回归（2026-11-07 实测）：54 PASS、0 FAIL、0 SKIP**，输出 `ALL_SELECTED_CHECKS=PASS`，退出码 0。环境：项目内便携解释器 `.jarvis-python-3.14.10` + `.jarvis-python314-deps`（fastapi / pydantic / uvicorn / sqlcipher3-wheels）+ `.jarvis-python314-apswmc-probe`（apsw 3.54.0.0 / SQLite3 Multiple Ciphers 2.6.1）。除五项 APSW 实验外，`apswmc_adapter`（同一套存储合同）与 `apswmc_services`（真实领域服务跑在加密库）也通过。
+- **隔离 Python 3.14 一键回归（2026-11-07 实测）：55 PASS、0 FAIL、0 SKIP**，输出 `ALL_SELECTED_CHECKS=PASS`，退出码 0。环境：项目内便携解释器 `.jarvis-python-3.14.10` + `.jarvis-python314-deps`（fastapi / pydantic / uvicorn / sqlcipher3-wheels）+ `.jarvis-python314-apswmc-probe`（apsw 3.54.0.0 / SQLite3 Multiple Ciphers 2.6.1）。除五项 APSW 实验外，`apswmc_adapter`（同一套存储合同）与 `apswmc_services`（真实领域服务跑在加密库）也通过。
 - **整套回归已能跑在加密后端上（2026-11-07）**：`verify_adapter_suite.py` 以随机密钥、`JARVIS_STORAGE_ADAPTER=apswmc` 启动 `verify_all.py`，整套同样 **49 PASS / 0 FAIL / 0 SKIP**；默认后端不受影响。这意味着存储适配合同在两种后端上逐项一致。
 - **备份链路已在真实 R2 上验证（2026-11-07）**：本地目录 sink + Cloudflare R2（桶 `jarvis-backup`，`backups/` 前缀 35 天桶锁、120 天生命周期）；上传守卫拒绝带恢复材料的归档，覆盖与删除都被桶锁拒绝（`ObjectLockedByBucketPolicy`），从云端下载后分别用口令与恢复码恢复到新目录成功；备份期间并发写无撕裂事务。凭据只存在于仓库外的 `%USERPROFILE%\.jarvis\r2.env`。
 - **S3 密钥轮换已实现（2026-11-07）**：`PRAGMA rekey` 实机可用；轮换带 pending 标记与中断自动续做，成功时双向验证（新钥匙开得动、旧钥匙开不动），失败回滚到旧密钥；`verify_vault_rotation.py` 覆盖 K4/K5/C2。
 - **备份自动化已就绪（2026-11-08）**：`backup_job` 读取 Windows 凭据管理器中的口令与恢复码（不再用环境变量），创建归档、保留本地 7 份/远端 4 份、写不含密钥的审计行；`backup_cli.py` 提供 store-passphrase / show-recovery-code / run；`tools/backup/schedule-backup.ps1` 注册每日与每周计划任务。实测：保留策略生效、审计无泄露、锁定对象只记录不报错、两种材料都能恢复。
 - **S4 并发验证通过（2026-11-07）**：4 写 × 40 次 + 3 读并发，160 次自增无丢失、读者观测到单调递增（最高 160）、无死锁、WAL/SHM 清理干净。过程中修掉适配器两个真实缺陷：`BEGIN IMMEDIATE` 前不释放旧语句导致 `SQLITE_BUSY_SNAPSHOT` 立即失败；游标集合用强引用导致一次性查询的读快照永不结束、读者永远读旧值。
-- **Python 3.13 对照环境：42 PASS、0 FAIL、12 SKIP**，退出码 2。12 项 SKIP 都是只能跑在 3.14 的 APSW/密钥实验，不是失败；该环境下 SQLCipher 与 DPAPI 虚构库探针通过。旧环境密码库已停止公开安全维护，只供离线实验。
+- **Python 3.13 对照环境：42 PASS、0 FAIL、13 SKIP**，退出码 2。13 项 SKIP 都是只能跑在 3.14 的 APSW/密钥实验，不是失败；该环境下 SQLCipher 与 DPAPI 虚构库探针通过。旧环境密码库已停止公开安全维护，只供离线实验。
 - 回归脚本自身修了两处（不涉及存储断言）：`verify_all.py` 在 GBK 控制台打印崩溃日志时因编码失败而中断，改为替换式输出；`verify_apswmc_crash_probe.py` 在终止子进程后临时目录偶发 `WinError 32`，改为忽略清理错误、重试并报告残留。
 - 本机实际 HTTP 验证覆盖上述多项模拟流程、身份选择限制和重启；不等于生产认证。
 - 旧版虚构数据库从迁移 0012 升至当前版本的测试通过；不是实际用户数据迁移或断电恢复证明。

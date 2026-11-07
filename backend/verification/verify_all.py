@@ -69,6 +69,7 @@ CHECKS = [
     ("vault_rotation", "verify_vault_rotation.py", ()),
     ("vault_concurrency", "verify_vault_concurrency.py", ()),
     ("vault_backup_job", "verify_backup_job.py", ()),
+    ("vault_app_schema", "verify_vault_app_schema.py", ()),
     ("sqlcipher_candidate", "verify_sqlcipher_candidate.py", ("sqlcipher3",)),
     ("synthetic_vault", "verify_synthetic_vault.py", ("sqlcipher3",)),
     ("windows_dpapi_candidate", "verify_windows_dpapi_candidate.py", ()),

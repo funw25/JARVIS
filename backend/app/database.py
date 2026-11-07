@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator
 
-from .settings import database_path
+from .settings import database_path, vault_dir
 from .security.storage_policy import require_synthetic_storage
 
 MIGRATIONS = Path(__file__).resolve().parents[1] / "migrations"
@@ -79,6 +79,9 @@ def connect(path: Path | None = None):
     switch to the experimental adapter without touching any service module.
     """
     require_synthetic_storage()
+    vault = vault_dir()
+    if vault is not None and not (vault / "meta.json").is_file():
+        raise StorageAdapterError("JARVIS_VAULT_DIR does not point at an initialised vault")
     target = Path(path) if path is not None else database_path()
     if adapter_requested():
         return _adapter_connect(target)

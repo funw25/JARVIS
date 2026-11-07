@@ -200,8 +200,14 @@ def create_backup(vault_root, destination_dir, *, passphrase, recovery_code=None
         manifest["manifest_hmac"] = _manifest_hmac(manifest, bk)
         (staging / MANIFEST).write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
-        name = "jarvis-backup-%s-%s%s" % (_now().replace(":", "").replace("-", ""), source_key_id or "unknown", SUFFIX)
-        archive = destination / name
+        # Two backups within the same second would otherwise collide; keep the
+        # readable timestamp name and add a counter only when needed.
+        base = "jarvis-backup-%s-%s" % (_now().replace(":", "").replace("-", ""), source_key_id or "unknown")
+        archive = destination / (base + SUFFIX)
+        counter = 2
+        while archive.exists():
+            archive = destination / ("%s-%d%s" % (base, counter, SUFFIX))
+            counter += 1
         with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as bundle:
             for entry in (MANIFEST, DB, KEYWRAP):
                 bundle.write(staging / entry, entry)

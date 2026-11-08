@@ -64,6 +64,14 @@ $cli = Join-Path $jarvisRoot 'backend\experimental\backup_cli.py'
 & 'C:\Users\Admin\.codex\.chatgpt-projects\g-p-6ae96df8f3c48191a4e131d6589494db\tools\backup\backup.cmd' store-passphrase
 ```
 
-输出分别列出 PASS、FAIL、SKIP；有跳过项时脚本按设计返回非零，跳过并非通过。**2026-11-07 实测：49 项通过、0 项失败、0 项跳过**（`ALL_SELECTED_CHECKS=PASS`）。为此把 `sqlcipher3-wheels` 装进了 `.jarvis-python314-deps`，并把 `apsw-sqlite3mc` 放在 `.jarvis-python314-apswmc-probe`；这两个目录是本机实验资产，缺失时对应检查会自动 SKIP 而不是误报通过。加密候选仍是独立实验，尚未保护主应用。
+输出分别列出 PASS、FAIL、SKIP；有跳过项时脚本按设计返回非零，跳过并非通过。**2026-11-08 实测：57 项通过、0 项失败、0 项跳过**（`ALL_SELECTED_CHECKS=PASS`）；3.13 对照为 42 通过 / 15 跳过。为此把 `sqlcipher3-wheels` 装进了 `.jarvis-python314-deps`，并把 `apsw-sqlite3mc` 放在 `.jarvis-python314-apswmc-probe`；这两个目录是本机实验资产，缺失时对应检查会自动 SKIP 而不是误报通过。加密候选仍是独立实验，尚未保护主应用。
+
+## 工作节奏与推送约定
+
+- 每完成一个**大阶段**（一个可独立验收的交付：S1–S5 的一段、某个 G 门槛、评审包等）做一次仓库推送。
+- 推送频率上限：**每天最多一次**。同一天内的多个小改动先在本地提交，合并进当天那一次推送。
+- 每次推送前：跑对应验证 + 完整回归（当前 57 项），并更新 `docs/PROJECT_LOG.md`、`docs/CURRENT_STATUS.md` 与相关设计文档里的数字；文档数字与代码不一致视为未完成。
+- 推送命令必须带代理：`git -c http.proxy=http://127.0.0.1:7890 -c https.proxy=http://127.0.0.1:7890 push origin main`。
+- 存在未推送提交时，汇报里必须写明，避免远端看起来"落后"却无人知道。
 
 项目进度和下一步见 [项目日志](PROJECT_LOG.md)、[路线图](ROADMAP.md) 和 [本地数据保护方案](DATA_SECURITY_DESIGN.md)。

@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / ".jarvis-python314-
 
 os.environ.setdefault("JARVIS_DATA_MODE", "synthetic")
 
-from experimental import backup_job, backup_sink, vault_backup, wincred
+from experimental import backup_job, backup_sink, vault_backup, vault_keys, wincred
 
 
 def command_store_passphrase(args):
@@ -40,13 +40,58 @@ def command_show_code(args):
     print("Write this down and keep it offline; it opens every backup without the passphrase.")
 
 
+def _sink_for(args):
+    if not getattr(args, "remote", False):
+        return None
+    credentials = Path(os.environ.get("USERPROFILE", str(Path.home()))) / ".jarvis" / "r2.env"
+    return backup_sink.sink_from_environment(credentials)
+
+
+def command_status(args):
+    vault = Path(args.vault)
+    status = vault_keys.rotation_status(vault, interval_days=args.interval_days)
+    print("key_id:        %s" % status["key_id"])
+    print("key since:     %s" % status["since"])
+    print("age (days):    %s" % status["age_days"])
+    print("rotation due:  %s (at %s, every %d days)" % (
+        "YES" if status["due"] else "no", status["due_at"], status["interval_days"]))
+    print("passphrase:    %s" % ("stored" if wincred.has_secret(backup_job.PASSPHRASE_TARGET) else "MISSING"))
+    print("recovery code: %s" % ("stored" if wincred.has_secret(backup_job.CODE_TARGET) else "MISSING"))
+    if args.local:
+        archives = sorted(Path(args.local).glob("jarvis-backup-*.jvault"))
+        print("local backups: %d (newest: %s)" % (
+            len(archives), archives[-1].name if archives else "none"))
+    if status["due"]:
+        print("next: run 'backup_cli.py rotate --vault <vault> --local <dir>' (it backs up first)")
+
+
+def command_rotate(args):
+    vault = Path(args.vault)
+    before = vault_keys.rotation_status(vault)
+    print("current key_id: %s (age %s days)" % (before["key_id"], before["age_days"]))
+    safety = backup_job.run(
+        vault, local_dir=Path(args.local), sink=_sink_for(args),
+        keep_local=args.keep_local, keep_remote=args.keep_remote,
+    )
+    print("safety backup:  %s" % safety["archive"])
+    if safety["uploaded"]:
+        print("uploaded:       %s" % safety["uploaded"])
+    rotated = vault_keys.rotate_vault(vault)
+    backup_job.audit(vault, {
+        "event": "key_rotated",
+        "old_key_id": rotated["old_key_id"],
+        "new_key_id": rotated["new_key_id"],
+        "safety_archive": Path(safety["archive"]).name,
+    })
+    after = vault_keys.rotation_status(vault)
+    print("new key_id:     %s" % rotated["new_key_id"])
+    print("next rotation:  %s" % after["due_at"])
+
+
 def command_run(args):
     vault = Path(args.vault)
     local = Path(args.local)
-    sink = None
-    if args.remote:
-        credentials = Path(os.environ.get("USERPROFILE", str(Path.home()))) / ".jarvis" / "r2.env"
-        sink = backup_sink.sink_from_environment(credentials)
+    sink = _sink_for(args)
     result = backup_job.run(
         vault, local_dir=local, sink=sink,
         keep_local=args.keep_local, keep_remote=args.keep_remote,
@@ -76,6 +121,20 @@ def main(argv=None):
     run.add_argument("--keep-local", type=int, default=7)
     run.add_argument("--keep-remote", type=int, default=4)
     run.set_defaults(func=command_run)
+
+    status = sub.add_parser("status", help="show rotation age, due date and stored credentials")
+    status.add_argument("--vault", required=True, help="vault directory")
+    status.add_argument("--local", help="local backup directory (shows the newest archive)")
+    status.add_argument("--interval-days", type=int, default=vault_keys.ROTATION_INTERVAL_DAYS)
+    status.set_defaults(func=command_status)
+
+    rotate = sub.add_parser("rotate", help="back up first, then rotate the data key")
+    rotate.add_argument("--vault", required=True, help="vault directory")
+    rotate.add_argument("--local", required=True, help="local backup directory for the safety backup")
+    rotate.add_argument("--remote", action="store_true", help="also upload the safety backup to R2")
+    rotate.add_argument("--keep-local", type=int, default=7)
+    rotate.add_argument("--keep-remote", type=int, default=4)
+    rotate.set_defaults(func=command_rotate)
 
     arguments = parser.parse_args(argv)
     try:

@@ -100,6 +100,19 @@ with tempfile.TemporaryDirectory(prefix="jarvis-vault-rotation-", ignore_cleanup
     assert keys.vault_status(vault)["key_id"] == rotated["new_key_id"]
     print("K5_FAILED_ROTATION_ROLLS_BACK_PACKAGING=PASS")
 
+    # D5: the rotation reminder is driven by rotated_at and ages out after 180 days.
+    fresh_status = keys.rotation_status(vault)
+    assert fresh_status["age_days"] == 0 and fresh_status["due"] is False, fresh_status
+    assert fresh_status["rotated_at"], "rotation did not record rotated_at"
+    meta_payload = json.loads((vault / keys.META).read_text(encoding="utf-8"))
+    meta_payload["rotated_at"] = "2025-01-01T00:00:00Z"
+    (vault / keys.META).write_text(json.dumps(meta_payload), encoding="utf-8")
+    aged = keys.rotation_status(vault)
+    assert aged["due"] is True and aged["age_days"] > 180, aged
+    print("D5_ROTATION_REMINDER_USES_ROTATED_AT=PASS age_days=%s" % aged["age_days"])
+    meta_payload["rotated_at"] = fresh_status["rotated_at"]
+    (vault / keys.META).write_text(json.dumps(meta_payload), encoding="utf-8")
+
     # C2: simulate a crash after the database was rekeyed but before the swap.
     old_key = keys._load_key(vault)
     new_key = os.urandom(32)

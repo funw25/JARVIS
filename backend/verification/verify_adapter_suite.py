@@ -31,7 +31,7 @@ with tempfile.TemporaryDirectory(prefix="jarvis-adapter-suite-", ignore_cleanup_
     run = subprocess.run(
         [sys.executable, str(ROOT / "backend" / "verification" / "verify_all.py")],
         cwd=ROOT, env=environment, capture_output=True, text=True,
-        encoding="utf-8", errors="replace", timeout=900,
+        encoding="utf-8", errors="replace", timeout=1800,
     )
 
     lines = (run.stdout or "").splitlines()

@@ -27,6 +27,11 @@
 
 ## 本轮新增/变更
 
+- **决策落地（D4/D5/D6，2026-11-08）**：
+  - **D4 独立清单密钥**：每次备份生成随机清单密钥 MK，用口令与恢复码分别包装进 `keywrap.manifest_wraps`；清单标 `hmac_mode: independent`；恢复先解 MK 再验签，旧归档按 `derived` 兼容。新增验证 `D4_BACKUP_KEY_ALONE_CANNOT_FORGE_MANIFEST`。
+  - **D5 手动轮换 + 到期提醒**：`meta.json` 的 `rotated_at` 由轮换写入；新增 `rotation_status()`（默认 180 天）；`backup_cli.py status` 显示年龄/到期日/凭据，`rotate` 先自动备份再轮换并写 `key_rotated` 审计。计划轮换（定时自动）记录为未来项，本次不实现。
+  - **D6 不用 EOL 驱动**：自建 SQLite3MC/SQLCipher + OpenSSL 3.5 LTS 静态链接，或换不依赖 OpenSSL 的后端，作为 G1 前置方案写进切换计划。
+- 实测：全新 vault `status` 显示 age 0 / due no / 到期 2027-05-07；`rotate` 先产出安全备份再换钥；D5 提醒测试用 2025-01-01 的 `rotated_at` 得到 `age_days=676, due=True`。
 - **S5 干跑与切换计划（2026-11-08）**：新增 `docs/STORAGE_SWITCH_PLAN.md`（8 项硬门槛、切换开关、明文→加密迁移步骤、回滚演练、窗口验收清单、待决事项）。
 - 应用新增 `JARVIS_VAULT_DIR`：设置后 `database_path()` 指向 `<vault>/vault.db`，`connect()` 在 vault 缺少 `meta.json` 时失败关闭。这样真实应用 schema 可以**直接住在 vault 里**，不再出现"迁移写进另一个数据库文件"的错位。
 - 新增 `verify_vault_app_schema.py` 干跑：在子进程里用真实 `app.database` 对 vault 执行 17 个迁移 → 32 张表、`vault_meta`/包装不被破坏、表名不以明文出现在文件里；随后备份→恢复→再次迁移校验通过。实测：`versions=17 tables=32`，恢复后的 vault 可再次打开并读到 17 个迁移。回归 **55 PASS / 0 FAIL / 0 SKIP**（3.14 默认与加密后端一致），3.13 对照 42 PASS / 13 SKIP。

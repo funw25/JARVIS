@@ -28,6 +28,7 @@ RETIRED = "retired"
 NEXT_KEYFILE = "dek.next.dpapi"
 NEXT_META = "meta.next.json"
 PENDING = "pending.json"
+ROTATION_INTERVAL_DAYS = 180
 
 
 class VaultError(RuntimeError):
@@ -77,13 +78,37 @@ def _unsafe(path):
     return path.is_symlink() or getattr(path, "is_junction", lambda: False)()
 
 
-def _meta_payload(key_id):
+def _meta_payload(key_id, *, created_at=None, rotated_at=None):
     return {
         "format": FORMAT,
         "key_id": key_id,
-        "created_at": _now(),
-        "rotated_at": None,
+        "created_at": created_at or _now(),
+        "rotated_at": rotated_at,
         "cipher": "chacha20",
+    }
+
+
+def rotation_status(root, interval_days=ROTATION_INTERVAL_DAYS):
+    """Report how old the current key is; drives the rotation reminder."""
+    import datetime
+
+    meta = _read_meta(Path(root))
+    stamp = meta.get("rotated_at") or meta.get("created_at") or ""
+    try:
+        moment = datetime.datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.timezone.utc)
+    except ValueError:
+        return {"key_id": meta["key_id"], "since": stamp, "age_days": None, "due": True,
+                "interval_days": interval_days, "due_at": None}
+    age_days = (datetime.datetime.now(datetime.timezone.utc) - moment).days
+    due_at = (moment + datetime.timedelta(days=interval_days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return {
+        "key_id": meta["key_id"],
+        "since": stamp,
+        "rotated_at": meta.get("rotated_at"),
+        "age_days": age_days,
+        "interval_days": interval_days,
+        "due": age_days >= interval_days,
+        "due_at": due_at,
     }
 
 
@@ -186,7 +211,7 @@ def rotate_vault(root):
     # interrupted rotation recoverable instead of leaving a silent mismatch.
     wrapped_new = protect_synthetic_key(new_key)
     (root / NEXT_KEYFILE).write_bytes(wrapped_new)
-    _write_json(root / NEXT_META, _meta_payload(new_key_id))
+    _write_json(root / NEXT_META, _meta_payload(new_key_id, created_at=meta.get("created_at"), rotated_at=_now()))
     _write_pending(root, old_key_id, new_key_id)
 
     try:

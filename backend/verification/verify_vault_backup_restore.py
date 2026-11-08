@@ -84,6 +84,11 @@ with tempfile.TemporaryDirectory(prefix="jarvis-vault-backup-", ignore_cleanup_e
     assert database[:16] != b"SQLite format 3\x00", "backup database is plaintext"
     assert MARKER.encode() not in database, "marker leaked into the backup database"
     assert manifest["source_key_id"] == info["key_id"]
+    assert manifest["hmac_mode"] == "independent", manifest.get("hmac_mode")
+    with zipfile.ZipFile(archive) as bundle:
+        keywrap = json.loads(bundle.read(backup.KEYWRAP))
+    assert len(keywrap.get("manifest_wraps", [])) == 2, keywrap.get("manifest_wraps")
+    print("D4_MANIFEST_KEY_IS_INDEPENDENT=PASS")
     in_place = base / "extracted.db"
     in_place.write_bytes(database)
     with sqlite3.connect(in_place) as plain:
@@ -121,6 +126,24 @@ with tempfile.TemporaryDirectory(prefix="jarvis-vault-backup-", ignore_cleanup_e
     rebuild(archive, mismatched, mutate_manifest)
     expect(backup.ArchiveRejected, lambda: backup.restore_backup(mismatched, base / "mismatch-out", passphrase=passphrase), "manifest mismatch")
     print("B3_B4_TAMPERED_BYTES_AND_MISMATCHED_MANIFEST_REJECTED=PASS")
+
+    # D4: knowing the backup key alone must not allow forging the manifest.
+    bk = backup._unwrap([entry for entry in keywrap["wraps"] if entry["type"] == "passphrase"][0],
+                        passphrase.encode("utf-8"))
+
+    def forge_manifest(name, data):
+        if name != backup.MANIFEST:
+            return data
+        payload = json.loads(data)
+        payload["tables"] = 999
+        covered = {k: v for k, v in payload.items() if k != "manifest_hmac"}
+        payload["manifest_hmac"] = backup._manifest_hmac(covered, backup._legacy_manifest_key(bk))
+        return json.dumps(payload).encode("utf-8")
+
+    forged = base / "forged.jvault"
+    rebuild(archive, forged, forge_manifest)
+    expect(backup.ArchiveRejected, lambda: backup.restore_backup(forged, base / "forged-out", passphrase=passphrase), "forged manifest")
+    print("D4_BACKUP_KEY_ALONE_CANNOT_FORGE_MANIFEST=PASS")
 
     # B8: passphrase policy.
     expect(backup.PassphraseRejected, lambda: backup.create_backup(vault if vault.exists() else base / "restored", base / "short", passphrase="short-pass"), "short passphrase")

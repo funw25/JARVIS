@@ -140,9 +140,15 @@ def _unwrap(entry, secret):
         raise UnwrapFailed("key wrap could not be opened") from exc
 
 
-def _manifest_hmac(manifest, bk):
+def _manifest_hmac(manifest, key):
+    """HMAC over the manifest; ``key`` is the independent manifest key (or the
+    legacy derived key for archives written before D4)."""
     body = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hmac.new(hmac.new(bk, b"jarvis-backup-manifest-v1", hashlib.sha256).digest(), body, hashlib.sha256).hexdigest()
+    return hmac.new(key, body, hashlib.sha256).hexdigest()
+
+
+def _legacy_manifest_key(bk):
+    return hmac.new(bk, b"jarvis-backup-manifest-v1", hashlib.sha256).digest()
 
 
 def _sha256_file(path):
@@ -180,7 +186,19 @@ def create_backup(vault_root, destination_dir, *, passphrase, recovery_code=None
             raise BackupError("backup database is not encrypted")
 
         wraps = [_wrap(bk, secret.encode("utf-8"), "passphrase"), _wrap(bk, normalized.encode("ascii"), "recovery_code")]
-        keywrap = {"format": KEYWRAP_FORMAT, "backup_key_id": backup_key_id, "wraps": wraps}
+        # D4: the manifest key is independent from the backup key, so a database
+        # key alone can never be used to forge a manifest.
+        manifest_key = secrets.token_bytes(32)
+        manifest_wraps = [
+            _wrap(manifest_key, secret.encode("utf-8"), "passphrase"),
+            _wrap(manifest_key, normalized.encode("ascii"), "recovery_code"),
+        ]
+        keywrap = {
+            "format": KEYWRAP_FORMAT,
+            "backup_key_id": backup_key_id,
+            "wraps": wraps,
+            "manifest_wraps": manifest_wraps,
+        }
         (staging / KEYWRAP).write_text(json.dumps(keywrap, indent=2), encoding="utf-8")
 
         source_key_id = vault_keys.vault_status(vault_root).get("key_id")
@@ -196,8 +214,10 @@ def create_backup(vault_root, destination_dir, *, passphrase, recovery_code=None
                 {"type": entry["type"], "kdf": entry["kdf"], "salt": entry["salt"], "nonce": entry["nonce"]}
                 for entry in wraps
             ],
+            "manifest_wraps": [entry["type"] for entry in manifest_wraps],
+            "hmac_mode": "independent",
         }
-        manifest["manifest_hmac"] = _manifest_hmac(manifest, bk)
+        manifest["manifest_hmac"] = _manifest_hmac(manifest, manifest_key)
         (staging / MANIFEST).write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
         # Two backups within the same second would otherwise collide; keep the
@@ -277,7 +297,16 @@ def restore_backup(archive, target_root, *, passphrase=None, recovery_code=None)
 
     if manifest.get("backup_key_id") != keywrap.get("backup_key_id"):
         raise ArchiveRejected("key wrap and manifest disagree about the backup key")
-    if _manifest_hmac({k: v for k, v in manifest.items() if k != "manifest_hmac"}, bk) != manifest.get("manifest_hmac"):
+
+    if manifest.get("hmac_mode") == "independent":
+        manifest_entries = [entry for entry in keywrap.get("manifest_wraps", []) if entry.get("type") == kind]
+        if not manifest_entries:
+            raise KeywrapMissing("archive has no manifest key wrap for %s" % kind)
+        manifest_key = _unwrap(manifest_entries[0], secret)
+    else:  # archives written before D4 derive the manifest key from the backup key
+        manifest_key = _legacy_manifest_key(bk)
+    covered = {k: v for k, v in manifest.items() if k != "manifest_hmac"}
+    if _manifest_hmac(covered, manifest_key) != manifest.get("manifest_hmac"):
         raise ArchiveRejected("manifest signature does not verify")
 
     parent = target.parent

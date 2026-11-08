@@ -27,6 +27,12 @@
 
 ## 本轮新增/变更
 
+- **G1 驱动审查清单与自建草案（2026-11-08）**：新增 `docs/DRIVER_REVIEW_AND_BUILD.md`、`docs/driver-manifest.json` 与 `backend/verification/verify_driver_provenance.py`（注册为 `driver_provenance`）。
+  - 实测盘点：`apsw_sqlite3mc` 3.54.0.0 / APSW 3.54.0.0 / SQLite 3.54.0 / SQLite3MC 2.6.1；主二进制 SHA-256 `a9267aeb…bd9d53`；随包许可证**只有 APSW 的 zlib 文本**，缺 SQLite3MC(MIT) 与 SQLite(public-domain)；二进制里找不到 OpenSSL/Botan 版本串 → **加密后端无法从产物确认**（此前"OpenSSL 3.6 已 EOL"的说法本地无法复核）。
+  - 结论：G1 **未通过**，两条缺口写明；合成数据验证可以继续，真实数据禁止。
+  - 清单：12 项检查（来源一致性、产物哈希、许可证完整性、SBOM、原语可验证性、EOL、可复现构建、漏洞响应、分发义务、树外依赖、命名冒充、测试覆盖），每项含验证方法与通过标准。
+  - 构建草案：三方案（A 自建 SQLite3MC+APSW 静态链接 OpenSSL 3.5 LTS；B SQLCipher；C SQLite3MC+Botan），A 为首选，含工具链、版本钉扎、校验、打包 licenses+SBOM、更新 manifest、重复构建比对哈希、跑 57 项回归。
+  - 回归：**57 PASS / 0 FAIL / 0 SKIP**（3.14），3.13 对照 42 PASS / 15 SKIP。
 - **G6 逐表迁移与 G7 回滚演练（2026-11-08）**：新增 `backend/experimental/migrate_to_vault.py`。
   - G6：以只读方式打开明文源库 → 在暂存目录建 vault → 按原 CREATE 语句逐表复制 → 提交后开外键并 `PRAGMA foreign_key_check` → 对每张表比对行数与内容摘要（按主键排序的 SHA-256）→ 校验 vault 是密文 → 原子 rename → 写 `migration-report.json`。任何不一致会删除暂存 vault 并保留源库；源库若含保留表名 `vault_meta` 直接中止。
   - G7：`drill_rollback` 把明文快照复制到新目录，`integrity_check` + 逐表行数 + `rollback-report.json`，拒绝覆盖既有目录。

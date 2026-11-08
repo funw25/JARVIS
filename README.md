@@ -105,7 +105,7 @@ backend/
   app/                 domain: api, services, repositories, security, migrations
   migrations/          17 versioned SQL migrations
   experimental/        encrypted adapter and isolated storage experiments
-  verification/        56 checks plus standalone suites
+  verification/        57 checks plus standalone suites
   demo_jarvis.py       dependency-free synthetic demo
   API_REFERENCE.md     local HTTP contract
 docs/                  product, architecture, security, storage and status records
@@ -165,15 +165,15 @@ self-checks:
 All checks use fictional data and temporary databases.
 
 ```bash
-python backend/verification/verify_all.py            # 56 checks
+python backend/verification/verify_all.py            # 57 checks
 python backend/verification/verify_adapter_suite.py  # same suite on the encrypted backend
 ```
 
 | Environment | Result |
 |---|---|
-| Python 3.14, default SQLite | **56 PASS / 0 FAIL / 0 SKIP** |
-| Python 3.14, encrypted adapter | **56 PASS / 0 FAIL / 0 SKIP** |
-| Python 3.13, default SQLite | 42 PASS / 0 FAIL / 14 SKIP (3.14-only experiments) |
+| Python 3.14, default SQLite | **57 PASS / 0 FAIL / 0 SKIP** |
+| Python 3.14, encrypted adapter | **57 PASS / 0 FAIL / 0 SKIP** |
+| Python 3.13, default SQLite | 42 PASS / 0 FAIL / 15 SKIP (3.14-only experiments) |
 
 A passing suite means the domain contract holds on the tested backends. It does
 **not** mean encryption, key recovery, backup or real-account access is ready.

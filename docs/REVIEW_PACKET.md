@@ -66,9 +66,9 @@
 |---|---|
 | 驱动 | `apsw-sqlite3mc`（APSW 3.54.0.0 + SQLite3 Multiple Ciphers 2.6.1），cp314 Windows wheel |
 | 算法 | ChaCha20 页加密，raw key（32 字节 hex），WAL |
-| 来源 | PyPI 预构建 wheel；未自行构建，未做可复现构建对照 |
+| 来源 | PyPI 预构建 wheel；未自行构建，未做可复现构建对照。哈希记录在 `docs/driver-manifest.json`，`verify_driver_provenance.py` 检测漂移 |
 | 依赖风险 | 随包 OpenSSL 3.6 已 EOL（D6 已定：不得承载真实数据；改自建 3.5 LTS 或换后端） |
-| 许可证 | APSW 与 SQLite3 Multiple Ciphers 上游均为宽松许可；完整第三方清单待 G1 逐项核对 |
+| 许可证 | 随包只有 APSW 的 zlib 风格文本（`dist-info/licenses/LICENSE`）；SQLite3MC(MIT) 与 SQLite(public domain) 文本缺失 → 分发前必须补齐（实测） |
 | 加载方式 | 仅显式 `JARVIS_STORAGE_ADAPTER=apswmc` + 64 hex 密钥时导入；默认路径零依赖 |
 
 ## 7. 验收证据
@@ -117,7 +117,7 @@
 
 | 门槛 | 状态 |
 |---|---|
-| G1 驱动来源/许可证/构建审查 | ❌ 待做（D6 已定方向） |
+| G1 驱动来源/许可证/构建审查 | 🟡 清单与检测就绪（`DRIVER_REVIEW_AND_BUILD.md`、`verify_driver_provenance.py`）；实测两条缺口：许可证文本仅 APSW、加密后端不可辨识 → 自建 3.5 LTS 尚未执行 |
 | G2 独立安全评审 | ⏳ 本文即为输入 |
 | G4 自动化稳定运行 ≥14 天 | ❌ 未开始 |
 | G5 端到端性能基线 | ❌ 未做 |

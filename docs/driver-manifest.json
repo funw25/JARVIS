@@ -1,0 +1,23 @@
+{
+  "recorded_at": "2026-11-08T13:34:54Z",
+  "status": "experimental build; NOT approved for real personal data (see docs/DRIVER_REVIEW_AND_BUILD.md)",
+  "wheel": {
+    "name": "apsw_sqlite3mc",
+    "version": "3.54.0.0",
+    "dist_info": "apsw_sqlite3mc-3.54.0.0.dist-info"
+  },
+  "runtime": {
+    "apsw": "3.54.0.0",
+    "sqlite": "3.54.0",
+    "sqlite3mc": "SQLite3 Multiple Ciphers 2.6.1"
+  },
+  "files": {
+    "apsw/__init__.cp314-win_amd64.pyd": "a9267aebffd5bcd590c812f8bff78ce2ed039d7ae1d463f5faaf781b7fbd9d53",
+    "apsw/_unicode.cp314-win_amd64.pyd": "08969acfce09b089905625d2d984c7542995cde6d588508e193a1e28ae7a3e20",
+    "apsw_sqlite3mc-3.54.0.0.dist-info/RECORD": "114d383745f8682bf420ce556ac7ce4388a1c045c7f3323f8354caf502e85105"
+  },
+  "known_gaps": [
+    "dist-info licenses/LICENSE covers APSW only (zlib-style); the MIT notice for SQLite3 Multiple Ciphers and the SQLite public-domain notice are not bundled",
+    "no OpenSSL or Botan version string in the shipped binaries, so the crypto backend cannot be verified from the artefact"
+  ]
+}

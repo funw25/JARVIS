@@ -27,6 +27,12 @@
 
 ## 本轮新增/变更
 
+- **G6 逐表迁移与 G7 回滚演练（2026-11-08）**：新增 `backend/experimental/migrate_to_vault.py`。
+  - G6：以只读方式打开明文源库 → 在暂存目录建 vault → 按原 CREATE 语句逐表复制 → 提交后开外键并 `PRAGMA foreign_key_check` → 对每张表比对行数与内容摘要（按主键排序的 SHA-256）→ 校验 vault 是密文 → 原子 rename → 写 `migration-report.json`。任何不一致会删除暂存 vault 并保留源库；源库若含保留表名 `vault_meta` 直接中止。
+  - G7：`drill_rollback` 把明文快照复制到新目录，`integrity_check` + 逐表行数 + `rollback-report.json`，拒绝覆盖既有目录。
+  - 验收：`verify_migrate_to_vault.py`（31 表 / 22 行合成数据，摘要一致、外键干净、密文、拒绝覆盖、保留表名中止且无残留、回滚可用）。注册后回归 **56 PASS / 0 FAIL / 0 SKIP**（3.14），3.13 对照 42 PASS / 14 SKIP。
+  - 缺陷：适配器套件环境会把"明文源库"建成加密库，脚本已在启动时清除 `JARVIS_STORAGE_ADAPTER` / `JARVIS_APSWMC_KEY` / `JARVIS_VAULT_DIR` 以隔离；另修了暂存目录 rename 后 vault 多一层的问题。
+- **评审包（2026-11-08）**：新增 `docs/REVIEW_PACKET.md` —— 系统边界与数据流、威胁模型（覆盖/不覆盖）、密钥与打开流程、备份恢复、驱动与依赖、12 行验收证据表（含脚本与提交号）、5 个已修缺陷、已知限制、未完成门槛、复现命令、给评审者的 12 个问题。
 - **决策落地（D4/D5/D6，2026-11-08）**：
   - **D4 独立清单密钥**：每次备份生成随机清单密钥 MK，用口令与恢复码分别包装进 `keywrap.manifest_wraps`；清单标 `hmac_mode: independent`；恢复先解 MK 再验签，旧归档按 `derived` 兼容。新增验证 `D4_BACKUP_KEY_ALONE_CANNOT_FORGE_MANIFEST`。
   - **D5 手动轮换 + 到期提醒**：`meta.json` 的 `rotated_at` 由轮换写入；新增 `rotation_status()`（默认 180 天）；`backup_cli.py status` 显示年龄/到期日/凭据，`rotate` 先自动备份再轮换并写 `key_rotated` 审计。计划轮换（定时自动）记录为未来项，本次不实现。

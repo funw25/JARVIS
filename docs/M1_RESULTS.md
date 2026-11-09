@@ -4,7 +4,7 @@
 **日期：** 2026-11-08  
 **数据：** 全部虚构；未连接任何账户、模型或外部服务  
 **代码：** `backend/evals/m1/artifacts.jsonl`、`backend/usecases/m1_*`、`backend/migrations/0018_m1_artifacts.sql`  
-**验证：** `verify_m1_dataset` / `verify_m1_pipeline` / `verify_m1_evaluation`（已注册进 60 项回归）
+**验证：** `verify_m1_dataset` / `verify_m1_pipeline` / `verify_m1_evaluation`（已注册进 60 项回归）；`verify_m1.py` 可单独运行这三项并保持零 SKIP
 
 ---
 
@@ -73,6 +73,7 @@ draft_created      -> m1_draft        (正文标"未发送"，无发送器)
 
 - 当前没有配置任何真实模型；`local_fake` 只证明流程可跑，**不能**替代质量基线。
 - `m1_eval.evaluate_model(rows, None)` 直接抛 `ModelUnavailable`，拒绝编造分数；`model_status()` 返回 `{"status": "未验证", "measured": false}`。
+- 当前 `evaluate_model` 对非 `None` 参数只要求可调用，**尚未验证调用对象是哪个模型或是否真的调用了模型**。接入模型前必须定义可审计的提供方/模型版本/调用记录，不能把规则函数或 `local_fake` 传入后宣称模型测量完成。
 - 验收标准保持：没有真实模型时，M1 的质量一栏就是"未验证"，不以新增测试数量替代。
 
 ## 5. M1 完成度对照（[执行计划 §3](JARVIS_V2_EXECUTION.md)）
@@ -83,7 +84,7 @@ draft_created      -> m1_draft        (正文标"未发送"，无发送器)
 | 2. 画清一条纵向调用链 | ✅ `usecases/m1_rules|pipeline|eval` + 迁移 0018；尚未把旧 `synthetic_*` 全面端口化 |
 | 3. 可用演示 | ✅ CLI 一条命令跑完整链路并打印审计 |
 | 4. AI 基线（规则 + 模型对比） | 🟡 规则基线完成；模型基线**未验证** |
-| 5. 固定运行环境 | ❌ 未做（属 M2） |
+| 5. 固定运行环境 | 🟡 已有 Python 3.14.10 下的 M1 专项零 SKIP 验证命令；尚无可在干净机器重建的解释器与依赖哈希锁。M1 离线环境属本阶段，正式可信存储环境属 M2 |
 
 M1 **未完成**：模型质量一栏为空、运行环境未锁定。按执行计划，未达到定义就留在 M1。
 
@@ -94,3 +95,7 @@ M1 **未完成**：模型质量一栏为空、运行环境未锁定。按执行�
 - 没有真实模型，因此没有质量/耗时/费用对比。
 - 页面（HUD）未接入；M1 只提供 CLI 与数据库状态。
 - 规则是关键词匹配，对同义改写、反讽、多语言混合没有鲁棒性证据。
+
+## 7. 2026-11-09 专项复验
+
+命令：`<项目内 Python 3.14.10> backend/verification/verify_m1.py`。输出：`M1_OFFLINE_CHECKS=PASS count=3 skip=0`、`M1_MODEL_QUALITY=UNVERIFIED`、`M1_EXIT=OPEN`。该入口只验证虚构数据集、闭环和规则评测；不把 60 项综合回归或 G1 驱动诊断当作 M1 放行结果。解释器版本已检查，但完整分发包、依赖来源与干净机器重建仍未锁定。

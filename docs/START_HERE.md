@@ -20,6 +20,16 @@ $env:TMP = $jarvisTemp
 
 若提示找不到项目路径或 Python，可能是项目被移动或隔离运行环境被清理；先保留完整错误信息，不要改用真实数据重试。系统 Python 3.13 也曾运行过此演示，但其旧加密网络库不适合正式联网。
 
+## 验证 M1 虚构数据闭环
+
+运行前面设置路径的命令后执行：
+
+```powershell
+& $jarvisPython (Join-Path $jarvisRoot 'backend\verification\verify_m1.py')
+```
+
+该入口只需 Python 3.14.10 标准库，检查数据集、纵向链路和规则评测，任何一项失败或版本不符都会返回非零。成功时仍会明确输出 `M1_MODEL_QUALITY=UNVERIFIED` 与 `M1_EXIT=OPEN`：真实模型质量尚未测量，不能据此接入私人资料。
+
 ## 自己验证本地接口
 
 运行上面设置路径的代码后，可以继续执行：

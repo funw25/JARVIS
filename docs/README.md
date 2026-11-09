@@ -28,6 +28,7 @@
 - [切换到加密存储的计划](STORAGE_SWITCH_PLAN.md)
 - [安全评审包](REVIEW_PACKET.md)
 - [M1 离线闭环结果与限制](M1_RESULTS.md)
+- [M1 离线环境：锁定与干净机器重建](M1_ENVIRONMENT.md)
 - [加密驱动审查清单与自建草案](DRIVER_REVIEW_AND_BUILD.md)
 - [独立合成加密库实验](EXPERIMENTAL_SYNTHETIC_VAULT.md)
 - [Python 3.14 隔离兼容性实验](ISOLATED_PYTHON_314.md)

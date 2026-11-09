@@ -71,6 +71,26 @@ draft_created      -> m1_draft        (正文标"未发送"，无发送器)
 
 ## 4. 模型质量：未验证
 
+**2026-11-09 可用性探测（本机实测）：** 没有本地模型运行时——`ollama`、`llama-cli`、`llama-server`、`lms` 均不存在的可执行文件，`.ollama` / `.cache\huggingface` / `.lmstudio` 目录均不存在，Python 侧 `llama_cpp`、`transformers`、`torch`、`onnxruntime`、`openai`、`httpx`、`requests` 均未安装。用户明确不连接任何账户，因此**当前没有任何真实模型可跑**，质量一栏保持"未验证"。
+
+适配器已就绪（`backend/usecases/m1_model.py`），只从环境变量读取配置，不读仓库里的任何密钥：
+
+| 变量 | 含义 |
+|---|---|
+| `JARVIS_M1_MODEL_PROVIDER` | `ollama` / `openai-compatible` / `command` |
+| `JARVIS_M1_MODEL` | 模型名或命令路径 |
+| `JARVIS_M1_MODEL_BASE_URL` | 例如 `http://127.0.0.1:11434` |
+| `JARVIS_M1_MODEL_KEY_ENV` | 存放密钥的**环境变量名**（密钥本身不入库） |
+| `JARVIS_M1_MODEL_TIMEOUT` | 秒，默认 60 |
+
+模型一旦可用，对照评测就是一条命令：
+
+```powershell
+& .\.jarvis-python-3.14.10\python.exe backend\usecases\m1_cli.py eval --engine model --out m1-model-report.json
+```
+
+未配置时会明确报错并返回非零，不会退化成规则基线冒充模型结果。`verify_m1_model_probe.py` 用本地 stub 端点验证了解析与拒绝路径（无效 JSON、未知分类、证据非逐字都会被处理），并断言"用 stub 跑通不等于质量测量"。
+
 - 当前没有配置任何真实模型；`local_fake` 只证明流程可跑，**不能**替代质量基线。
 - `m1_eval.evaluate_model(rows, None)` 直接抛 `ModelUnavailable`，拒绝编造分数；`model_status()` 返回 `{"status": "未验证", "measured": false}`。
 - 当前 `evaluate_model` 对非 `None` 参数只要求可调用，**尚未验证调用对象是哪个模型或是否真的调用了模型**。接入模型前必须定义可审计的提供方/模型版本/调用记录，不能把规则函数或 `local_fake` 传入后宣称模型测量完成。
@@ -83,8 +103,8 @@ draft_created      -> m1_draft        (正文标"未发送"，无发送器)
 | 1. 固定样本与契约（40–60 条标注） | ✅ 53 条，含证据与类别 |
 | 2. 画清一条纵向调用链 | ✅ `usecases/m1_rules|pipeline|eval` + 迁移 0018；尚未把旧 `synthetic_*` 全面端口化 |
 | 3. 可用演示 | ✅ CLI 一条命令跑完整链路并打印审计 |
-| 4. AI 基线（规则 + 模型对比） | 🟡 规则基线完成；模型基线**未验证** |
-| 5. 固定运行环境 | 🟡 已有 Python 3.14.10 下的 M1 专项零 SKIP 验证命令；尚无可在干净机器重建的解释器与依赖哈希锁。M1 离线环境属本阶段，正式可信存储环境属 M2 |
+| 4. AI 基线（规则 + 模型对比） | 🟡 规则基线完成；模型适配器与拒绝路径已就绪，但**本机无任何真实模型**（无运行时、无权重、不接账户），模型基线仍**未验证** |
+| 5. 固定运行环境 | ✅ M1 离线环境已锁定：解释器 3.14.10（官方 embeddable，SHA-256 固定）、32 个包版本+哈希锁、离线 wheelhouse、`bootstrap.ps1` 与干净房间重建实测（4 项检查零 SKIP）。见 [M1 环境](M1_ENVIRONMENT.md)。正式可信存储环境仍属 M2 |
 
 M1 **未完成**：模型质量一栏为空、运行环境未锁定。按执行计划，未达到定义就留在 M1。
 

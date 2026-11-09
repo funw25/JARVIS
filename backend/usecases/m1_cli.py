@@ -16,7 +16,7 @@ BACKEND = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND))
 os.environ.setdefault("JARVIS_DATA_MODE", "synthetic")
 
-from usecases import m1_eval, m1_pipeline, m1_rules  # noqa: E402
+from usecases import m1_eval, m1_model, m1_pipeline, m1_rules  # noqa: E402
 
 DATASET = BACKEND / "evals" / "m1" / "artifacts.jsonl"
 
@@ -26,7 +26,16 @@ def _rows():
 
 
 def command_eval(args):
-    report = m1_eval.evaluate(_rows())
+    rows = _rows()
+    engine = None
+    if getattr(args, "engine", "rules") == "model":
+        try:
+            engine = m1_model.engine()
+        except m1_model.ModelUnavailable as exc:
+            print("error: %s" % exc, file=sys.stderr)
+            print("model quality: 未验证 (no real model reachable)", file=sys.stderr)
+            return 2
+    report = m1_eval.evaluate(rows, engine)
     print(m1_eval.summarize(report))
     print("model quality: %s (%s)" % (m1_eval.model_status()["status"], m1_eval.model_status()["reason"]))
     if args.out:
@@ -88,6 +97,8 @@ def main(argv=None):
 
     evaluate = sub.add_parser("eval", help="evaluate the rule baseline on the labeled set")
     evaluate.add_argument("--out", help="write the full report as JSON")
+    evaluate.add_argument("--engine", choices=["rules", "model"], default="rules",
+                         help="rules = deterministic baseline; model = configured real model")
     evaluate.set_defaults(func=command_eval)
 
     demo = sub.add_parser("demo", help="run one artifact through the whole loop")

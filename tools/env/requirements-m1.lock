@@ -1,0 +1,67 @@
+# M1 offline environment lock - generated from the wheelhouse, do not edit by hand.
+# Install with: pip install --no-index --find-links <wheelhouse> --require-hashes -r this-file
+
+annotated-doc==0.0.5 --hash=sha256:117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101
+#   wheel: annotated_doc-0.0.5-py3-none-any.whl
+annotated-types==0.8.0 --hash=sha256:f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0
+#   wheel: annotated_types-0.8.0-py3-none-any.whl
+anyio==4.16.0 --hash=sha256:c66ae634e0b8228396b801741beb3294326d4b6102f7bba4041c0dfb58c29026
+#   wheel: anyio-4.16.0-py3-none-any.whl
+argon2-cffi==25.1.0 --hash=sha256:fdc8b074db390fccb6eb4a3604ae7231f219aa669a2652e0f20e16ba513d5741
+#   wheel: argon2_cffi-25.1.0-py3-none-any.whl
+argon2-cffi-bindings==26.1.0 --hash=sha256:2c36ff87b5dfaa477d0bd51e9d7f6abdae7c8955d2983c97419085d842154b3e
+#   wheel: argon2_cffi_bindings-26.1.0-cp310-abi3-win_amd64.whl
+boto3==1.43.126 --hash=sha256:dd701a973b02a73930e546a6a15d13edbfbedc3180bb3d55b0a88678c284ccd6
+#   wheel: boto3-1.43.126-py3-none-any.whl
+botocore==1.43.126 --hash=sha256:2f2239a47025a2fa173cd145ab8803ac02b76114864bf5b66475ff1cb88e6b0a
+#   wheel: botocore-1.43.126-py3-none-any.whl
+cffi==2.1.1 --hash=sha256:3222ba5d678f80a030e6afbcc33dc1ae5cb45facabb61cee2c7016b8432fde48
+#   wheel: cffi-2.1.1-cp314-cp314-win_amd64.whl
+click==8.5.1 --hash=sha256:8bb5376d2006950386f8c6427613334a2acadc5f559cb80e638d00b4df957e37
+#   wheel: click-8.5.1-py3-none-any.whl
+cryptography==50.0.2 --hash=sha256:7afa5a6602a9f29af1f3a2965f831bae7c9d5d597b7cbb716d41ab3b7d89879c
+#   wheel: cryptography-50.0.2-cp311-abi3-win_amd64.whl
+fastapi==0.162.0 --hash=sha256:3785963de305dd09912426cb81f2d230fce98ab3521cdfe97265c8d14983128c
+#   wheel: fastapi-0.162.0-py3-none-any.whl
+h11==0.16.0 --hash=sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86
+#   wheel: h11-0.16.0-py3-none-any.whl
+httptools==0.9.0 --hash=sha256:edd5aa045fa3cc57143db018dd32ce7962bd5b525d05230709015d7e570100aa
+#   wheel: httptools-0.9.0-cp314-cp314-win_amd64.whl
+idna==3.20 --hash=sha256:ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c
+#   wheel: idna-3.20-py3-none-any.whl
+jmespath==1.1.0 --hash=sha256:a5663118de4908c91729bea0acadca56526eb2698e83de10cd116ae0f4e97c64
+#   wheel: jmespath-1.1.0-py3-none-any.whl
+opentelemetry-api==1.45.2 --hash=sha256:2cbd737377e710ee740d261c94e93fa0f08e6d037c18f17513cc0a2d94479a34
+#   wheel: opentelemetry_api-1.45.2-py3-none-any.whl
+pycparser==3.12 --hash=sha256:a076f3f489b39b43ed13563a1dafe42447445bec2e294154ec5c57fcdda4c85e
+#   wheel: pycparser-3.12-py3-none-any.whl
+pydantic==2.14.3 --hash=sha256:3f7b347782ab7e4cf4c798496ae3a82787d9f21ec12676a9c564355eeef8daa8
+#   wheel: pydantic-2.14.3-py3-none-any.whl
+pydantic-core==2.50.4 --hash=sha256:b0cdb655fbd1562c2dfc9986f9103a106f7058cd0915afc6e656d4b1d73f3387
+#   wheel: pydantic_core-2.50.4-cp314-cp314-win_amd64.whl
+python-dateutil==2.9.0.post0 --hash=sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427
+#   wheel: python_dateutil-2.9.0.post0-py2.py3-none-any.whl
+python-dotenv==1.2.4 --hash=sha256:42269a8a5b3fd54ffa6f3d84b18abed50064717576b4ecf03dc4a55d8aa04fdc
+#   wheel: python_dotenv-1.2.4-py3-none-any.whl
+pyyaml==6.0.3 --hash=sha256:4a2e8cebe2ff6ab7d1050ecd59c25d4c8bd7e6f400f5f82b96557ac0abafd0ac
+#   wheel: pyyaml-6.0.3-cp314-cp314-win_amd64.whl
+s3transfer==0.19.3 --hash=sha256:24eb7535804306355e31c952a90022bf5b2f9d760f9a11062c7493a217c08553
+#   wheel: s3transfer-0.19.3-py3-none-any.whl
+six==1.17.0 --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274
+#   wheel: six-1.17.0-py2.py3-none-any.whl
+sqlcipher3-wheels==0.5.7 --hash=sha256:f210fdbbb794cc1b3739c7bff879b8bcc5949567f5c222e251882ec076e69b72
+#   wheel: sqlcipher3_wheels-0.5.7-cp314-cp314-win_amd64.whl
+starlette==1.10.0 --hash=sha256:478c0ab3b4ced6e82719849c118fa406f0278a3499c1a898cd15cd31bdc38ce4
+#   wheel: starlette-1.10.0-py3-none-any.whl
+typing-extensions==4.16.0 --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8
+#   wheel: typing_extensions-4.16.0-py3-none-any.whl
+typing-inspection==0.4.5 --hash=sha256:bc210535442b39e1bf2805e0c7a17dfd6a4ace760c84c7f7d16245d23a6b1c39
+#   wheel: typing_inspection-0.4.5-py3-none-any.whl
+urllib3==2.8.0 --hash=sha256:0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3
+#   wheel: urllib3-2.8.0-py3-none-any.whl
+uvicorn==0.54.0 --hash=sha256:505bdb0f318731d45f1f712071fc781a8981f6847a31c902c9f5e652d4f67faf
+#   wheel: uvicorn-0.54.0-py3-none-any.whl
+watchfiles==1.3.0 --hash=sha256:1acabde19b67e673274e89a04d613b7fb1f122e2c4b8ec9a581e59c149264b61
+#   wheel: watchfiles-1.3.0-cp310-abi3-win_amd64.whl
+websockets==17.4 --hash=sha256:70293c25d79d1f084fdd665894481547575e429d2a75e8d72caec2f6b6b07af8
+#   wheel: websockets-17.4-cp314-cp314-win_amd64.whl

@@ -1,7 +1,7 @@
 """Run only the mandatory, account-free M1 checks.
 
-This script checks the synthetic dataset, vertical loop and rule evaluation.
-It does not certify model quality or release readiness.
+This script checks the locked environment, the synthetic dataset, the vertical
+loop and the rule evaluation. It does not certify model quality or release readiness.
 """
 import os
 import subprocess
@@ -12,9 +12,11 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 CHECKS = (
+    "verify_env_lock.py",
     "verify_m1_dataset.py",
     "verify_m1_pipeline.py",
     "verify_m1_evaluation.py",
+    "verify_m1_model_probe.py",
 )
 
 

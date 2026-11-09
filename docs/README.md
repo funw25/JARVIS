@@ -2,8 +2,14 @@
 
 这套文档是 Jarvis 的长期产品记录。产品范围、界面语言、系统边界、决策和版本计划分别放在独立文件里；重要变化应同步更新相应文档与本地原型。
 
+**2026-11-08 重审入口：** [新版产品定义](JARVIS_V2_PRODUCT.md) → [新版目标架构](JARVIS_V2_ARCHITECTURE.md) → [当前进度与下一阶段](JARVIS_V2_EXECUTION.md)。这三份是新的独立建议方案；下方旧版需求、路线图和实验文档保留为证据与历史记录。陪伴需求仍冻结，真实资料仍禁止进入当前构建。
+
 ## 文档索引
 
+- [新版产品定义与版本边界](JARVIS_V2_PRODUCT.md)
+- [新版目标架构与 AI 算法设计](JARVIS_V2_ARCHITECTURE.md)
+- [新版交付计划、当前进度与下一阶段](JARVIS_V2_EXECUTION.md)
+- [39 项风险整改选项](RISK_REMEDIATION_OPTIONS.md)
 - [当前进展、未完成事项和下一步](CURRENT_STATUS.md)
 - [从这里开始：本机演示与启动说明](START_HERE.md)
 - [2026-11-06 工作进展检查点](CHECKPOINT_2026-11-06.md)

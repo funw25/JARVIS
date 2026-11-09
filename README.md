@@ -1,5 +1,10 @@
 # Jarvis
 
+For the current independent product and architecture reassessment, start with
+[product scope](docs/JARVIS_V2_PRODUCT.md), [target architecture](docs/JARVIS_V2_ARCHITECTURE.md),
+and [current phase and next milestone](docs/JARVIS_V2_EXECUTION.md). These are proposals;
+the existing code remains a synthetic-data prototype.
+
 A local-first personal information and action workspace: mail, tasks, captured
 knowledge and conversations in one place, with a human approval step in front of
 every external action.
@@ -171,12 +176,14 @@ python backend/verification/verify_adapter_suite.py  # same suite on the encrypt
 
 | Environment | Result |
 |---|---|
-| Python 3.14, default SQLite | **57 PASS / 0 FAIL / 0 SKIP** |
-| Python 3.14, encrypted adapter | **57 PASS / 0 FAIL / 0 SKIP** |
+| Python 3.14, default SQLite (last recorded) | **57 script items PASS / 0 FAIL / 0 SKIP** |
+| Python 3.14, encrypted adapter (last recorded) | **57 script items PASS / 0 FAIL / 0 SKIP** |
 | Python 3.13, default SQLite | 42 PASS / 0 FAIL / 15 SKIP (3.14-only experiments) |
 
-A passing suite means the domain contract holds on the tested backends. It does
-**not** mean encryption, key recovery, backup or real-account access is ready.
+One of the 57 items is `driver_provenance`: it can be counted as PASS while
+printing `G1_GATE=OPEN`. The aggregate is a synthetic regression count, not a
+release gate or approval for personal data. These are previously recorded runs;
+this documentation change did not rerun them.
 
 ## Safety and privacy boundaries
 

@@ -1,8 +1,30 @@
 # Jarvis 项目日志与下一步
 
-**项目状态：** Jarvis 优先；合成工作流、本机 HTTP 与提醒规则已验证；主应用加密和恢复尚未实现  
-**最近更新：** 2026-11-07  
-**当前阶段：** J31 合成草稿和审批列表完成；继续推进 Jarvis 底层和安全验证（见[底层方案](CORE_IMPLEMENTATION_PLAN.md)）
+**项目状态：** Jarvis 优先；合成工作流、本机 HTTP 与提醒规则已验证；实验 vault 可供合成数据使用，默认存储未切换，真实数据恢复与安全放行未完成
+**最近更新：** 2026-11-09
+**当前阶段：** M0 产品/架构重设基线已形成建议草案；下一阶段 M1 合成纵向闭环与 AI 质量基线（见[新版交付计划](JARVIS_V2_EXECUTION.md)）
+
+## 2026-11-09：事实一致性修订，M1 尚未启动
+
+- 核对上游：SQLCipher 稳定版 v4.20.0 已于 2026-10-27 发布；PyPI 的 `sqlcipher3` 0.6.5 于 2026-11-05 列有 Windows CPython 3.14 wheel，页面标记无构建来源证明。wheel 存在不等于其捆绑版本、密码库或安全性已通过 G1。来源：[SQLCipher Releases](https://github.com/sqlcipher/sqlcipher/releases)、[sqlcipher3 0.6.5](https://pypi.org/project/sqlcipher3/0.6.5/)。
+- 修订驱动审查的旧版本号和 D6 注释；项目日志原本把 SQLite3MC 与 OpenSSL 3.5 LTS 绑定的两处记为**历史错误前提**，保留事件记录但不再当现行建议。检查点文档明确标为历史快照。
+- 将 57 PASS 明确写成“57 个脚本项”，其中 `driver_provenance` 仍可在 `G1_GATE=OPEN` 时返回成功；因此合成回归总数与供应链放行独立报告。同步修订 README、启动说明、当前状态和新版计划。
+- 环境观察按 runner/会话分开：先前 Codex 工具默认权限读文档成功；用户报告当前 DSH 受限模式所有 shell 命令均以 `0xC0000142` 退出，只有完全权限可用。没有据其中一次观察推断另一环境已经修复。
+- 本次只做文档一致性修订，不运行新回归，不连接账号，不处理真实数据，不推送；M1 实施仍未开始。
+
+## 2026-11-08：独立重审总体设计
+
+- 从用户已确认目标重新定义 Jarvis 为“信息到行动的工作台”；产出 [产品定义与版本边界](JARVIS_V2_PRODUCT.md)、[目标架构与 AI 算法设计](JARVIS_V2_ARCHITECTURE.md)、[进度与阶段计划](JARVIS_V2_EXECUTION.md)。不把现有 FastAPI、SQLite、APSW、HUD 文件或旧里程碑当作必须沿用的结论。
+- 关键选择：R0 先用虚构数据证明可追溯的完整用户闭环和 AI 质量；M2 再完成可信本机存储/身份/恢复门槛；真实 Gmail、外发、HUD、语音、多设备与 X 分别过门。陪伴模式维持冻结；微信账号控制列为平台可行性项目。
+- 当前定位：M0 建议文档已写，M1 尚未实现。最近记录的 57 个脚本项包含仍报告 `G1_GATE=OPEN` 的驱动诊断，不应统称为已放行的功能或安全回归；假模型不证明 AI 质量，实验加密未成为真实资料存储。下一动作是建立 40–60 条虚构标注样本、来源无关合同和可重复的离线纵向演示。
+- 本次只读检查本地代码与文档，并查阅 Google/X 的官方接口说明；没有登录账号、调用模型、上传备份、修改数据或运行新回归。文档链接与差异检查完成后记录结果。
+
+## 2026-11-08：39 项风险复核与 D6 归因修正
+
+- 依据用户提供的 39 项问题，新增 [风险整改方案](RISK_REMEDIATION_OPTIONS.md)：比较继续合成实验、可追溯自建 APSW/SQLite3MC、替换驱动及缩小首发范围四条路线；给出 P0/P1 优先级、验收口径和停止条件。
+- 修正旧文档中的 D6 前提：SQLCipher 候选报告的 OpenSSL 3.6 不能归因于当前 APSW/SQLite3MC。当前 wheel 的源码到二进制构建链和实际依赖仍未证实，G1 保持 OPEN；真实数据仍禁止。
+- 复核 `verify_driver_provenance.py`：即使输出 `G1_GATE=OPEN`，脚本仍可打印 `DRIVER_PROVENANCE=PASS` 并以 0 退出，因此 57 项合成回归通过不能被解释为 G1 放行。发布门禁需独立实现。
+- 本次只修改分析与状态文档，未运行回归、未触及真实账户、R2 对象、凭据或用户数据。
 
 ## 项目目标
 
@@ -31,8 +53,8 @@
   - 实测盘点：`apsw_sqlite3mc` 3.54.0.0 / APSW 3.54.0.0 / SQLite 3.54.0 / SQLite3MC 2.6.1；主二进制 SHA-256 `a9267aeb…bd9d53`；随包许可证**只有 APSW 的 zlib 文本**，缺 SQLite3MC(MIT) 与 SQLite(public-domain)；二进制里找不到 OpenSSL/Botan 版本串 → **加密后端无法从产物确认**（此前"OpenSSL 3.6 已 EOL"的说法本地无法复核）。
   - 结论：G1 **未通过**，两条缺口写明；合成数据验证可以继续，真实数据禁止。
   - 清单：12 项检查（来源一致性、产物哈希、许可证完整性、SBOM、原语可验证性、EOL、可复现构建、漏洞响应、分发义务、树外依赖、命名冒充、测试覆盖），每项含验证方法与通过标准。
-  - 构建草案：三方案（A 自建 SQLite3MC+APSW 静态链接 OpenSSL 3.5 LTS；B SQLCipher；C SQLite3MC+Botan），A 为首选，含工具链、版本钉扎、校验、打包 licenses+SBOM、更新 manifest、重复构建比对哈希、跑 57 项回归。
-  - 回归：**57 PASS / 0 FAIL / 0 SKIP**（3.14），3.13 对照 42 PASS / 15 SKIP。
+  - 当时的构建草案（历史，前提已纠正）曾把“SQLite3MC+APSW 静态链接 OpenSSL 3.5 LTS”列为首选；这是把 SQLCipher 候选的 OpenSSL 风险外推所致，不应作为当前 APSW/SQLite3MC 构建要求。现行方案先查证实际原语与依赖，再决定是否引入外部密码库；见 [驱动审查](DRIVER_REVIEW_AND_BUILD.md)。
+  - 当时的脚本回归：**57 PASS / 0 FAIL / 0 SKIP**（3.14），3.13 对照 42 PASS / 15 SKIP；其中 `driver_provenance` 虽记 PASS，却输出 `G1_GATE=OPEN`，不能把这 57 项解释为供应链放行。
 - **G6 逐表迁移与 G7 回滚演练（2026-11-08）**：新增 `backend/experimental/migrate_to_vault.py`。
   - G6：以只读方式打开明文源库 → 在暂存目录建 vault → 按原 CREATE 语句逐表复制 → 提交后开外键并 `PRAGMA foreign_key_check` → 对每张表比对行数与内容摘要（按主键排序的 SHA-256）→ 校验 vault 是密文 → 原子 rename → 写 `migration-report.json`。任何不一致会删除暂存 vault 并保留源库；源库若含保留表名 `vault_meta` 直接中止。
   - G7：`drill_rollback` 把明文快照复制到新目录，`integrity_check` + 逐表行数 + `rollback-report.json`，拒绝覆盖既有目录。
@@ -42,7 +64,7 @@
 - **决策落地（D4/D5/D6，2026-11-08）**：
   - **D4 独立清单密钥**：每次备份生成随机清单密钥 MK，用口令与恢复码分别包装进 `keywrap.manifest_wraps`；清单标 `hmac_mode: independent`；恢复先解 MK 再验签，旧归档按 `derived` 兼容。新增验证 `D4_BACKUP_KEY_ALONE_CANNOT_FORGE_MANIFEST`。
   - **D5 手动轮换 + 到期提醒**：`meta.json` 的 `rotated_at` 由轮换写入；新增 `rotation_status()`（默认 180 天）；`backup_cli.py status` 显示年龄/到期日/凭据，`rotate` 先自动备份再轮换并写 `key_rotated` 审计。计划轮换（定时自动）记录为未来项，本次不实现。
-  - **D6 不用 EOL 驱动**：自建 SQLite3MC/SQLCipher + OpenSSL 3.5 LTS 静态链接，或换不依赖 OpenSSL 的后端，作为 G1 前置方案写进切换计划。
+  - **当时的 D6 判断（历史，现已纠正）**：曾建议 SQLite3MC/SQLCipher 一律改用 OpenSSL 3.5 LTS。已测 SQLCipher 候选的风险不能证明当前 APSW/SQLite3MC 使用 OpenSSL；现行 D6 要求先证实源码、构建与实际依赖，G1 未通过前仍禁止真实数据。
 - 实测：全新 vault `status` 显示 age 0 / due no / 到期 2027-05-07；`rotate` 先产出安全备份再换钥；D5 提醒测试用 2025-01-01 的 `rotated_at` 得到 `age_days=676, due=True`。
 - **S5 干跑与切换计划（2026-11-08）**：新增 `docs/STORAGE_SWITCH_PLAN.md`（8 项硬门槛、切换开关、明文→加密迁移步骤、回滚演练、窗口验收清单、待决事项）。
 - 应用新增 `JARVIS_VAULT_DIR`：设置后 `database_path()` 指向 `<vault>/vault.db`，`connect()` 在 vault 缺少 `meta.json` 时失败关闭。这样真实应用 schema 可以**直接住在 vault 里**，不再出现"迁移写进另一个数据库文件"的错位。

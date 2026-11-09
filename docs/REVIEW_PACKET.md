@@ -67,7 +67,7 @@
 | 驱动 | `apsw-sqlite3mc`（APSW 3.54.0.0 + SQLite3 Multiple Ciphers 2.6.1），cp314 Windows wheel |
 | 算法 | ChaCha20 页加密，raw key（32 字节 hex），WAL |
 | 来源 | PyPI 预构建 wheel；未自行构建，未做可复现构建对照。哈希记录在 `docs/driver-manifest.json`，`verify_driver_provenance.py` 检测漂移 |
-| 依赖风险 | 随包 OpenSSL 3.6 已 EOL（D6 已定：不得承载真实数据；改自建 3.5 LTS 或换后端） |
+| 依赖风险 | 当前 APSW/SQLite3MC wheel 的原语来源与构建依赖尚未证实，不能据此声称随包使用 OpenSSL 3.6。已测 SQLCipher 候选另有 OpenSSL 3.6 维护风险；两条路线须分别评审。G1 未通过，真实数据仍禁止。 |
 | 许可证 | 随包只有 APSW 的 zlib 风格文本（`dist-info/licenses/LICENSE`）；SQLite3MC(MIT) 与 SQLite(public domain) 文本缺失 → 分发前必须补齐（实测） |
 | 加载方式 | 仅显式 `JARVIS_STORAGE_ADAPTER=apswmc` + 64 hex 密钥时导入；默认路径零依赖 |
 
@@ -117,7 +117,7 @@
 
 | 门槛 | 状态 |
 |---|---|
-| G1 驱动来源/许可证/构建审查 | 🟡 清单与检测就绪（`DRIVER_REVIEW_AND_BUILD.md`、`verify_driver_provenance.py`）；实测两条缺口：许可证文本仅 APSW、加密后端不可辨识 → 自建 3.5 LTS 尚未执行 |
+| G1 驱动来源/许可证/构建审查 | 🟡 清单与检测就绪（`DRIVER_REVIEW_AND_BUILD.md`、`verify_driver_provenance.py`）；实测两条缺口：许可证文本仅 APSW、加密后端不可辨识；尚未完成来源到产物的构建证据 |
 | G2 独立安全评审 | ⏳ 本文即为输入 |
 | G4 自动化稳定运行 ≥14 天 | ❌ 未开始 |
 | G5 端到端性能基线 | ❌ 未做 |
@@ -127,7 +127,7 @@
 ```powershell
 $repo = 'C:\Users\Admin\.codex\.chatgpt-projects\g-p-6ae96df8f3c48191a4e131d6589494db'
 $py = "$repo\.jarvis-python-3.14.10\python.exe"
-& $py "$repo\backend\verification\verify_all.py"              # 56 项
+& $py "$repo\backend\verification\verify_all.py"              # 运行当次清单，记录数量与 SKIP
 & $py "$repo\backend\verification\verify_adapter_suite.py"    # 同一套跑在加密后端
 & $py "$repo\backend\verification\verify_vault_backup_upload.py"  # 需 R2 凭据
 & $py "$repo\backend\verification\verify_migrate_to_vault.py"     # G6/G7
@@ -148,4 +148,4 @@ $py = "$repo\.jarvis-python-3.14.10\python.exe"
 9. `weakref` 修复后，是否存在"游标仍被引用导致快照长期持有"的残留路径（例如长迭代中写入）？
 10. `JARVIS_VAULT_DIR` 的引入是否可能在未初始化目录上创建明文库？
 11. 审计日志是否会泄露敏感元数据（归档名含 `key_id`、时间戳）？
-12. 在当前 EOL OpenSSL 3.6 构建上，是否存在必须立即停用的理由（而不只是"发布前替换"）？
+12. 能否用可复核的构建记录与二进制依赖清单证明当前 APSW/SQLite3MC wheel 实际使用的加密原语及其来源？

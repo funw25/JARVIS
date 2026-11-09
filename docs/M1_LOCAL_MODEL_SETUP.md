@@ -21,8 +21,7 @@
 项目已备好 `tools/models/setup_local_model.ps1`。它调用固定版本的 CLI，以 `127.0.0.1:11434` 启动隐藏本机服务，设置 `OLLAMA_NO_CLOUD=1`，检查日志确实报告云功能关闭，然后拉取指定本地模型；最后从 `/api/tags` 核对模型名、非零大小和摘要。**它会写入普通 Ollama 所需的 `%USERPROFILE%\.ollama` 本机配置目录，不登录账号。**
 
 ```powershell
-$jarvisRoot = Join-Path $env:USERPROFILE '.codex\.chatgpt-projects\g-p-6ae96df8f3c48191a4e131d6589494db'
-& C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $jarvisRoot 'tools\models\setup_local_model.ps1')
+& C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.codex\.chatgpt-projects\g-p-6ae96df8f3c48191a4e131d6589494db\tools\models\setup_local_model.ps1"
 ```
 
 成功时应看到 `OLLAMA_LOCAL_API=PASS` 和 `LOCAL_MODEL_READY=PASS model=qwen3:4b-instruct-2507-q4_K_M digest=...`。如果失败，保留报错和 `.jarvis-ollama/server.stderr.log` 的末尾几行即可；**不要发送 `id_ed25519` 或任何密钥**。

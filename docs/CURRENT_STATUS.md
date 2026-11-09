@@ -19,16 +19,17 @@
 
 ## 验证情况
 
-- **隔离 Python 3.14 一键回归（2026-11-08 最近记录）：57 个脚本项 PASS、0 FAIL、0 SKIP**，输出 `ALL_SELECTED_CHECKS=PASS`，退出码 0。环境：项目内便携解释器 `.jarvis-python-3.14.10` + `.jarvis-python314-deps`（fastapi / pydantic / uvicorn / sqlcipher3-wheels）+ `.jarvis-python314-apswmc-probe`（apsw 3.54.0.0 / SQLite3 Multiple Ciphers 2.6.1）。57 项中包含 `driver_provenance`：它虽被计作 PASS，却仍打印 `G1_GATE=OPEN`；因此该数字不能作为加密驱动放行或真实数据可用的证据。本轮文档修正未重新运行回归。
-- **整套回归已能跑在加密后端上（2026-11-07 当时实测）**：`verify_adapter_suite.py` 以随机密钥、`JARVIS_STORAGE_ADAPTER=apswmc` 启动 `verify_all.py`；当时 **49 PASS / 0 FAIL / 0 SKIP**，这是历史结果，不代表当前 57 项清单已在加密后端重新全量验证。
+- **隔离 Python 3.14 一键回归（2026-11-08 最近记录）：60 个脚本项 PASS、0 FAIL、0 SKIP**，输出 `ALL_SELECTED_CHECKS=PASS`，退出码 0。环境：项目内便携解释器 `.jarvis-python-3.14.10` + `.jarvis-python314-deps`（fastapi / pydantic / uvicorn / sqlcipher3-wheels）+ `.jarvis-python314-apswmc-probe`（apsw 3.54.0.0 / SQLite3 Multiple Ciphers 2.6.1）。60 项中包含 `driver_provenance`：它虽被计作 PASS，却仍打印 `G1_GATE=OPEN`；因此该数字不能作为加密驱动放行或真实数据可用的证据。
+- **整套回归已能跑在加密后端上（2026-11-07 当时实测）**：`verify_adapter_suite.py` 以随机密钥、`JARVIS_STORAGE_ADAPTER=apswmc` 启动 `verify_all.py`；2026-11-08 重新实测 **60 PASS / 0 FAIL / 0 SKIP**；早前记录的 49 项为历史值。
 - **备份链路已在真实 R2 上验证（2026-11-07）**：本地目录 sink + Cloudflare R2（桶 `jarvis-backup`，`backups/` 前缀 35 天桶锁、120 天生命周期）；上传守卫拒绝带恢复材料的归档，覆盖与删除都被桶锁拒绝（`ObjectLockedByBucketPolicy`），从云端下载后分别用口令与恢复码恢复到新目录成功；备份期间并发写无撕裂事务。凭据只存在于仓库外的 `%USERPROFILE%\.jarvis\r2.env`。
+- **M1 离线纵向闭环已交付（2026-11-08）**：53 条虚构标注样本（5 类、6 条长线程、3 组重复、4 条含糊承诺，证据全部逐字校验）、规则基线 `rules-v2`（分类 100%、todo 88.7%、draft 100%、优先级 94.3%、注入召回 100%，并明确标注"数据集与规则同源、不主张泛化"）、纵向链路 `import → suggestion(证据) → 用户修改/拒绝 → todo 或草稿 → 审计`（CLI 一条命令可跑，注入被接受也不产生动作，无发送器），以及评测框架（无真实模型时 `evaluate_model` 直接拒绝编造分数，`model_status` 固定为"未验证"）。结果与限制见 [M1_RESULTS.md](M1_RESULTS.md)。
 - **G1 清单与检测就绪（2026-11-08）**：`verify_driver_provenance.py` 比对 `docs/driver-manifest.json` 的版本与文件哈希（漂移即失败），并报告许可证覆盖与后端可识别性。实测两条缺口：随包许可证只有 APSW（缺 SQLite3MC/SQLite）、二进制无法证实实际原语来源 → **G1 仍 OPEN**。当前 APSW/SQLite3MC 不能被认定为使用 OpenSSL 3.6；此前的结论属于另行测试的 SQLCipher 候选。修订后的自建草案见 [DRIVER_REVIEW_AND_BUILD.md](DRIVER_REVIEW_AND_BUILD.md)。
-- **G6/G7 已实现（2026-11-08）**：`experimental/migrate_to_vault.py` 把明文库逐表复制进 vault（31 表/22 行合成数据、行数与内容摘要逐表比对、外键检查、密文校验、`migration-report.json`），并实现回滚演练 `drill_rollback`（快照恢复、`integrity_check`、逐表行数、`rollback-report.json`、拒绝覆盖）。两者注册时回归为 56 项全绿；当前 57 项结果见上。评审包见 [REVIEW_PACKET.md](REVIEW_PACKET.md)。
+- **G6/G7 已实现（2026-11-08）**：`experimental/migrate_to_vault.py` 把明文库逐表复制进 vault（31 表/22 行合成数据、行数与内容摘要逐表比对、外键检查、密文校验、`migration-report.json`），并实现回滚演练 `drill_rollback`（快照恢复、`integrity_check`、逐表行数、`rollback-report.json`、拒绝覆盖）。两者注册时回归为 56 项全绿；当前 60 项结果见上。评审包见 [REVIEW_PACKET.md](REVIEW_PACKET.md)。
 - **决策 D4/D5/D6（2026-11-08）**：D4 备份清单使用**独立随机密钥**；D5 采用**手动轮换 + 180 天到期查询**，尚无主动通知；D6 已纠正为“当前 APSW/SQLite3MC 构建来源与依赖未证实，不得承载真实数据”，不能把 SQLCipher 候选的 OpenSSL 3.6 风险外推。具体整改见 [风险整改方案](RISK_REMEDIATION_OPTIONS.md)。
 - **S3 密钥轮换已实现（2026-11-07）**：`PRAGMA rekey` 实机可用；轮换带 pending 标记与中断自动续做，成功时双向验证（新钥匙开得动、旧钥匙开不动），失败回滚到旧密钥；`verify_vault_rotation.py` 覆盖 K4/K5/C2。
 - **备份自动化实验已就绪（2026-11-08）**：`backup_job` 默认读取 Windows 凭据管理器中的口令与恢复码，但代码仍允许显式参数和环境变量回退，需在正式版本中收紧；创建归档、尝试保留本地 7 份/远端 4 份、写不含密钥的审计行。远端 35 天锁定会使实际份数高于 4。`backup_cli.py` 提供 store-passphrase / show-recovery-code / run；`tools/backup/schedule-backup.ps1` 可注册任务，但 G4 连续运行尚未开始。
 - **S4 并发验证通过（2026-11-07）**：4 写 × 40 次 + 3 读并发，160 次自增无丢失、读者观测到单调递增（最高 160）、无死锁、WAL/SHM 清理干净。过程中修掉适配器两个真实缺陷：`BEGIN IMMEDIATE` 前不释放旧语句导致 `SQLITE_BUSY_SNAPSHOT` 立即失败；游标集合用强引用导致一次性查询的读快照永不结束、读者永远读旧值。
-- **Python 3.13 对照环境：42 PASS、0 FAIL、15 SKIP**，退出码 2。15 项 SKIP 都是只能跑在 3.14 的 APSW/密钥实验，不是失败；该环境下 SQLCipher 与 DPAPI 虚构库探针通过。旧环境密码库已停止公开安全维护，只供离线实验。
+- **Python 3.13 对照环境：45 PASS、0 FAIL、15 SKIP**，退出码 2。15 项 SKIP 都是只能跑在 3.14 的 APSW/密钥实验，不是失败；该环境下 SQLCipher 与 DPAPI 虚构库探针通过。旧环境密码库已停止公开安全维护，只供离线实验。
 - 回归脚本自身修了两处（不涉及存储断言）：`verify_all.py` 在 GBK 控制台打印崩溃日志时因编码失败而中断，改为替换式输出；`verify_apswmc_crash_probe.py` 在终止子进程后临时目录偶发 `WinError 32`，改为忽略清理错误、重试并报告残留。
 - 本机实际 HTTP 验证覆盖上述多项模拟流程、身份选择限制和重启；不等于生产认证。
 - 旧版虚构数据库从迁移 0012 升至当前版本的测试通过；不是实际用户数据迁移或断电恢复证明。

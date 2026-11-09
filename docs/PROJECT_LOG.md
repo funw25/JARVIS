@@ -49,6 +49,12 @@
 
 ## 本轮新增/变更
 
+- **M1 离线纵向闭环（2026-11-08）**：新增 `backend/evals/m1/artifacts.jsonl`（53 条虚构标注样本：needs_reply 15 / action 13 / fyi 11 / noise 6 / injection 8，6 条长线程、3 组重复、4 条含糊承诺，证据全部逐字）、`backend/migrations/0018_m1_artifacts.sql`、`backend/usecases/m1_rules.py`（rules-v2）、`m1_pipeline.py`（导入→建议→决定→todo/草稿→审计）、`m1_eval.py`（评测，拒绝编造模型分数）、`m1_cli.py`（`demo` / `eval` / `status`）。
+  - 规则基线实测：分类 100%（53/53）、todo 88.7%、draft 100%、优先级 94.3%、证据非空与逐字均 90.6%、注入召回 100%、耗时约 2 ms。**数据集与规则同源，100% 不代表泛化**，报告内固定写入 `dataset_authored_with_rules: true` 与 `generalization_claimed: false`；永远答 fyi 的坏引擎在同一集合只有 20.7%。
+  - 闭环实测：`m1-005` 走完 5 条审计（import/suggestion/decision/todo/draft）；用户修改可关闭 todo 只留草稿；拒绝不产生行但留审计；重复文本标记 `duplicate_of`；注入被接受仍不产生 todo/draft；库内不存在"已发送"草稿。
+  - 模型质量：无真实模型 → `evaluate_model(rows, None)` 抛 `ModelUnavailable`，`model_status()` 固定"未验证"，不以假模型冒充通过。
+  - 新增三项验证并注册：`m1_dataset` / `m1_pipeline` / `m1_evaluation`；回归 **60 项 PASS / 0 FAIL / 0 SKIP**（3.14），3.13 对照 45 PASS / 15 SKIP。
+  - 观察到的抖动：3.13 连跑时 `http_runtime` 曾因 8765 端口占用失败一次，单跑与整套重跑均通过；端口未隔离，属测试稳定性问题，已记录未修。
 - **G1 驱动审查清单与自建草案（2026-11-08）**：新增 `docs/DRIVER_REVIEW_AND_BUILD.md`、`docs/driver-manifest.json` 与 `backend/verification/verify_driver_provenance.py`（注册为 `driver_provenance`）。
   - 实测盘点：`apsw_sqlite3mc` 3.54.0.0 / APSW 3.54.0.0 / SQLite 3.54.0 / SQLite3MC 2.6.1；主二进制 SHA-256 `a9267aeb…bd9d53`；随包许可证**只有 APSW 的 zlib 文本**，缺 SQLite3MC(MIT) 与 SQLite(public-domain)；二进制里找不到 OpenSSL/Botan 版本串 → **加密后端无法从产物确认**（此前"OpenSSL 3.6 已 EOL"的说法本地无法复核）。
   - 结论：G1 **未通过**，两条缺口写明；合成数据验证可以继续，真实数据禁止。

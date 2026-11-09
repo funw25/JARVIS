@@ -110,7 +110,7 @@ backend/
   app/                 domain: api, services, repositories, security, migrations
   migrations/          17 versioned SQL migrations
   experimental/        encrypted adapter and isolated storage experiments
-  verification/        57 checks plus standalone suites
+  verification/        60 checks plus standalone suites
   demo_jarvis.py       dependency-free synthetic demo
   API_REFERENCE.md     local HTTP contract
 docs/                  product, architecture, security, storage and status records
@@ -170,17 +170,17 @@ self-checks:
 All checks use fictional data and temporary databases.
 
 ```bash
-python backend/verification/verify_all.py            # 57 checks
+backend/verification/verify_all.py            # 60 checks
 python backend/verification/verify_adapter_suite.py  # same suite on the encrypted backend
 ```
 
 | Environment | Result |
 |---|---|
-| Python 3.14, default SQLite (last recorded) | **57 script items PASS / 0 FAIL / 0 SKIP** |
-| Python 3.14, encrypted adapter (last recorded) | **57 script items PASS / 0 FAIL / 0 SKIP** |
-| Python 3.13, default SQLite | 42 PASS / 0 FAIL / 15 SKIP (3.14-only experiments) |
+| Python 3.14, default SQLite (last recorded) | **60 script items PASS / 0 FAIL / 0 SKIP** |
+| Python 3.14, encrypted adapter (last recorded) | **60 script items PASS / 0 FAIL / 0 SKIP** |
+| Python 3.13, default SQLite | 45 PASS / 0 FAIL / 15 SKIP (3.14-only experiments) |
 
-One of the 57 items is `driver_provenance`: it can be counted as PASS while
+One of the 60 items is `driver_provenance`: it can be counted as PASS while
 printing `G1_GATE=OPEN`. The aggregate is a synthetic regression count, not a
 release gate or approval for personal data. These are previously recorded runs;
 this documentation change did not rerun them.

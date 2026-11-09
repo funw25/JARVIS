@@ -20,7 +20,10 @@ for ($attempt = 0; $attempt -lt 20; $attempt++) {
         if ($version.version) { $ready = $true; break }
     } catch { }
 }
-if (-not $ready) { throw 'Ollama loopback API did not become ready; inspect .jarvis-ollama/server.stderr.log' }
+if (-not $ready) {
+    $recent = Get-Content -LiteralPath (Join-Path $base 'server.stderr.log') -Tail 5 -ErrorAction SilentlyContinue
+    throw "Ollama loopback API did not become ready. Recent error: $($recent -join ' | ')"
+}
 
 $serverLog = Join-Path $base 'server.stderr.log'
 $cloudOff = Select-String -LiteralPath $serverLog -Pattern 'Ollama cloud disabled:\s*true' -Quiet -ErrorAction SilentlyContinue

@@ -6,6 +6,7 @@
 
 ## 2026-11-09：本地模型路线与运行器限制
 
+- 用户首次按单行命令启动准备脚本，只输出了 `OLLAMA_LOCAL_SERVER_STARTED`；本机检查发现该进程已退出、11434 无监听、日志仍报 `.ollama\id_ed25519` 拒绝访问。核对工具创建的 `.ollama` 为空且受限进程只有读权限后，按确认的绝对路径移除该空目录；普通 PowerShell 可在重试时自行创建。启动脚本改为检查进程是否立刻退出并回显最近错误，避免把“已创建进程”误报为“服务已就绪”。模型仍未下载或运行。
 - 用户在普通 PowerShell 中先运行了依赖 `$jarvisRoot` 的第二行，变量尚未赋值，`Join-Path` 在脚本启动前报空值；本地服务/模型下载均未开始。将 [本地模型准备说明](M1_LOCAL_MODEL_SETUP.md) 改为不依赖临时变量的单行命令，并核对脚本路径存在。
 - 用户确认本机没有 Ollama/模型权重，并给出 15.7 GB RAM、i5-1145G7、Intel Iris Xe 共享显存、C 盘约 159.3 GB 空闲。选定 2.5 GB 左右的 `qwen3:4b-instruct-2507-q4_K_M` 作为 CPU 首轮候选，不把硬件估算当质量结果。
 - 查阅 Ollama 官方文档：云模型既有 `:cloud` 也有 `-cloud` 标签；FAQ 明确提供 `OLLAMA_NO_CLOUD=1`。修正本地适配器漏拦 `-cloud` 的缺陷，并限制 Ollama 提供方为回环 HTTP；本地模型须经 `/api/tags` 核对非零大小与摘要。回环请求禁用系统代理。评测支持 3 条试跑和 53 条全量运行，完整报告含规则/模型逐条比较；Ollama 参数固定 `temperature=0`、`seed=42`、`num_ctx=4096`。5 项 M1 离线回归再次通过，仍打印 `M1_MODEL_QUALITY=UNVERIFIED`。

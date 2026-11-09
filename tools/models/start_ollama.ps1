@@ -21,4 +21,9 @@ $process = Start-Process -FilePath $ollama -ArgumentList 'serve' -WorkingDirecto
     -RedirectStandardOutput (Join-Path $base 'server.stdout.log') `
     -RedirectStandardError (Join-Path $base 'server.stderr.log')
 $process.Id | Set-Content -LiteralPath (Join-Path $base 'server.pid') -Encoding ASCII
-Write-Host "OLLAMA_LOCAL_SERVER_STARTED pid=$($process.Id) host=$env:OLLAMA_HOST cloud_disabled=$env:OLLAMA_NO_CLOUD"
+Start-Sleep -Seconds 1
+if ($process.HasExited) {
+    $recent = Get-Content -LiteralPath (Join-Path $base 'server.stderr.log') -Tail 5 -ErrorAction SilentlyContinue
+    throw "Ollama exited immediately. Recent error: $($recent -join ' | ')"
+}
+Write-Host "OLLAMA_PROCESS_SPAWNED pid=$($process.Id) host=$env:OLLAMA_HOST cloud_disabled=$env:OLLAMA_NO_CLOUD"

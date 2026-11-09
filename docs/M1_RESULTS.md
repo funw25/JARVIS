@@ -79,21 +79,23 @@ draft_created      -> m1_draft        (正文标"未发送"，无发送器)
 |---|---|
 | `JARVIS_M1_MODEL_PROVIDER` | `ollama` / `openai-compatible` / `command` |
 | `JARVIS_M1_MODEL` | 模型名或命令路径 |
-| `JARVIS_M1_MODEL_BASE_URL` | 例如 `http://127.0.0.1:11434` |
+| `JARVIS_M1_MODEL_BASE_URL` | Ollama 默认 `http://127.0.0.1:11434`；其他提供方必须指定端点 |
 | `JARVIS_M1_MODEL_KEY_ENV` | 存放密钥的**环境变量名**（密钥本身不入库） |
 | `JARVIS_M1_MODEL_TIMEOUT` | 秒，默认 60 |
 
-模型一旦可用，对照评测就是一条命令：
+配置并确认模型可用后，对照评测可运行：
 
 ```powershell
 & .\.jarvis-python-3.14.10\python.exe backend\usecases\m1_cli.py eval --engine model --out m1-model-report.json
 ```
 
-未配置时会明确报错并返回非零，不会退化成规则基线冒充模型结果。`verify_m1_model_probe.py` 用本地 stub 端点验证了解析与拒绝路径（无效 JSON、未知分类、证据非逐字都会被处理），并断言"用 stub 跑通不等于质量测量"。
+未配置时会明确报错并返回非零，不会退化成规则基线冒充模型结果。成功报告会标明所配置的提供方、模型名、端点和 53 条逐项预测；提供方身份仍需人工核对，模型输出错误时不能把未完成运行当作通过。`verify_m1_model_probe.py` 用本地 stub 端点验证了解析与拒绝路径（无效 JSON、未知分类、证据非逐字都会被处理），并断言"用 stub 跑通不等于质量测量"。
+
+**路线选择（待用户确定）：** 首选本机 Ollama 的**已下载本地模型**，因为 Windows 端有本机服务，现有适配器可直接调用其 `/api/generate` JSON 输出接口；具体模型大小应按机器 RAM/显存和速度选择，不预设 7B 一定合适。Ollama 也支持云模型，因此本地评测要禁用云功能并核对模型不带 `:cloud`。`command` 提供方目前只支持“可执行文件从标准输入读提示、向标准输出写 JSON”的包装器，**不能直接把 GGUF 路径交给 `llama-cli`**；需另写包装器。OpenAI 兼容端点若非回环地址，CLI 要求显式 `--allow-remote`，并在运行前确认 53 条虚构输入和预算。参考 [Ollama Windows](https://docs.ollama.com/windows)、[本机 API](https://docs.ollama.com/api/generate)、[关闭云功能](https://docs.ollama.com/faq#how-do-i-disable-ollamas-cloud-features)。
 
 - 当前没有配置任何真实模型；`local_fake` 只证明流程可跑，**不能**替代质量基线。
 - `m1_eval.evaluate_model(rows, None)` 直接抛 `ModelUnavailable`，拒绝编造分数；`model_status()` 返回 `{"status": "未验证", "measured": false}`。
-- 当前 `evaluate_model` 对非 `None` 参数只要求可调用，**尚未验证调用对象是哪个模型或是否真的调用了模型**。接入模型前必须定义可审计的提供方/模型版本/调用记录，不能把规则函数或 `local_fake` 传入后宣称模型测量完成。
+- 当前 `evaluate_model` 对非 `None` 参数只要求可调用，**尚未独立验证调用对象是哪个模型或是否真的调用了模型**。CLI 在成功运行后会记录提供方/模型名/端点与逐条结果，但这些是配置与接口响应证据，仍需核对本地模型摘要，不能把规则函数或 `local_fake` 传入后宣称真实模型测量完成。
 - 验收标准保持：没有真实模型时，M1 的质量一栏就是"未验证"，不以新增测试数量替代。
 
 ## 5. M1 完成度对照（[执行计划 §3](JARVIS_V2_EXECUTION.md)）
@@ -106,16 +108,17 @@ draft_created      -> m1_draft        (正文标"未发送"，无发送器)
 | 4. AI 基线（规则 + 模型对比） | 🟡 规则基线完成；模型适配器与拒绝路径已就绪，但**本机无任何真实模型**（无运行时、无权重、不接账户），模型基线仍**未验证** |
 | 5. 固定运行环境 | ✅ M1 离线环境已锁定：解释器 3.14.10（官方 embeddable，SHA-256 固定）、32 个包版本+哈希锁、离线 wheelhouse、`bootstrap.ps1` 与干净房间重建实测（4 项检查零 SKIP）。见 [M1 环境](M1_ENVIRONMENT.md)。正式可信存储环境仍属 M2 |
 
-M1 **未完成**：模型质量一栏为空、运行环境未锁定。按执行计划，未达到定义就留在 M1。
+M1 **未完成**：M1 环境已锁定并在同机干净目录重建，但真实模型质量一栏仍为空。按执行计划，未达到定义就留在 M1。
 
 ## 6. 限制
 
 - 53 条样本量小，且与规则同源；不能用于对外宣称准确率。
 - 只有中文与少量英文，没有真实长邮件、附件、HTML、线程引用链。
 - 没有真实模型，因此没有质量/耗时/费用对比。
+- 模型接口目前不能从服务响应独立证明权重身份；评测报告的提供方与模型名来自配置，运行前应记录本地模型摘要或供应商返回的模型版本。单条模型响应错误会中断整次运行，须保留错误并重跑，不能把残缺结果列为 53 条完成。
 - 页面（HUD）未接入；M1 只提供 CLI 与数据库状态。
 - 规则是关键词匹配，对同义改写、反讽、多语言混合没有鲁棒性证据。
 
 ## 7. 2026-11-09 专项复验
 
-命令：`<项目内 Python 3.14.10> backend/verification/verify_m1.py`。输出：`M1_OFFLINE_CHECKS=PASS count=3 skip=0`、`M1_MODEL_QUALITY=UNVERIFIED`、`M1_EXIT=OPEN`。该入口只验证虚构数据集、闭环和规则评测；不把 60 项综合回归或 G1 驱动诊断当作 M1 放行结果。解释器版本已检查，但完整分发包、依赖来源与干净机器重建仍未锁定。
+最初的专项入口只跑 3 项；后来加入环境锁检查与模型适配器探针。2026-11-09 本机再次运行 `<项目内 Python 3.14.10> backend/verification/verify_m1.py`：`M1_OFFLINE_CHECKS=PASS count=5 skip=0`、`M1_MODEL_QUALITY=UNVERIFIED`、`M1_EXIT=OPEN`。其中一次受限运行环境无法读取依赖目录，`verify_env_lock.py` 报缺包；同一代码在获得该目录读取权限后 5 项通过。此差异属于本次运行权限，不覆盖此前同机干净目录重建结果，也不证明受限 DSH 问题已修复。

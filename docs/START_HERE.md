@@ -28,7 +28,7 @@ $env:TMP = $jarvisTemp
 & $jarvisPython (Join-Path $jarvisRoot 'backend\verification\verify_m1.py')
 ```
 
-该入口只需 Python 3.14.10 标准库，检查数据集、纵向链路和规则评测，任何一项失败或版本不符都会返回非零。成功时仍会明确输出 `M1_MODEL_QUALITY=UNVERIFIED` 与 `M1_EXIT=OPEN`：真实模型质量尚未测量，不能据此接入私人资料。
+该入口使用已锁定的 Python 3.14.10 与离线安装的依赖，检查环境锁、数据集、纵向链路、规则评测和模型适配器探针；任何一项失败或版本不符都会返回非零。成功时仍会明确输出 `M1_MODEL_QUALITY=UNVERIFIED` 与 `M1_EXIT=OPEN`：真实模型质量尚未测量，不能据此接入私人资料。
 
 ## 自己验证本地接口
 

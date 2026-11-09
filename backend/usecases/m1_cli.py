@@ -28,18 +28,35 @@ def _rows():
 def command_eval(args):
     rows = _rows()
     engine = None
+    config = None
     if getattr(args, "engine", "rules") == "model":
         try:
-            engine = m1_model.engine()
+            config = m1_model.load_config()
+            engine = m1_model.engine(config)
+            if not m1_model.is_loopback_endpoint(config) and not getattr(args, "allow_remote", False):
+                print("error: remote model endpoint requires --allow-remote after reviewing the input and budget",
+                      file=sys.stderr)
+                return 2
         except m1_model.ModelUnavailable as exc:
             print("error: %s" % exc, file=sys.stderr)
             print("model quality: 未验证 (no real model reachable)", file=sys.stderr)
             return 2
-    report = m1_eval.evaluate(rows, engine)
+    if engine is None:
+        report = m1_eval.evaluate(rows)
+        model_state = m1_eval.model_status()
+    else:
+        report = m1_eval.evaluate_model(rows, engine)
+        report["model_config"] = config.describe()
+        model_state = {
+            "status": "候选模型输出已测量",
+            "measured": True,
+            "provider_identity_verified": False,
+            "config": config.describe(),
+        }
     print(m1_eval.summarize(report))
-    print("model quality: %s (%s)" % (m1_eval.model_status()["status"], m1_eval.model_status()["reason"]))
+    print("model quality: %s" % model_state["status"])
     if args.out:
-        Path(args.out).write_text(json.dumps({"report": report, "model": m1_eval.model_status()},
+        Path(args.out).write_text(json.dumps({"report": report, "model": model_state},
                                              indent=2, ensure_ascii=False), encoding="utf-8")
         print("written: %s" % args.out)
     return 0
@@ -99,6 +116,8 @@ def main(argv=None):
     evaluate.add_argument("--out", help="write the full report as JSON")
     evaluate.add_argument("--engine", choices=["rules", "model"], default="rules",
                          help="rules = deterministic baseline; model = configured real model")
+    evaluate.add_argument("--allow-remote", action="store_true",
+                          help="explicitly permit sending the fictional evaluation set to a non-local endpoint")
     evaluate.set_defaults(func=command_eval)
 
     demo = sub.add_parser("demo", help="run one artifact through the whole loop")

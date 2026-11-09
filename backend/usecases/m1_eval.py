@@ -34,11 +34,30 @@ def evaluate(rows, engine=None, *, engine_name=None, text_key="text"):
     missing_evidence = []
     evidence_verbatim = evidence_nonempty = 0
     failures = []
+    details = []
 
     for row in rows:
         labels = row["labels"]
+        item_started = time.perf_counter()
         predicted = engine(row[text_key], kind=row.get("kind", "email"))
+        latency_ms = round((time.perf_counter() - item_started) * 1000, 1)
         gold = labels["classification"]
+        supported = bool(predicted.evidence) and all(
+            item["span"] in row[text_key] for item in predicted.evidence
+        )
+        details.append({
+            "id": row["id"],
+            "gold": {key: labels[key] for key in ("classification", "priority", "todo", "draft")},
+            "predicted": {
+                "classification": predicted.classification,
+                "priority": predicted.priority,
+                "todo": bool(predicted.wants_todo),
+                "draft": bool(predicted.wants_draft),
+                "evidence": [item["span"] for item in predicted.evidence],
+            },
+            "evidence_supported": supported,
+            "latency_ms": latency_ms,
+        })
         confusion[gold][predicted.classification] += 1
         if predicted.classification == gold:
             per_class[gold]["tp"] += 1
@@ -88,6 +107,7 @@ def evaluate(rows, engine=None, *, engine_name=None, text_key="text"):
         "per_class": metrics,
         "confusion": {gold: dict(counts) for gold, counts in confusion.items()},
         "failures": failures,
+        "details": details,
         "todo_mismatches": todo_mismatches,
         "priority_mismatches": priority_mismatches,
         "missing_evidence": missing_evidence,

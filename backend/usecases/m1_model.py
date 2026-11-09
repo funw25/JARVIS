@@ -13,11 +13,13 @@ Any failure to reach a model surfaces as ``ModelUnavailable``; the evaluation
 layer then reports "未验证" instead of a number.
 """
 import json
+import math
 import os
 import shutil
 import subprocess
 import urllib.error
 import urllib.request
+from urllib.parse import urlsplit
 from dataclasses import dataclass
 
 from . import m1_rules
@@ -62,13 +64,24 @@ def load_config(environment=None):
         return None
     if provider not in PROVIDERS:
         raise ModelNotConfigured("unknown provider: " + provider)
+    if provider == "ollama" and model.lower().endswith(":cloud"):
+        raise ModelNotConfigured("Ollama cloud model is not allowed through the local-only provider")
     return ModelConfig(
         provider=provider,
         model=model,
-        base_url=env.get("JARVIS_M1_MODEL_BASE_URL", "").strip(),
+        base_url=env.get("JARVIS_M1_MODEL_BASE_URL", "").strip()
+        or ("http://127.0.0.1:11434" if provider == "ollama" else ""),
         key_env=env.get("JARVIS_M1_MODEL_KEY_ENV", "").strip(),
         timeout=float(env.get("JARVIS_M1_MODEL_TIMEOUT", "60")),
     )
+
+
+def is_loopback_endpoint(config):
+    """Whether an HTTP provider is pointed at the local machine."""
+    if config.provider == "command":
+        return True
+    parsed = urlsplit(config.base_url)
+    return parsed.scheme == "http" and parsed.hostname in ("127.0.0.1", "localhost", "::1")
 
 
 def _request_json(url, *, payload=None, headers=None, timeout=60.0):
@@ -122,14 +135,23 @@ def _parse_reply(text):
     if classification not in m1_rules.CLASSES:
         raise ModelUnavailable("model returned an unknown classification: " + classification)
     if priority not in m1_rules.PRIORITIES:
-        priority = "normal"
-    evidence = [str(item) for item in payload.get("evidence", []) if isinstance(item, str)]
+        raise ModelUnavailable("model returned an unknown priority: " + priority)
+    if not isinstance(payload.get("todo"), bool) or not isinstance(payload.get("draft"), bool):
+        raise ModelUnavailable("model todo/draft fields must be booleans")
+    evidence = payload.get("evidence", [])
+    if not isinstance(evidence, list) or any(not isinstance(item, str) for item in evidence):
+        raise ModelUnavailable("model evidence must be a list of strings")
+    confidence = payload.get("confidence", 0.5)
+    if isinstance(confidence, bool) or not isinstance(confidence, (int, float)) or not math.isfinite(confidence):
+        raise ModelUnavailable("model confidence must be a finite number")
+    if not 0 <= confidence <= 1:
+        raise ModelUnavailable("model confidence must be between 0 and 1")
     return m1_rules.Suggestion(
         classification=classification,
         priority=priority,
-        wants_todo=bool(payload.get("todo", False)),
-        wants_draft=bool(payload.get("draft", False)),
-        confidence=float(payload.get("confidence", 0.5) or 0.5),
+        wants_todo=payload["todo"],
+        wants_draft=payload["draft"],
+        confidence=float(confidence),
         evidence=[{"span": span, "kind": "model", "reason": "model evidence"} for span in evidence],
     )
 
@@ -180,11 +202,7 @@ def engine(config=None):
 
     def call(text, *, kind="email"):
         reply = _call_model(config, text)
-        suggestion = _parse_reply(reply)
-        supported = all(item["span"] in text for item in suggestion.evidence) if suggestion.evidence else False
-        if not supported:
-            suggestion.evidence = [item for item in suggestion.evidence if item["span"] in text]
-        return suggestion
+        return _parse_reply(reply)
 
     call.name = "model:%s/%s" % (config.provider, config.model)
     return call

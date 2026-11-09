@@ -1,4 +1,4 @@
-# M1 离线环境：锁定与干净机器重建
+# M1 离线环境：锁定与干净目录重建
 
 **状态：** M1 离线环境已锁定并可在干净目录重建（2026-11-09）  
 **范围：** 只覆盖 M1 的虚构数据链路与回归；M2 的加密驱动供应链、正式运行环境不在此页  
@@ -35,7 +35,7 @@ pwsh -File "$repo\tools\env\test-cleanroom.ps1" -ZipPath <python-3.14.10-embed-a
 
 `bootstrap.ps1` 会：核对 zip 哈希 → 解压 → 重写 `python314._pth`（加入依赖目录）→ 用 `--require-hashes` 离线装 32 个 wheel → 跑 `verify_env_lock.py`。
 
-## 3. 干净机器重建的实测证据
+## 3. 同机干净目录重建的实测证据
 
 2026-11-09 在项目内临时目录跑 `test-cleanroom.ps1`（全新解压的解释器 + 全新依赖目录，不使用 `.jarvis-python314-deps`）：
 
@@ -58,6 +58,8 @@ CLEAN_ROOM_REBUILD=PASS
 
 注意最后两行：环境可重建**不改变** M1 的门槛状态——模型质量仍未测量。
 
+随后 `verify_m1.py` 加入模型适配器探针，用户报告的新一次干净目录输出为 `M1_OFFLINE_CHECKS=PASS count=5 skip=0`。本会话在既有锁定环境中复验了 5 项，未重新运行完整干净目录脚本；上面的 4 项输出保留为当时的历史记录。
+
 ## 4. 仓库内的位置
 
 | 路径 | 说明 |
@@ -77,3 +79,4 @@ CLEAN_ROOM_REBUILD=PASS
 - 这是**进程级**环境隔离，不是沙箱或虚拟机；不防御同用户恶意程序。
 - 解释器与依赖目录都在仓库内，`git clean -x` 会删除它们，必须用 bootstrap 重建。
 - 首次取 zip 的双重校验依赖 python.org 的 HTTPS 与记录哈希；未做 GPG 签名校验。
+- 干净目录测试仍使用仓库现有的 `.venv` 作为 pip 解包工具；这证明目标解释器和依赖目录可从本地材料重建，不等于另一台独立 Windows 机器已经复核。

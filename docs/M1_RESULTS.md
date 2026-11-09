@@ -71,7 +71,7 @@ draft_created      -> m1_draft        (正文标"未发送"，无发送器)
 
 ## 4. 模型质量：未验证
 
-**2026-11-09 可用性探测（本机实测）：** 没有本地模型运行时——`ollama`、`llama-cli`、`llama-server`、`lms` 均不存在的可执行文件，`.ollama` / `.cache\huggingface` / `.lmstudio` 目录均不存在，Python 侧 `llama_cpp`、`transformers`、`torch`、`onnxruntime`、`openai`、`httpx`、`requests` 均未安装。用户明确不连接任何账户，因此**当前没有任何真实模型可跑**，质量一栏保持"未验证"。
+**2026-11-09 初次可用性探测（历史观察）：** 当时没有本地模型运行时——`ollama`、`llama-cli`、`llama-server`、`lms` 均不在 PATH，常见模型目录不存在，Python 侧 `llama_cpp`、`transformers`、`torch`、`onnxruntime`、`openai`、`httpx`、`requests` 均未安装。后来已下载并校验隔离的 Ollama CLI，但服务尚未成功启动、权重尚未下载；**当前仍没有真实模型可跑**，质量一栏保持"未验证"。
 
 适配器已就绪（`backend/usecases/m1_model.py`），只从环境变量读取配置，不读仓库里的任何密钥：
 
@@ -91,7 +91,11 @@ draft_created      -> m1_draft        (正文标"未发送"，无发送器)
 
 未配置时会明确报错并返回非零，不会退化成规则基线冒充模型结果。成功报告会标明所配置的提供方、模型名、端点和 53 条逐项预测；提供方身份仍需人工核对，模型输出错误时不能把未完成运行当作通过。`verify_m1_model_probe.py` 用本地 stub 端点验证了解析与拒绝路径（无效 JSON、未知分类、证据非逐字都会被处理），并断言"用 stub 跑通不等于质量测量"。
 
-**路线选择（待用户确定）：** 首选本机 Ollama 的**已下载本地模型**，因为 Windows 端有本机服务，现有适配器可直接调用其 `/api/generate` JSON 输出接口；具体模型大小应按机器 RAM/显存和速度选择，不预设 7B 一定合适。Ollama 也支持云模型，因此本地评测要禁用云功能并核对模型不带 `:cloud`。`command` 提供方目前只支持“可执行文件从标准输入读提示、向标准输出写 JSON”的包装器，**不能直接把 GGUF 路径交给 `llama-cli`**；需另写包装器。OpenAI 兼容端点若非回环地址，CLI 要求显式 `--allow-remote`，并在运行前确认 53 条虚构输入和预算。参考 [Ollama Windows](https://docs.ollama.com/windows)、[本机 API](https://docs.ollama.com/api/generate)、[关闭云功能](https://docs.ollama.com/faq#how-do-i-disable-ollamas-cloud-features)。
+**已选路线（2026-11-09）：** 用户选本机 Ollama，机器约 15.7 GB RAM、i5-1145G7、Intel Iris Xe 共享显存；按 CPU 推理估算。首个候选定为 `qwen3:4b-instruct-2507-q4_K_M`，官方列表约 2.5 GB，模型质量尚未测量。Ollama 同时使用 `:cloud` 和 `-cloud` 标签；本地适配器拒绝这两种后缀，只接受回环 HTTP 地址，并在 `/api/tags` 找到具有非零大小和摘要的模型后才开始评测。服务侧还应设置 `OLLAMA_NO_CLOUD=1` 并重启；单靠未登录状态或客户端标签检查不构成完整防云保证。参考 [模型规格](https://ollama.com/library/qwen3/tags)、[云模型标签](https://ollama.com/library/gpt-oss/tags)、[关闭云功能](https://docs.ollama.com/faq#how-do-i-disable-ollamas-cloud-features)。
+
+**本地准备状态：** Ollama 官方 CLI 已下载并通过发布哈希核对；当前自动化运行器无法写其用户配置目录，服务和模型权重尚未就绪。处理步骤与限制见 [本地模型准备记录](M1_LOCAL_MODEL_SETUP.md)。
+
+`command` 提供方目前只支持“可执行文件从标准输入读提示、向标准输出写 JSON”的包装器，**不能直接把 GGUF 路径交给 `llama-cli`**；需另写包装器。OpenAI 兼容端点若非回环地址，CLI 要求显式 `--allow-remote`，并在运行前确认 53 条虚构输入和预算。[Ollama Windows](https://docs.ollama.com/windows)、[本机 API](https://docs.ollama.com/api/generate)。
 
 - 当前没有配置任何真实模型；`local_fake` 只证明流程可跑，**不能**替代质量基线。
 - `m1_eval.evaluate_model(rows, None)` 直接抛 `ModelUnavailable`，拒绝编造分数；`model_status()` 返回 `{"status": "未验证", "measured": false}`。

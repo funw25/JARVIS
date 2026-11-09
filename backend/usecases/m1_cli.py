@@ -27,8 +27,15 @@ def _rows():
 
 def command_eval(args):
     rows = _rows()
+    if getattr(args, "limit", None) is not None:
+        if not 1 <= args.limit <= len(rows):
+            print("error: --limit must be between 1 and %d" % len(rows), file=sys.stderr)
+            return 2
+        rows = rows[:args.limit]
     engine = None
     config = None
+    model_probe = None
+    baseline = None
     if getattr(args, "engine", "rules") == "model":
         try:
             config = m1_model.load_config()
@@ -37,6 +44,12 @@ def command_eval(args):
                 print("error: remote model endpoint requires --allow-remote after reviewing the input and budget",
                       file=sys.stderr)
                 return 2
+            if config.provider == "ollama":
+                model_probe = m1_model.probe(config)
+                if not model_probe["available"]:
+                    print("error: requested Ollama model is not confirmed as a downloaded local model",
+                          file=sys.stderr)
+                    return 2
         except m1_model.ModelUnavailable as exc:
             print("error: %s" % exc, file=sys.stderr)
             print("model quality: 未验证 (no real model reachable)", file=sys.stderr)
@@ -46,17 +59,38 @@ def command_eval(args):
         model_state = m1_eval.model_status()
     else:
         report = m1_eval.evaluate_model(rows, engine)
+        baseline = m1_eval.evaluate(rows)
         report["model_config"] = config.describe()
+        if model_probe is not None:
+            report["model_digest"] = model_probe["model_digest"]
+            report["model_size_bytes"] = model_probe["model_size_bytes"]
         model_state = {
             "status": "候选模型输出已测量",
             "measured": True,
             "provider_identity_verified": False,
             "config": config.describe(),
         }
+        if model_probe is not None:
+            model_state["model_digest"] = model_probe["model_digest"]
     print(m1_eval.summarize(report))
     print("model quality: %s" % model_state["status"])
+    if len(rows) < len(_rows()):
+        print("partial run: %d/%d items; not an M1 completion result" % (len(rows), len(_rows())))
     if args.out:
-        Path(args.out).write_text(json.dumps({"report": report, "model": model_state},
+        payload = {"report": report, "model": model_state,
+                   "dataset_total": len(_rows()), "complete_dataset": len(rows) == len(_rows())}
+        if baseline is not None:
+            payload["rule_report"] = baseline
+            rules_by_id = {item["id"]: item for item in baseline["details"]}
+            payload["comparison"] = [
+                {"id": item["id"], "gold": item["gold"],
+                 "rules": rules_by_id[item["id"]]["predicted"],
+                 "model": item["predicted"],
+                 "model_evidence_supported": item["evidence_supported"],
+                 "model_latency_ms": item["latency_ms"]}
+                for item in report["details"]
+            ]
+        Path(args.out).write_text(json.dumps(payload,
                                              indent=2, ensure_ascii=False), encoding="utf-8")
         print("written: %s" % args.out)
     return 0
@@ -118,6 +152,8 @@ def main(argv=None):
                          help="rules = deterministic baseline; model = configured real model")
     evaluate.add_argument("--allow-remote", action="store_true",
                           help="explicitly permit sending the fictional evaluation set to a non-local endpoint")
+    evaluate.add_argument("--limit", type=int,
+                          help="pilot on the first N fictional rows; partial results cannot complete M1")
     evaluate.set_defaults(func=command_eval)
 
     demo = sub.add_parser("demo", help="run one artifact through the whole loop")

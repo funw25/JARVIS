@@ -64,9 +64,9 @@ def load_config(environment=None):
         return None
     if provider not in PROVIDERS:
         raise ModelNotConfigured("unknown provider: " + provider)
-    if provider == "ollama" and model.lower().endswith(":cloud"):
+    if provider == "ollama" and model.lower().endswith((":cloud", "-cloud")):
         raise ModelNotConfigured("Ollama cloud model is not allowed through the local-only provider")
-    return ModelConfig(
+    config = ModelConfig(
         provider=provider,
         model=model,
         base_url=env.get("JARVIS_M1_MODEL_BASE_URL", "").strip()
@@ -74,6 +74,9 @@ def load_config(environment=None):
         key_env=env.get("JARVIS_M1_MODEL_KEY_ENV", "").strip(),
         timeout=float(env.get("JARVIS_M1_MODEL_TIMEOUT", "60")),
     )
+    if provider == "ollama" and not is_loopback_endpoint(config):
+        raise ModelNotConfigured("Ollama provider requires a local loopback HTTP endpoint")
+    return config
 
 
 def is_loopback_endpoint(config):
@@ -92,7 +95,10 @@ def _request_json(url, *, payload=None, headers=None, timeout=60.0):
         request_headers["Content-Type"] = "application/json"
     request = urllib.request.Request(url, data=data, headers=request_headers, method="POST" if data else "GET")
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        opener = (urllib.request.build_opener(urllib.request.ProxyHandler({}))
+                  if urlsplit(url).hostname in ("127.0.0.1", "localhost", "::1")
+                  else urllib.request.build_opener())
+        with opener.open(request, timeout=timeout) as response:
             return json.loads(response.read().decode("utf-8"))
     except (urllib.error.URLError, TimeoutError, OSError, ValueError) as exc:
         raise ModelUnavailable("model endpoint unreachable: %s" % exc) from exc
@@ -105,21 +111,30 @@ def probe(config=None, *, environment=None):
         return {
             "available": False,
             "reason": "未配置模型（需要 JARVIS_M1_MODEL_PROVIDER 与 JARVIS_M1_MODEL）",
-            "measured": False,
+            "probe_completed": False,
+            "quality_measured": False,
         }
     try:
         if config.provider == "ollama":
             tags = _request_json(config.base_url.rstrip("/") + "/api/tags", timeout=config.timeout)
             names = [item.get("name", "") for item in tags.get("models", [])]
-            return {"available": config.model in names, "models": names, "measured": True, "config": config.describe()}
+            match = next((item for item in tags.get("models", []) if item.get("name") == config.model), None)
+            local = bool(match and isinstance(match.get("size"), int) and match["size"] > 0
+                         and match.get("digest"))
+            return {"available": local, "models": names, "model_size_bytes": match.get("size") if match else None,
+                    "model_digest": match.get("digest") if match else None,
+                    "probe_completed": True, "quality_measured": False, "config": config.describe()}
         if config.provider == "openai-compatible":
             listing = _request_json(config.base_url.rstrip("/") + "/models", timeout=config.timeout)
             names = [item.get("id", "") for item in listing.get("data", [])]
-            return {"available": config.model in names, "models": names, "measured": True, "config": config.describe()}
+            return {"available": config.model in names, "models": names, "probe_completed": True,
+                    "quality_measured": False, "config": config.describe()}
         executable = shutil.which(config.model)
-        return {"available": bool(executable), "path": executable, "measured": True, "config": config.describe()}
+        return {"available": bool(executable), "path": executable, "probe_completed": True,
+                "quality_measured": False, "config": config.describe()}
     except ModelUnavailable as exc:
-        return {"available": False, "reason": str(exc), "measured": False, "config": config.describe()}
+        return {"available": False, "reason": str(exc), "probe_completed": False,
+                "quality_measured": False, "config": config.describe()}
 
 
 def _parse_reply(text):
@@ -160,7 +175,8 @@ def _call_model(config, text):
     if config.provider == "ollama":
         reply = _request_json(
             config.base_url.rstrip("/") + "/api/generate",
-            payload={"model": config.model, "prompt": PROMPT + text, "stream": False, "format": "json"},
+            payload={"model": config.model, "prompt": PROMPT + text, "stream": False, "format": "json",
+                     "options": {"temperature": 0, "seed": 42, "num_ctx": 4096}},
             timeout=config.timeout,
         )
         return reply.get("response", "")

@@ -8,6 +8,7 @@ import json
 import io
 import os
 import sys
+import tempfile
 import threading
 from contextlib import redirect_stdout
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -37,11 +38,18 @@ def expect(error, call, label):
 # 1. No configuration: the adapter must refuse rather than return a default.
 assert m1_model.load_config() is None
 status = m1_model.probe()
-assert status["available"] is False and status["measured"] is False, status
+assert status["available"] is False and status["quality_measured"] is False, status
 expect(m1_model.ModelNotConfigured, m1_model.engine, "engine without config")
 expect(m1_model.ModelNotConfigured,
        lambda: m1_model.load_config({"JARVIS_M1_MODEL_PROVIDER": "ollama", "JARVIS_M1_MODEL": "x:cloud"}),
        "Ollama cloud model")
+expect(m1_model.ModelNotConfigured,
+       lambda: m1_model.load_config({"JARVIS_M1_MODEL_PROVIDER": "ollama", "JARVIS_M1_MODEL": "x:120b-cloud"}),
+       "Ollama dash-cloud model")
+expect(m1_model.ModelNotConfigured,
+       lambda: m1_model.load_config({"JARVIS_M1_MODEL_PROVIDER": "ollama", "JARVIS_M1_MODEL": "local",
+                                     "JARVIS_M1_MODEL_BASE_URL": "https://example.invalid"}),
+       "non-local Ollama endpoint")
 assert m1_model.is_loopback_endpoint(m1_model.ModelConfig("ollama", "local", "http://127.0.0.1:11434"))
 assert not m1_model.is_loopback_endpoint(m1_model.ModelConfig("openai-compatible", "remote", "https://example.invalid/v1"))
 assert m1_model.load_config({"JARVIS_M1_MODEL_PROVIDER": "ollama", "JARVIS_M1_MODEL": "local"}).base_url == "http://127.0.0.1:11434"
@@ -68,6 +76,11 @@ class Stub(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path.endswith("/models"):
             self._send({"data": [{"id": "stub-model"}]})
+        elif self.path.endswith("/api/tags"):
+            self._send({"models": [
+                {"name": "local-model", "size": 2500000000, "digest": "test-digest"},
+                {"name": "x:120b-cloud", "size": 0, "digest": "cloud-digest"},
+            ]})
         else:
             self._send({"error": "not found"}, 404)
 
@@ -111,6 +124,11 @@ try:
     assert status["available"] is True, status
     print("MODEL_PROBE_FINDS_LOCAL_ENDPOINT=PASS models=%s" % status.get("models"))
 
+    local = m1_model.probe(m1_model.ModelConfig("ollama", "local-model", "http://127.0.0.1:%d" % port))
+    assert local["available"] is True and local["model_digest"] == "test-digest", local
+    cloud = m1_model.probe(m1_model.ModelConfig("ollama", "x:120b-cloud", "http://127.0.0.1:%d" % port))
+    assert cloud["available"] is False, cloud
+
     engine = m1_model.engine()
     suggestion = engine(TEXT, kind="email")
     assert suggestion.classification == "needs_reply"
@@ -128,8 +146,14 @@ try:
     try:
         m1_cli._rows = lambda: [row]
         captured = io.StringIO()
-        with redirect_stdout(captured):
-            assert m1_cli.command_eval(SimpleNamespace(engine="model", out=None)) == 0
+        with tempfile.TemporaryDirectory(prefix="jarvis-m1-model-report-") as directory:
+            report_path = Path(directory) / "report.json"
+            with redirect_stdout(captured):
+                assert m1_cli.command_eval(SimpleNamespace(engine="model", out=str(report_path))) == 0
+            saved = json.loads(report_path.read_text(encoding="utf-8"))
+            assert saved["complete_dataset"] is True
+            assert len(saved["comparison"]) == 1 and saved["comparison"][0]["id"] == row["id"]
+            assert saved["report"]["engine"] == "model:openai-compatible/stub-model"
         assert "engine: model:openai-compatible/stub-model" in captured.getvalue()
         assert "候选模型输出已测量" in captured.getvalue()
     finally:

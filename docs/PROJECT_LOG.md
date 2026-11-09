@@ -4,6 +4,13 @@
 **最近更新：** 2026-11-09
 **当前阶段：** M1 合成纵向闭环进行中；链路、规则基线和同机干净目录重建已交付，真实模型质量未验证（见[新版交付计划](JARVIS_V2_EXECUTION.md)）
 
+## 2026-11-09：本地模型路线与运行器限制
+
+- 用户确认本机没有 Ollama/模型权重，并给出 15.7 GB RAM、i5-1145G7、Intel Iris Xe 共享显存、C 盘约 159.3 GB 空闲。选定 2.5 GB 左右的 `qwen3:4b-instruct-2507-q4_K_M` 作为 CPU 首轮候选，不把硬件估算当质量结果。
+- 查阅 Ollama 官方文档：云模型既有 `:cloud` 也有 `-cloud` 标签；FAQ 明确提供 `OLLAMA_NO_CLOUD=1`。修正本地适配器漏拦 `-cloud` 的缺陷，并限制 Ollama 提供方为回环 HTTP；本地模型须经 `/api/tags` 核对非零大小与摘要。回环请求禁用系统代理。评测支持 3 条试跑和 53 条全量运行，完整报告含规则/模型逐条比较；Ollama 参数固定 `temperature=0`、`seed=42`、`num_ctx=4096`。5 项 M1 离线回归再次通过，仍打印 `M1_MODEL_QUALITY=UNVERIFIED`。
+- 官方 Ollama CLI `v0.40.15` Windows zip 已下载至忽略目录，大小与 GitHub 发布 SHA-256 `9ca74a7a…0221c6` 一致，`ollama.exe --version` 可运行。无 Ollama 账号登录，无模型权重下载，无样本模型调用。
+- Ollama 前台与隐藏后台服务均因当前运行器无法打开 `%USERPROFILE%\.ollama\id_ed25519` 而失败；端口 11434 无监听。创建目录未解决文件访问限制。已备好[本地模型准备说明](M1_LOCAL_MODEL_SETUP.md)和普通 Windows PowerShell 一次性脚本；下一步由用户在普通会话运行该脚本，再继续虚构数据试跑与全量评测。M1 仍未完成。
+
 ## 2026-11-09：模型评测入口核对
 
 - 用户报告 M1 Windows x64 环境已锁定：官方 CPython 3.14.10 zip 哈希固定、32 个 wheel 版本与哈希入锁、离线安装、同机干净目录重建成功。核对 [M1 环境](M1_ENVIRONMENT.md)和脚本；这证明新的目标目录可从本地材料重建，尚非另一台独立机器的复核。

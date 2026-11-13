@@ -1,0 +1,93 @@
+{
+  "date": "2026-11-14",
+  "scope": "independent replication of the 2026-11-09 local-model baseline on the same 53 fictional artifacts",
+  "dataset_sha256": "a377b1c713433b9804f52a1e633d932be5a967ba90f2357318573cff7e0f4ee0",
+  "adapter_sha256": "96d262158449b0e40b4e4e9c462a42e4867f04555f665e07af1b415c6ad7cc17",
+  "model": "qwen3:4b-instruct-2507-q4_K_M",
+  "model_digest": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+  "model_size_bytes": 2497293803,
+  "ollama_version": "0.40.15",
+  "inference": "CPU only (GPU discovery failed; 15.7 GiB RAM)",
+  "settings": {
+    "temperature": 0,
+    "seed": 42,
+    "num_ctx": 4096,
+    "provider": "ollama",
+    "endpoint": "127.0.0.1:11434"
+  },
+  "cloud_disabled": true,
+  "runs": [
+    {
+      "label": "run1",
+      "report_sha256": "d9a65b763957b4baaa6a9e7ea82204ec63ea8f0e7419c934263807147aefb69b",
+      "items": 53,
+      "metrics": {
+        "classification_accuracy": 0.434,
+        "todo_accuracy": 0.8302,
+        "draft_accuracy": 0.717,
+        "priority_accuracy": 0.4151,
+        "injection_recall": 0.125,
+        "evidence_nonempty_rate": 1.0,
+        "evidence_verbatim_rate": 0.9811,
+        "duration_ms": 342015.2
+      }
+    },
+    {
+      "label": "run2",
+      "report_sha256": "701c0baf6361cfb2b347408bd15e7726237901a6b4bff0891e480aad46699f93",
+      "items": 53,
+      "metrics": {
+        "classification_accuracy": 0.434,
+        "todo_accuracy": 0.8302,
+        "draft_accuracy": 0.717,
+        "priority_accuracy": 0.3962,
+        "injection_recall": 0.125,
+        "evidence_nonempty_rate": 1.0,
+        "evidence_verbatim_rate": 1.0,
+        "duration_ms": 331741.3
+      }
+    }
+  ],
+  "variance": {
+    "classification_accuracy": {
+      "min": 0.434,
+      "max": 0.434,
+      "stable": true
+    },
+    "todo_accuracy": {
+      "min": 0.8302,
+      "max": 0.8302,
+      "stable": true
+    },
+    "draft_accuracy": {
+      "min": 0.717,
+      "max": 0.717,
+      "stable": true
+    },
+    "priority_accuracy": {
+      "min": 0.3962,
+      "max": 0.4151,
+      "stable": false
+    },
+    "injection_recall": {
+      "min": 0.125,
+      "max": 0.125,
+      "stable": true
+    },
+    "evidence_verbatim_rate": {
+      "min": 0.9811,
+      "max": 1.0,
+      "stable": false
+    }
+  },
+  "baseline_2026_11_09": {
+    "classification_accuracy": 0.434,
+    "todo_accuracy": 0.8302,
+    "draft_accuracy": 0.717,
+    "priority_accuracy": 0.3774,
+    "injection_recall": 0.125,
+    "evidence_verbatim_rate": 0.9811,
+    "duration_ms": 311400
+  },
+  "note": "Metrics only; per-item predictions stay in the git-ignored .jarvis-ollama/results directory and no sample text is copied here."
+}

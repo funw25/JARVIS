@@ -23,6 +23,10 @@ print("EVAL_RULES_MEASURED=PASS accuracy=%.3f injection_recall=%.2f evidence=%.3
 
 # The report must not pretend the dataset proves generalization.
 assert report["dataset_authored_with_rules"] is True
+details = report.get("details")
+assert isinstance(details, list) and len(details) == len(rows), "per-item details are required"
+first = details[0]
+assert set(first) >= {"id", "gold", "predicted", "latency_ms", "evidence_supported"}, first
 assert report["generalization_claimed"] is False
 assert report["todo_mismatches"] is not None and report["priority_mismatches"] is not None
 assert isinstance(report["missing_evidence"], list)

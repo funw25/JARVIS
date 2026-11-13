@@ -10,8 +10,9 @@ knowledge and conversations in one place, with a human approval step in front of
 every external action.
 
 > **Status: early development.** Jarvis runs on synthetic (fictional) data only.
-> It does not connect to a real mailbox, chat account or AI model provider, and it
-> does not send anything. Do not put real mail, chat logs, passwords, keys or other
+> It does not connect to a real mailbox or chat account, and it does not send anything.
+> A local Ollama model has only been evaluated on fictional samples and is not in the main workflow.
+> Do not put real mail, chat logs, passwords, keys or other
 > personal data into the current build.
 
 ---

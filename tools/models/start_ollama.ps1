@@ -1,22 +1,16 @@
-<# Start the pinned Ollama CLI as a loopback-only, cloud-disabled local process. #>
+<# Start Ollama with its entire per-user state isolated under the project. #>
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $base = Join-Path $repo '.jarvis-ollama'
-$ollama = Join-Path $base 'runtime-v0.40.15\ollama.exe'
-$models = Join-Path $base 'models'
-if (-not (Test-Path -LiteralPath $ollama)) { throw "Ollama runtime missing: $ollama" }
-New-Item -ItemType Directory -Path $models -Force | Out-Null
+$python = Join-Path $repo '.jarvis-python-3.14.10\python.exe'
+$launcher = Join-Path $repo 'tools\models\ollama_in_project.py'
+if (-not (Test-Path -LiteralPath $python)) { throw "Python runtime missing: $python" }
+if (-not (Test-Path -LiteralPath $launcher)) { throw "Ollama launcher missing: $launcher" }
 
 $existing = Get-NetTCPConnection -LocalPort 11434 -State Listen -ErrorAction SilentlyContinue
 if ($existing) { throw 'port 11434 already has a listener; inspect it before starting Jarvis Ollama' }
 
-$env:OLLAMA_HOST = '127.0.0.1:11434'
-$env:OLLAMA_NO_CLOUD = '1'
-$env:OLLAMA_MODELS = $models
-$env:HTTPS_PROXY = 'http://127.0.0.1:7890'
-$env:NO_PROXY = '127.0.0.1,localhost'
-
-$process = Start-Process -FilePath $ollama -ArgumentList 'serve' -WorkingDirectory $base `
+$process = Start-Process -FilePath $python -ArgumentList @($launcher, 'serve') -WorkingDirectory $repo `
     -WindowStyle Hidden -PassThru `
     -RedirectStandardOutput (Join-Path $base 'server.stdout.log') `
     -RedirectStandardError (Join-Path $base 'server.stderr.log')
@@ -26,4 +20,4 @@ if ($process.HasExited) {
     $recent = Get-Content -LiteralPath (Join-Path $base 'server.stderr.log') -Tail 5 -ErrorAction SilentlyContinue
     throw "Ollama exited immediately. Recent error: $($recent -join ' | ')"
 }
-Write-Host "OLLAMA_PROCESS_SPAWNED pid=$($process.Id) host=$env:OLLAMA_HOST cloud_disabled=$env:OLLAMA_NO_CLOUD"
+Write-Host "OLLAMA_PROCESS_SPAWNED pid=$($process.Id) host=127.0.0.1:11434 cloud_disabled=1 profile=project"

@@ -19,6 +19,7 @@ os.environ.setdefault("JARVIS_DATA_MODE", "synthetic")
 from usecases import m1_eval, m1_model, m1_pipeline, m1_rules  # noqa: E402
 
 DATASET = BACKEND / "evals" / "m1" / "artifacts.jsonl"
+HOLDOUT = BACKEND / "evals" / "m1" / "holdout.jsonl"
 
 
 def _rows():
@@ -26,7 +27,17 @@ def _rows():
 
 
 def command_eval(args):
-    rows = _rows()
+    holdout = bool(getattr(args, "holdout", False))
+    rows = m1_pipeline.load_dataset(HOLDOUT) if holdout else _rows()
+    dataset_total = len(rows)
+    requested_ids = getattr(args, "ids", None)
+    if requested_ids:
+        ids = [item.strip() for item in requested_ids.split(",") if item.strip()]
+        by_id = {row["id"]: row for row in rows}
+        if not ids or len(ids) != len(set(ids)) or any(item not in by_id for item in ids):
+            print("error: --ids must contain distinct known dataset IDs", file=sys.stderr)
+            return 2
+        rows = [by_id[item] for item in ids]
     if getattr(args, "limit", None) is not None:
         if not 1 <= args.limit <= len(rows):
             print("error: --limit must be between 1 and %d" % len(rows), file=sys.stderr)
@@ -55,11 +66,11 @@ def command_eval(args):
             print("model quality: 未验证 (no real model reachable)", file=sys.stderr)
             return 2
     if engine is None:
-        report = m1_eval.evaluate(rows)
+        report = m1_eval.evaluate(rows, dataset_authored_with_rules=not holdout)
         model_state = m1_eval.model_status()
     else:
-        report = m1_eval.evaluate_model(rows, engine)
-        baseline = m1_eval.evaluate(rows)
+        report = m1_eval.evaluate_model(rows, engine, dataset_authored_with_rules=not holdout)
+        baseline = m1_eval.evaluate(rows, dataset_authored_with_rules=not holdout)
         report["model_config"] = config.describe()
         if model_probe is not None:
             report["model_digest"] = model_probe["model_digest"]
@@ -74,11 +85,12 @@ def command_eval(args):
             model_state["model_digest"] = model_probe["model_digest"]
     print(m1_eval.summarize(report))
     print("model quality: %s" % model_state["status"])
-    if len(rows) < len(_rows()):
-        print("partial run: %d/%d items; not an M1 completion result" % (len(rows), len(_rows())))
+    if len(rows) < dataset_total:
+        print("partial run: %d/%d items; not an M1 completion result" % (len(rows), dataset_total))
     if args.out:
         payload = {"report": report, "model": model_state,
-                   "dataset_total": len(_rows()), "complete_dataset": len(rows) == len(_rows())}
+                   "dataset_id": "m1-holdout-v1" if holdout else "m1-fixed-v1",
+                   "dataset_total": dataset_total, "complete_dataset": len(rows) == dataset_total}
         if baseline is not None:
             payload["rule_report"] = baseline
             rules_by_id = {item["id"]: item for item in baseline["details"]}
@@ -152,8 +164,12 @@ def main(argv=None):
                          help="rules = deterministic baseline; model = configured real model")
     evaluate.add_argument("--allow-remote", action="store_true",
                           help="explicitly permit sending the fictional evaluation set to a non-local endpoint")
-    evaluate.add_argument("--limit", type=int,
-                          help="pilot on the first N fictional rows; partial results cannot complete M1")
+    evaluate.add_argument("--holdout", action="store_true",
+                          help="evaluate the separate 20-item fictional holdout instead of the fixed 53-item set")
+    selection = evaluate.add_mutually_exclusive_group()
+    selection.add_argument("--limit", type=int,
+                           help="pilot on the first N fictional rows; partial results cannot complete M1")
+    selection.add_argument("--ids", help="pilot on comma-separated fictional dataset IDs")
     evaluate.set_defaults(func=command_eval)
 
     demo = sub.add_parser("demo", help="run one artifact through the whole loop")

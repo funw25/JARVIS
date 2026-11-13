@@ -13,6 +13,7 @@ for name in ("JARVIS_STORAGE_ADAPTER", "JARVIS_APSWMC_KEY", "JARVIS_VAULT_DIR"):
 
 import app.database as database
 from usecases import m1_pipeline
+from usecases import m1_rules
 
 DATASET = ROOT / "backend" / "evals" / "m1" / "artifacts.jsonl"
 rows = {row["id"]: row for row in m1_pipeline.load_dataset(DATASET)}
@@ -81,6 +82,42 @@ with tempfile.TemporaryDirectory(prefix="jarvis-m1-pipeline-", ignore_cleanup_er
         assert accepted["suggestion"]["classification"] == "injection"
         assert accepted["created"]["todo_id"] is None and accepted["created"]["draft_id"] is None
         print("LOOP_ACCEPTED_INJECTION_CREATES_NO_ACTION=PASS")
+
+        # 5a. A model cannot turn a rule-detected injection into work.
+        imported = m1_pipeline.import_artifact(connection, rows["m1-041"])
+        def unsafe_model(text, *, kind):
+            return m1_rules.Suggestion("action", "high", True, True, 0.9,
+                                       [{"span": "管理员密码", "kind": "model", "reason": "candidate"}])
+        unsafe_model.name = "model:synthetic-unsafe"
+        screened = m1_pipeline.suggest(connection, imported["artifact_id"], unsafe_model)
+        assert screened["engine"] == unsafe_model.name + "+rules-veto"
+        assert screened["classification"] == "injection" and not screened["todo"] and not screened["draft"]
+        assert screened["evidence_supported"] is True
+        assert screened["rule_veto"] is True
+        print("LOOP_RULE_VETO_BLOCKS_MODEL_INJECTION_ACTION=PASS")
+
+        # 5b. Unsupported source claims are refused before a suggestion is stored.
+        imported = m1_pipeline.import_artifact(connection, rows["m1-003"])
+        before = connection.execute("SELECT count(*) FROM m1_suggestions").fetchone()[0]
+        def unsupported_model(text, *, kind):
+            return m1_rules.Suggestion("needs_reply", "normal", False, True, 0.9,
+                                       [{"span": "invented source", "kind": "model", "reason": "candidate"}])
+        try:
+            m1_pipeline.suggest(connection, imported["artifact_id"], unsupported_model)
+            raise AssertionError("unsupported evidence was accepted")
+        except ValueError as exc:
+            assert "verbatim" in str(exc)
+        assert connection.execute("SELECT count(*) FROM m1_suggestions").fetchone()[0] == before
+        print("LOOP_UNSUPPORTED_EVIDENCE_REJECTED=PASS")
+
+        # 5c. Editing an injection decision cannot re-enable actions.
+        edited = m1_pipeline.decide(connection, accepted["suggestion"]["suggestion_id"], "modify", {"todo": True})
+        try:
+            m1_pipeline.materialize(connection, edited["decision_id"])
+            raise AssertionError("edited injection created work")
+        except ValueError as exc:
+            assert "injection-classified" in str(exc)
+        print("LOOP_INJECTION_EDIT_CANNOT_CREATE_ACTION=PASS")
 
         totals = {
             "todos": connection.execute("SELECT count(*) FROM todos").fetchone()[0],

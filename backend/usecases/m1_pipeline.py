@@ -63,24 +63,44 @@ def suggest(connection, artifact_id, engine=None):
         raise KeyError("unknown artifact: " + artifact_id)
     engine = engine or m1_rules.suggest
     result = engine(row["content"], kind=row["kind"])
+    if result.classification not in m1_rules.CLASSES or result.priority not in m1_rules.PRIORITIES:
+        raise ValueError("candidate has an invalid classification or priority")
+    if any(not isinstance(item, dict) or not isinstance(item.get("span"), str)
+           or item["span"] not in row["content"] for item in result.evidence):
+        raise ValueError("candidate evidence is not a verbatim source span")
+    if (result.wants_todo or result.wants_draft) and not result.evidence:
+        raise ValueError("actionable candidate requires source evidence")
+    rule_veto = False
+    if engine is not m1_rules.suggest:
+        rule_screen = m1_rules.suggest(row["content"], kind=row["kind"])
+        if rule_screen.classification == "injection":
+            result = rule_screen
+            rule_veto = True
+    action_veto = False
+    if result.classification == "injection" and (result.wants_todo or result.wants_draft):
+        result = m1_rules.Suggestion("injection", "high", False, False, result.confidence, result.evidence)
+        action_veto = True
     suggestion_id = _id("sug")
+    engine_name = getattr(engine, "name", m1_rules.ENGINE_NAME) + ("+rules-veto" if rule_veto else "")
     connection.execute(
         "INSERT INTO m1_suggestions (id, artifact_id, engine, classification, priority, wants_todo, wants_draft,"
         " confidence, evidence_json, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
-        (suggestion_id, artifact_id, m1_rules.ENGINE_NAME, result.classification, result.priority,
+        (suggestion_id, artifact_id, engine_name, result.classification, result.priority,
          int(result.wants_todo), int(result.wants_draft), float(result.confidence),
          json.dumps(result.evidence, ensure_ascii=False), _now()),
     )
     supported = all(item["span"] in row["content"] for item in result.evidence) if result.evidence else False
     audit(connection, "suggestion_created", "m1_suggestion", suggestion_id, actor_type="assistant", actor_id=ASSISTANT,
           metadata={"classification": result.classification, "priority": result.priority,
-                    "evidence_supported": supported, "duplicate": bool(row["duplicate_of"])})
+                    "evidence_supported": supported, "duplicate": bool(row["duplicate_of"]),
+                    "rule_veto": rule_veto, "action_veto": action_veto})
     return {
-        "suggestion_id": suggestion_id, "artifact_id": artifact_id, "engine": m1_rules.ENGINE_NAME,
+        "suggestion_id": suggestion_id, "artifact_id": artifact_id, "engine": engine_name,
         "classification": result.classification, "priority": result.priority,
         "todo": result.wants_todo, "draft": result.wants_draft,
         "confidence": result.confidence, "evidence": result.evidence,
         "evidence_supported": supported, "duplicate_of": row["duplicate_of"],
+        "rule_veto": rule_veto, "action_veto": action_veto,
     }
 
 
@@ -115,6 +135,8 @@ def materialize(connection, decision_id):
     edits = json.loads(row["edits_json"] or "{}")
     wants_todo = bool(edits.get("todo", row["wants_todo"]))
     wants_draft = bool(edits.get("draft", row["wants_draft"]))
+    if row["classification"] == "injection" and (wants_todo or wants_draft):
+        raise ValueError("an injection-classified artifact cannot create work")
     title = edits.get("title") or _title_from(row["content"], row["kind"])
     evidence = json.loads(row["evidence_json"] or "[]")
 

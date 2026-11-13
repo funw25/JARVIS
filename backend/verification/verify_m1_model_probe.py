@@ -61,6 +61,8 @@ TEXT = "请确认下周三的演示时间是否仍然有效，我这边要订会
 
 class Stub(BaseHTTPRequestHandler):
     mode = "ok"
+    last_payload = None
+    invalid_remaining = 0
 
     def log_message(self, *args):  # silence the test output
         pass
@@ -86,8 +88,10 @@ class Stub(BaseHTTPRequestHandler):
 
     def do_POST(self):
         length = int(self.headers.get("Content-Length", "0"))
-        self.rfile.read(length)
-        if Stub.mode == "broken":
+        Stub.last_payload = json.loads(self.rfile.read(length))
+        if Stub.mode == "broken" or Stub.invalid_remaining:
+            if Stub.invalid_remaining:
+                Stub.invalid_remaining -= 1
             payload = "this is not json"
             body = json.dumps({"choices": [{"message": {"content": payload}}]}).encode("utf-8")
             self.send_response(200)
@@ -137,6 +141,14 @@ try:
     assert suggestion.evidence and all(item["span"] in TEXT for item in suggestion.evidence), suggestion.evidence
     print("MODEL_REPLY_PARSED_WITH_VERBATIM_EVIDENCE=PASS")
 
+    v2 = m1_model.engine(m1_model.ModelConfig("openai-compatible", "stub-model", base,
+                                             prompt_version="v2"))
+    assert v2(TEXT, kind="email").classification == "needs_reply"
+    assert Stub.last_payload["messages"][0]["role"] == "system"
+    assert Stub.last_payload["messages"][1] == {"role": "user", "content": TEXT}
+    assert v2.name == "model:openai-compatible/stub-model"
+    print("MODEL_V2_SEPARATES_INSTRUCTIONS_FROM_INPUT=PASS")
+
     row = {"id": "probe-1", "kind": "email", "text": TEXT,
            "labels": {"classification": "needs_reply", "priority": "normal", "todo": True, "draft": True}}
     report = m1_eval.evaluate_model([row], engine)
@@ -154,6 +166,12 @@ try:
             assert saved["complete_dataset"] is True
             assert len(saved["comparison"]) == 1 and saved["comparison"][0]["id"] == row["id"]
             assert saved["report"]["engine"] == "model:openai-compatible/stub-model"
+            m1_cli._rows = lambda: [row, dict(row, id="probe-2")]
+            with redirect_stdout(io.StringIO()):
+                assert m1_cli.command_eval(SimpleNamespace(engine="model", out=str(report_path),
+                                                           ids="probe-1")) == 0
+            partial = json.loads(report_path.read_text(encoding="utf-8"))
+            assert partial["complete_dataset"] is False and len(partial["comparison"]) == 1
         assert "engine: model:openai-compatible/stub-model" in captured.getvalue()
         assert "候选模型输出已测量" in captured.getvalue()
     finally:
@@ -176,6 +194,12 @@ try:
     Stub.mode = "broken"
     expect(m1_model.ModelUnavailable, lambda: engine(TEXT), "invalid model reply")
     Stub.mode = "ok"
+    Stub.invalid_remaining = 1
+    recovered = m1_eval.evaluate_model([row], engine)
+    assert recovered["retry_items"] == 1 and recovered["retry_total"] == 1
+    assert recovered["details"][0]["attempts"] == 2
+    assert Stub.invalid_remaining == 0
+    print("MODEL_BOUNDED_RETRY_IS_RECORDED=PASS")
     print("MODEL_INVALID_REPLY_IS_REJECTED=PASS")
 
     # The adapter running against a stub does not turn into a quality claim.
@@ -185,7 +209,7 @@ try:
 finally:
     server.shutdown()
     for name in ("JARVIS_M1_MODEL_PROVIDER", "JARVIS_M1_MODEL", "JARVIS_M1_MODEL_BASE_URL",
-                 "JARVIS_M1_MODEL_KEY_ENV", "JARVIS_M1_MODEL_TIMEOUT"):
+                 "JARVIS_M1_MODEL_KEY_ENV", "JARVIS_M1_MODEL_TIMEOUT", "JARVIS_M1_PROMPT_VERSION"):
         os.environ.pop(name, None)
 
 print("M1_MODEL_ADAPTER=PASS")

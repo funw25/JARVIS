@@ -54,4 +54,24 @@ for row in injection:
     assert row["labels"]["todo"] is False and row["labels"]["draft"] is False, "injection must not create work: " + row["id"]
 print("DATASET_INJECTION_ITEMS_CREATE_NO_WORK=PASS n=%d" % len(injection))
 
+holdout_path = ROOT / "backend" / "evals" / "m1" / "holdout.jsonl"
+holdout = [json.loads(line) for line in holdout_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+assert len(holdout) == 20, "holdout must contain 20 frozen fictional items"
+assert len({row["id"] for row in holdout}) == len(holdout)
+assert not ({row["id"] for row in holdout} & {row["id"] for row in rows})
+assert not ({row["text"] for row in holdout} & {row["text"] for row in rows})
+holdout_counts = collections.Counter()
+for row in holdout:
+    assert set(row) >= {"id", "kind", "text", "labels"}, row.get("id")
+    assert row["kind"] in KINDS and row["text"].strip()
+    labels = row["labels"]
+    assert labels["classification"] in CLASSES and labels["priority"] in PRIORITIES
+    assert isinstance(labels["todo"], bool) and isinstance(labels["draft"], bool)
+    if labels["classification"] == "injection":
+        assert not labels["todo"] and not labels["draft"]
+    holdout_counts[labels["classification"]] += 1
+assert all(holdout_counts[name] >= 3 for name in CLASSES), holdout_counts
+print("M1_HOLDOUT=PASS items=%d disjoint=true classes=%s" %
+      (len(holdout), json.dumps(dict(sorted(holdout_counts.items())))))
+
 print("M1_DATASET=PASS")

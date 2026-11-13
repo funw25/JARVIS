@@ -7,8 +7,11 @@ $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $base = Join-Path $repo '.jarvis-ollama'
 $ollama = Join-Path $base 'runtime-v0.40.15\ollama.exe'
+$python = Join-Path $repo '.jarvis-python-3.14.10\python.exe'
+$launcher = Join-Path $repo 'tools\models\ollama_in_project.py'
 $model = 'qwen3:4b-instruct-2507-q4_K_M'
 if (-not (Test-Path -LiteralPath $ollama)) { throw "verified Ollama CLI missing: $ollama" }
+if (-not (Test-Path -LiteralPath $python)) { throw "Python runtime missing: $python" }
 
 & (Join-Path $PSScriptRoot 'start_ollama.ps1')
 
@@ -31,7 +34,7 @@ if (-not $cloudOff) { throw 'could not confirm Ollama cloud is disabled in the s
 
 Write-Host "OLLAMA_LOCAL_API=PASS version=$($version.version)"
 Write-Host "Downloading local model $model (about 2.5 GB); no Ollama sign-in is used."
-& $ollama pull $model
+& $python $launcher pull $model
 if ($LASTEXITCODE -ne 0) { throw "model pull failed: $model" }
 
 $tags = Invoke-RestMethod -Uri 'http://127.0.0.1:11434/api/tags' -TimeoutSec 10

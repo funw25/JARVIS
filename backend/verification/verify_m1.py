@@ -48,8 +48,8 @@ def main():
         print("PASS %s" % filename)
 
     print("M1_OFFLINE_CHECKS=PASS count=%d skip=0" % len(CHECKS))
-    print("M1_MODEL_QUALITY=UNVERIFIED")
-    print("M1_EXIT=OPEN")
+    print("M1_MODEL_QUALITY=NOT_CHECKED (offline checks do not call a real model)")
+    print("M1_EXIT=NOT_CHECKED (run the separate research quality gate)")
     return 0
 
 

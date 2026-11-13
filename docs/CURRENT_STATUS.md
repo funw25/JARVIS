@@ -1,8 +1,8 @@
 # Jarvis 当前状态
 
-更新：2026-11-09。当前开发方向是 Jarvis 底层；陪伴模式保留现有通道，暂不扩展；电影 HUD 原型冻结，尚未接后端。
+更新：2026-11-14。当前开发方向是 Jarvis 底层；陪伴模式保留现有通道，暂不扩展；电影 HUD 原型冻结，尚未接后端。
 
-**重审进度：** 当前是 [M1 离线纵向闭环](JARVIS_V2_EXECUTION.md)，但**尚未完成**：虚构数据链路、规则基线和评测框架已落地；[M1 环境](M1_ENVIRONMENT.md)已在同一台 Windows 主机的干净目录重建；真实模型质量仍未测量。M0 的[产品定义](JARVIS_V2_PRODUCT.md)与[目标架构](JARVIS_V2_ARCHITECTURE.md)已形成基线。以下表格记录已实现的实际证据，不代表 M1 或真实数据门槛通过。
+**重审进度：** [M1 虚构数据研究闭环](M1_RESULTS.md)已收口：纵向链路、同机离线环境、两次 v2 全量模型报告与 20 条留出集均已验证，[研究质量门禁](M1_MODEL_QUALITY_GATE.md)输出 `PASS_RESEARCH_ONLY`。**下一阶段 M2 可信本机底座尚未启动。** v2 的噪声和优先级质量、独立标注、真实资料处理仍未获准；以下证据不代表真实数据门槛通过。M0 的[产品定义](JARVIS_V2_PRODUCT.md)与[目标架构](JARVIS_V2_ARCHITECTURE.md)继续作为基线。
 
 **现在只能使用虚构资料。** 主应用数据库仍是明文，尚无真实账户连接或邮件发送器。以下“可用”均指开发环境里的本机合成数据功能，不是可以接管真实账户的产品。
 
@@ -12,7 +12,7 @@
 | 提醒 | 配置提前时间，本机查询到期项并确认，防止重复和旧状态误确认 | 系统通知、后台调度、重复周期、多设备去重 |
 | 邮件 | 本地虚构收件箱、会话、筛选、分流、转待办、草稿、模拟审批、规则预览/整理/撤销 | Gmail 授权、真实同步与摘要、发送器和逐项可信确认 |
 | 知识和收集 | 虚构收集项、笔记、标签、分页/搜索、转待办及来源关联 | 真实网页/文件/微信/X/小红书内容收集、语义搜索 |
-| AI | 本地假模型状态流；M1 虚构标注集、规则基线与评测框架 | 真实本地/云模型质量测量、模型调用证据、真实数据出站确认 |
+| AI | 本地假模型状态流；53 条原集 + 20 条留出集；Ollama v2 两次全量关键决策 53/53 一致，原集分类 81.1%/注入 8/8，留出集分类 85%/注入 4/4 | 噪声/优先级质量、独立标注复核、真实数据出站确认；模型尚未接入主工作流 |
 | 安全 | 本机开发令牌、请求来源检查、输入边界、模拟审批绑定快照；独立加密候选探针 | 主应用加密、可信会话、备份恢复、密钥轮换、独立安全审查 |
 | 多设备 | 基本方向与风险文档 | 账户、设备信任、端到端加密同步、冲突解决 |
 | 界面和语音 | 现有纯模拟 HUD | 与后端连接、桌面交付、按键语音输入/播报 |
@@ -22,6 +22,7 @@
 - **隔离 Python 3.14 一键回归（2026-11-08 最近记录）：62 个脚本项 PASS、0 FAIL、0 SKIP**，输出 `ALL_SELECTED_CHECKS=PASS`，退出码 0。环境：项目内便携解释器 `.jarvis-python-3.14.10` + `.jarvis-python314-deps`（fastapi / pydantic / uvicorn / sqlcipher3-wheels）+ `.jarvis-python314-apswmc-probe`（apsw 3.54.0.0 / SQLite3 Multiple Ciphers 2.6.1）。62 项中包含 `driver_provenance`：它虽被计作 PASS，却仍打印 `G1_GATE=OPEN`；因此该数字不能作为加密驱动放行或真实数据可用的证据。
 - **整套回归已能跑在加密后端上（2026-11-07 当时实测）**：`verify_adapter_suite.py` 以随机密钥、`JARVIS_STORAGE_ADAPTER=apswmc` 启动 `verify_all.py`；2026-11-08 重新实测 **60 PASS / 0 FAIL / 0 SKIP**；早前记录的 49 项为历史值。
 - **备份链路已在真实 R2 上验证（2026-11-07）**：本地目录 sink + Cloudflare R2（桶 `jarvis-backup`，`backups/` 前缀 35 天桶锁、120 天生命周期）；上传守卫拒绝带恢复材料的归档，覆盖与删除都被桶锁拒绝（`ObjectLockedByBucketPolicy`），从云端下载后分别用口令与恢复码恢复到新目录成功；备份期间并发写无撕裂事务。凭据只存在于仓库外的 `%USERPROFILE%\.jarvis\r2.env`。
+- **本地模型质量已测量（2026-11-14）**：用项目内隔离目录启动 Ollama 0.40.15（`OLLAMA_NO_CLOUD=true`，日志确认 cloud disabled；GPU 不可用，纯 CPU），模型 `qwen3:4b-instruct-2507-q4_K_M`（摘要 `0edcdef3…`）跑完 53 条两次：分类 43.4%、todo 83.0%、draft 71.7%、注入召回 12.5%（1/8）、需回复召回 0/15 三次完全一致；优先级 37.7/41.5/39.6 与证据逐字 98.1/98.1/100 存在漂移。结论是**失败基线**，不能用于真实邮件；M1 是否关闭待产品决定。证据见 `docs/evidence/M1_OLLAMA_REPLICATION_2026-11-14.json`。
 - **M1 离线环境已锁定（2026-11-09）**：解释器固定为 CPython 3.14.10（官方 embeddable zip，SHA-256 `90905e64…`；与本项目解释器逐文件比对 36/37 一致，唯一差异是 `._pth`），32 个依赖版本与 wheel 哈希写入 `tools/env/requirements-m1.lock`，离线 wheelhouse + `bootstrap.ps1` 重建，`test-cleanroom.ps1` 在全新目录实测通过（环境校验 + M1 三项检查，零 SKIP）。详见 [M1_ENVIRONMENT.md](M1_ENVIRONMENT.md)。
 - **M1 离线纵向闭环已交付（2026-11-08）**：53 条虚构标注样本（5 类、6 条长线程、3 组重复、4 条含糊承诺，证据全部逐字校验）、规则基线 `rules-v2`（分类 100%、todo 88.7%、draft 100%、优先级 94.3%、注入召回 100%，并明确标注"数据集与规则同源、不主张泛化"）、纵向链路 `import → suggestion(证据) → 用户修改/拒绝 → todo 或草稿 → 审计`（CLI 一条命令可跑，注入被接受也不产生动作，无发送器），以及评测框架（无真实模型时 `evaluate_model` 直接拒绝编造分数，`model_status` 固定为"未验证"）。结果与限制见 [M1_RESULTS.md](M1_RESULTS.md)。
 - **G1 清单与检测就绪（2026-11-08）**：`verify_driver_provenance.py` 比对 `docs/driver-manifest.json` 的版本与文件哈希（漂移即失败），并报告许可证覆盖与后端可识别性。实测两条缺口：随包许可证只有 APSW（缺 SQLite3MC/SQLite）、二进制无法证实实际原语来源 → **G1 仍 OPEN**。当前 APSW/SQLite3MC 不能被认定为使用 OpenSSL 3.6；此前的结论属于另行测试的 SQLCipher 候选。修订后的自建草案见 [DRIVER_REVIEW_AND_BUILD.md](DRIVER_REVIEW_AND_BUILD.md)。

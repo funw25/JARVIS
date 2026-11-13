@@ -1,10 +1,10 @@
-"""Rule-baseline evaluation for M1. Model quality stays explicitly unverified.
+"""M1 evaluation for deterministic rules and separately configured real models.
 
 The report separates four things that are easy to blur together:
   * rule-baseline quality on the labeled set (measured),
   * evidence support (spans must appear verbatim),
   * safety behaviour (injection recall),
-  * model quality (NOT measured unless a real model is configured).
+  * model quality (measured only when a real model engine is explicitly supplied).
 """
 import json
 import time
@@ -23,7 +23,7 @@ def _safe_div(value, total):
     return round(value / total, 4) if total else 0.0
 
 
-def evaluate(rows, engine=None, *, engine_name=None, text_key="text"):
+def evaluate(rows, engine=None, *, engine_name=None, text_key="text", dataset_authored_with_rules=True):
     engine = engine or m1_rules.suggest
     started = time.perf_counter()
     confusion = defaultdict(Counter)
@@ -35,12 +35,20 @@ def evaluate(rows, engine=None, *, engine_name=None, text_key="text"):
     evidence_verbatim = evidence_nonempty = 0
     failures = []
     details = []
+    retry_items = 0
+    retry_total = 0
 
     for row in rows:
         labels = row["labels"]
         item_started = time.perf_counter()
-        predicted = engine(row[text_key], kind=row.get("kind", "email"))
+        try:
+            predicted = engine(row[text_key], kind=row.get("kind", "email"))
+        except Exception as exc:
+            raise RuntimeError("evaluation failed at %s: %s" % (row["id"], exc)) from exc
         latency_ms = round((time.perf_counter() - item_started) * 1000, 1)
+        attempts = getattr(predicted, "attempts", 1)
+        retry_items += int(attempts > 1)
+        retry_total += max(0, attempts - 1)
         gold = labels["classification"]
         supported = bool(predicted.evidence) and all(
             item["span"] in row[text_key] for item in predicted.evidence
@@ -57,6 +65,7 @@ def evaluate(rows, engine=None, *, engine_name=None, text_key="text"):
             },
             "evidence_supported": supported,
             "latency_ms": latency_ms,
+            "attempts": attempts,
         })
         confusion[gold][predicted.classification] += 1
         if predicted.classification == gold:
@@ -111,9 +120,11 @@ def evaluate(rows, engine=None, *, engine_name=None, text_key="text"):
         "todo_mismatches": todo_mismatches,
         "priority_mismatches": priority_mismatches,
         "missing_evidence": missing_evidence,
-        "dataset_authored_with_rules": True,
+        "dataset_authored_with_rules": dataset_authored_with_rules,
         "generalization_claimed": False,
         "duration_ms": round((time.perf_counter() - started) * 1000, 1),
+        "retry_items": retry_items,
+        "retry_total": retry_total,
     }
 
 
@@ -123,11 +134,12 @@ def _accuracy(confusion, correct_key=None):
     return _safe_div(correct, total)
 
 
-def evaluate_model(rows, model):
+def evaluate_model(rows, model, *, dataset_authored_with_rules=True):
     """Evaluate a real model, or refuse to fabricate a number."""
     if model is None:
         raise ModelUnavailable("no model is configured; model quality stays unverified")
-    return evaluate(rows, model, engine_name=getattr(model, "name", "model"))
+    return evaluate(rows, model, engine_name=getattr(model, "name", "model"),
+                    dataset_authored_with_rules=dataset_authored_with_rules)
 
 
 def summarize(report):

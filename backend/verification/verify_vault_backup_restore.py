@@ -75,6 +75,7 @@ with tempfile.TemporaryDirectory(prefix="jarvis-vault-backup-") as directory:
     vault = base / "vault"
     info = keys.create_vault(vault)
     with keys.open_vault(vault) as connection:
+        stable_vault_id = connection.execute("SELECT value FROM vault_meta WHERE name='vault_id'").fetchone()[0]
         connection.execute("CREATE TABLE notes(value TEXT NOT NULL)")
         connection.execute("INSERT INTO notes VALUES (?)", (MARKER,))
 
@@ -86,6 +87,26 @@ with tempfile.TemporaryDirectory(prefix="jarvis-vault-backup-") as directory:
     assert result["recovery_code"], "a recovery code should be generated when not supplied"
     assert backup.inspect_archive(archive)["entries"] and not backup.inspect_archive(archive)["suspicious"]
     print("B1_ARCHIVE_CREATED_WITH_WRAPPED_KEY_AND_MANIFEST=PASS")
+
+    # A live source changing immediately after snapshot must not alter its manifest.
+    from unittest.mock import patch
+    original_snapshot = backup._snapshot
+    def snapshot_then_mutate(source, target, key):
+        original_snapshot(source, target, key)
+        source.execute("CREATE TABLE after_snapshot(value TEXT)")
+        source.execute("PRAGMA user_version=42")
+        source.commit()
+    with patch.object(backup, "_snapshot", snapshot_then_mutate):
+        concurrent_result = backup.create_backup(vault, base / "snapshot-metadata", passphrase=passphrase)
+    with zipfile.ZipFile(concurrent_result["archive"]) as bundle:
+        snapshot_manifest = json.loads(bundle.read(backup.MANIFEST))
+    backup.restore_backup(concurrent_result["archive"], base / "snapshot-metadata-restored", passphrase=passphrase)
+    with keys.open_vault(base / "snapshot-metadata-restored") as connection:
+        assert snapshot_manifest["tables"] == connection.execute("SELECT count(*) FROM sqlite_master WHERE type='table'").fetchone()[0]
+        assert snapshot_manifest["schema_version"] == connection.execute("PRAGMA user_version").fetchone()[0] == 0
+    with keys.open_vault(vault) as connection:
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 42
+    print("BACKUP_MANIFEST_METADATA_MATCHES_SNAPSHOT_NOT_LIVE_SOURCE=PASS")
 
     # B2: the archive database is encrypted under its own key.
     with zipfile.ZipFile(archive) as bundle:
@@ -110,6 +131,7 @@ with tempfile.TemporaryDirectory(prefix="jarvis-vault-backup-") as directory:
     restored = keys.restore = backup.restore_backup(archive, base / "restored", passphrase=passphrase)
     with keys.open_vault(base / "restored") as connection:
         assert connection.execute("SELECT value FROM notes").fetchone()[0] == MARKER
+        assert connection.execute("SELECT value FROM vault_meta WHERE name='vault_id'").fetchone()[0] == stable_vault_id
     assert restored["key_id"] == info["key_id"]
     print("B1_RESTORE_WITH_PASSPHRASE_RECOVERS_DATA=PASS")
 

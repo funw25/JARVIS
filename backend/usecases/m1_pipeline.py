@@ -7,8 +7,9 @@ import hashlib
 import json
 import uuid
 from datetime import datetime, timezone
+from functools import wraps
 
-from . import m1_rules
+from . import audit_chain, m1_rules
 
 OWNER = "local"
 ASSISTANT = "jarvis"
@@ -27,15 +28,40 @@ def load_dataset(path):
         return [json.loads(line) for line in handle if line.strip()]
 
 
+def _atomic_m1(function):
+    """Keep each M1 operation and its audit in the caller's transaction."""
+    @wraps(function)
+    def wrapped(connection, *args, **kwargs):
+        if not connection.in_transaction:
+            connection.execute("BEGIN IMMEDIATE")
+        savepoint = "m1_" + uuid.uuid4().hex
+        connection.execute("SAVEPOINT " + savepoint)
+        try:
+            result = function(connection, *args, **kwargs)
+            connection.execute("RELEASE SAVEPOINT " + savepoint)
+            return result
+        except BaseException:
+            connection.execute("ROLLBACK TO SAVEPOINT " + savepoint)
+            connection.execute("RELEASE SAVEPOINT " + savepoint)
+            raise
+    return wrapped
+
+
 def audit(connection, event_type, object_type, object_id, *, actor_type="user", actor_id=OWNER, metadata=None):
+    created_at = _now()
     connection.execute(
         "INSERT INTO audit_events (id, owner_id, actor_type, actor_id, event_type, object_type, object_id,"
         " metadata_json, created_at) VALUES (?,?,?,?,?,?,?,?,?)",
         (_id("audit"), OWNER, actor_type, actor_id, event_type, object_type, object_id,
-         json.dumps(metadata or {}, ensure_ascii=False, sort_keys=True), _now()),
+         json.dumps(metadata or {}, ensure_ascii=False, sort_keys=True), created_at),
     )
+    # Deliberately omit metadata and user content from the experimental chain.
+    audit_chain.append(connection, {"type": event_type, "object_type": object_type,
+                                    "object_id": object_id, "actor_type": actor_type,
+                                    "actor_id": actor_id, "created_at": created_at})
 
 
+@_atomic_m1
 def import_artifact(connection, row):
     """Insert one artifact; identical text is recorded as a duplicate."""
     content = row["text"]
@@ -57,6 +83,7 @@ def import_artifact(connection, row):
     return {"artifact_id": artifact_id, "duplicate_of": duplicate_of}
 
 
+@_atomic_m1
 def suggest(connection, artifact_id, engine=None):
     row = connection.execute("SELECT * FROM m1_artifacts WHERE id=?", (artifact_id,)).fetchone()
     if row is None:
@@ -103,6 +130,7 @@ def suggest(connection, artifact_id, engine=None):
     }
 
 
+@_atomic_m1
 def decide(connection, suggestion_id, action, edits=None):
     if action not in ("accept", "modify", "reject"):
         raise ValueError("action must be accept, modify or reject")
@@ -208,6 +236,7 @@ def _title_from(content, kind):
     return (kind + " | " + cleaned)[:80]
 
 
+@_atomic_m1
 def run_item(connection, row, *, action="accept", edits=None):
     """Run one artifact through the whole loop and return the transcript."""
     imported = import_artifact(connection, row)

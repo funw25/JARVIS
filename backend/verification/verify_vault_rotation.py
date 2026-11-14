@@ -53,6 +53,7 @@ with tempfile.TemporaryDirectory(prefix="jarvis-vault-rotation-") as directory:
     vault = base / "vault"
     info = keys.create_vault(vault)
     with keys.open_vault(vault) as connection:
+        stable_vault_id = connection.execute("SELECT value FROM vault_meta WHERE name='vault_id'").fetchone()[0]
         connection.execute("CREATE TABLE notes(value TEXT NOT NULL)")
         connection.execute("INSERT INTO notes VALUES (?)", (MARKER,))
 
@@ -64,6 +65,7 @@ with tempfile.TemporaryDirectory(prefix="jarvis-vault-rotation-") as directory:
         assert connection.execute("SELECT value FROM notes").fetchone()[0] == MARKER
         stored = dict(connection.execute("SELECT name, value FROM vault_meta").fetchall())
     assert stored["key_id"] == rotated["new_key_id"], stored
+    assert stored["vault_id"] == stable_vault_id
     assert keys.vault_status(vault)["key_id"] == rotated["new_key_id"]
     assert not (vault / keys.PENDING).exists(), "pending marker survived a clean rotation"
     retired = vault / keys.RETIRED / ("dek.%s.dpapi" % rotated["old_key_id"])

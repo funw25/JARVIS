@@ -171,6 +171,23 @@ def _snapshot(source, target_path, bk):
                 pass
 
 
+def _snapshot_audit(connection):
+    """Read a verified local chain head from a snapshot, or report no chain."""
+    names = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('audit_identity','audit_chain')")}
+    if not names:
+        return None
+    if names != {"audit_identity", "audit_chain"}:
+        raise BackupError("snapshot audit tables are incomplete")
+    from usecases import audit_chain
+    result = audit_chain.verify(connection)
+    if result["status"] != "LOCAL_CHAIN_CONSISTENT_UNANCHORED":
+        raise BackupError("snapshot audit chain is invalid")
+    if "vault_id" not in result:
+        return None
+    return {"version": 1, "vault_id": result["vault_id"], "epoch": result["epoch"],
+            "seq": result["count"], "head": result["head"]}
+
+
 def create_backup(vault_root, destination_dir, *, passphrase, recovery_code=None):
     """Write a self-contained archive and return its metadata (code only if generated)."""
     require_synthetic_storage()
@@ -186,8 +203,16 @@ def create_backup(vault_root, destination_dir, *, passphrase, recovery_code=None
         backup_key_id = secrets.token_hex(8)
         with vault_keys.open_vault(vault_root) as source:
             _snapshot(source, staging / DB, bk)
-            tables = source.execute("SELECT count(*) FROM sqlite_master WHERE type='table'").fetchone()[0]
-            schema_version = source.execute("PRAGMA user_version").fetchone()[0]
+        # Metadata must describe the same immutable snapshot as the archive,
+        # not a live source that may have changed during or after backup.
+        with apswmc_storage.connect(staging / DB, bk, create=False) as snapshot:
+            tables = snapshot.execute("SELECT count(*) FROM sqlite_master WHERE type='table'").fetchone()[0]
+            schema_version = snapshot.execute("PRAGMA user_version").fetchone()[0]
+            source_key_id_row = snapshot.execute("SELECT value FROM vault_meta WHERE name='key_id'").fetchone()
+            if not source_key_id_row:
+                raise BackupError("snapshot is missing its source key identifier")
+            source_key_id = source_key_id_row[0]
+            audit_snapshot = _snapshot_audit(snapshot)
         if apswmc_storage.plaintext_header(staging / DB):
             raise BackupError("backup database is not encrypted")
         if (staging / DB).stat().st_size > MAX_DATABASE_BYTES:
@@ -209,7 +234,6 @@ def create_backup(vault_root, destination_dir, *, passphrase, recovery_code=None
         }
         (staging / KEYWRAP).write_text(json.dumps(keywrap, indent=2), encoding="utf-8")
 
-        source_key_id = vault_keys.vault_status(vault_root).get("key_id")
         manifest = {
             "format": FORMAT,
             "created_at": _now(),
@@ -225,6 +249,8 @@ def create_backup(vault_root, destination_dir, *, passphrase, recovery_code=None
             "manifest_wraps": [entry["type"] for entry in manifest_wraps],
             "hmac_mode": "independent",
         }
+        if audit_snapshot is not None:
+            manifest["audit_snapshot"] = audit_snapshot
         manifest["manifest_hmac"] = _manifest_hmac(manifest, manifest_key)
         (staging / MANIFEST).write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
@@ -336,6 +362,20 @@ def restore_backup(archive, target_root, *, passphrase=None, recovery_code=None)
             if connection.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                 raise RestoreRejected("restored database failed integrity_check")
             stored = dict(connection.execute("SELECT name, value FROM vault_meta").fetchall())
+            audit_status = "LEGACY_UNANCHORED"
+            if "audit_snapshot" in manifest:
+                expected_audit = manifest["audit_snapshot"]
+                if (not isinstance(expected_audit, dict) or
+                        set(expected_audit) != {"version", "vault_id", "epoch", "seq", "head"} or
+                        type(expected_audit["version"]) is not int or type(expected_audit["seq"]) is not int):
+                    raise RestoreRejected("manifest audit snapshot is malformed")
+                try:
+                    actual_audit = _snapshot_audit(connection)
+                except BackupError as exc:
+                    raise RestoreRejected("restored audit chain failed verification") from exc
+                if actual_audit is None or expected_audit != actual_audit:
+                    raise RestoreRejected("manifest and snapshot audit heads disagree")
+                audit_status = "SNAPSHOT_INTERNALLY_CONSISTENT"
         if stored.get("format") != vault_keys.FORMAT:
             raise RestoreRejected("restored database has an unexpected vault format")
         if stored.get("key_id") != manifest.get("source_key_id"):
@@ -345,6 +385,7 @@ def restore_backup(archive, target_root, *, passphrase=None, recovery_code=None)
         if os.path.lexists(target):
             raise RestoreRejected("restore target appeared during restore")
         os.replace(staging, target)
-        return {"root": str(target), "key_id": stored["key_id"], "backup_key_id": manifest.get("backup_key_id")}
+        return {"root": str(target), "key_id": stored["key_id"], "backup_key_id": manifest.get("backup_key_id"),
+                "audit_status": audit_status}
     finally:
         shutil.rmtree(staging, ignore_errors=True)

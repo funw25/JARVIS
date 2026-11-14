@@ -53,6 +53,9 @@ with tempfile.TemporaryDirectory(prefix="jarvis-migrate-") as directory:
     source_db = database.database_path()
 
     with closing(sqlite3.connect(source_db)) as connection, connection:
+        from usecases import audit_chain
+        connection.execute("BEGIN IMMEDIATE")
+        identity = audit_chain.append(connection, {"type": "fictional_migration"})
         for assistant in ("companion", "jarvis"):
             connection.execute(
                 "INSERT OR IGNORE INTO assistant_profiles VALUES (?,?,?,?,?,?,?)",
@@ -87,6 +90,8 @@ with tempfile.TemporaryDirectory(prefix="jarvis-migrate-") as directory:
         assert handle.execute("SELECT count(*) FROM todos").fetchone()[0] == TODOS
         assert handle.execute("SELECT count(*) FROM schema_migrations").fetchone()[0] == len(list(database.MIGRATIONS.glob("[0-9][0-9][0-9][0-9]_*.sql")))
         assert handle.execute("PRAGMA foreign_key_check").fetchall() == []
+        assert handle.execute("SELECT value FROM vault_meta WHERE name='vault_id'").fetchone()[0] == identity["vault_id"]
+        assert audit_chain.verify(handle)["status"] == "LOCAL_CHAIN_CONSISTENT_UNANCHORED"
     finally:
         cm.__exit__(None, None, None)
     assert (vault / vault_keys.DBFILE).read_bytes()[:16] != b"SQLite format 3\x00"

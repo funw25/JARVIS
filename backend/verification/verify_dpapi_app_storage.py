@@ -50,6 +50,11 @@ try:
             assert m1_pipeline.materialize(conn, transcript["decision"]["decision_id"]) == transcript["created"]
         with database.connect() as conn:
             assert conn.execute("SELECT count(*) FROM m1_materializations").fetchone()[0] == 1
+            vault_id = conn.execute("SELECT value FROM vault_meta WHERE name='vault_id'").fetchone()[0]
+            identity = conn.execute("SELECT vault_id FROM audit_identity WHERE singleton=1").fetchone()[0]
+            assert vault_id == identity
+            from usecases import audit_chain
+            assert audit_chain.verify(conn)["status"] == "LOCAL_CHAIN_CONSISTENT_UNANCHORED"
         print("DPAPI_APP_MIGRATIONS_AND_IDEMPOTENT_WORKFLOW=PASS")
 
         with database.connect() as conn:

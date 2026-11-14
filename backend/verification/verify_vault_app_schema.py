@@ -8,6 +8,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -80,7 +81,8 @@ with tempfile.TemporaryDirectory(prefix="jarvis-vault-app-") as directory:
     # A backup of the vault with the application schema restores and keeps data.
     from experimental import vault_backup
     made = vault_backup.create_backup(vault, Path(directory) / "backups", passphrase="switch plan dry run passphrase")
-    vault_backup.restore_backup(made["archive"], Path(directory) / "restored", passphrase="switch plan dry run passphrase")
+    legacy = vault_backup.restore_backup(made["archive"], Path(directory) / "restored", passphrase="switch plan dry run passphrase")
+    assert legacy["audit_status"] == "LEGACY_UNANCHORED"
     restored_root = Path(directory) / 'restored'
     restored_key = vault_keys._load_key(restored_root)
     check = subprocess.run(
@@ -94,6 +96,43 @@ with tempfile.TemporaryDirectory(prefix="jarvis-vault-app-") as directory:
     )
     print("RESTORED_VAULT_REUSABLE=%s versions=%s" % (check.returncode == 0, check.stdout.strip()[-4:]))
     assert check.returncode == 0, check.stderr[-1500:]
+
+    # The snapshot head belongs to the archive, not the later live vault.
+    from usecases import audit_chain
+    with vault_keys.open_vault(vault) as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        first = audit_chain.append(connection, {"type": "fictional_first"})
+    anchored = vault_backup.create_backup(vault, Path(directory) / "chain-backups", passphrase="switch plan dry run passphrase")
+    with vault_keys.open_vault(vault) as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        second = audit_chain.append(connection, {"type": "fictional_later"})
+    assert second["seq"] == first["seq"] + 1
+    old = vault_backup.restore_backup(anchored["archive"], Path(directory) / "chain-restored", passphrase="switch plan dry run passphrase")
+    assert old["audit_status"] == "SNAPSHOT_INTERNALLY_CONSISTENT"
+    with vault_keys.open_vault(Path(directory) / "chain-restored") as connection:
+        assert audit_chain.verify(connection)["head"] == first["head"]
+    # A whole older archive still appears internally consistent without a witness.
+    assert first["head"] != second["head"]
+    print("SNAPSHOT_AUDIT_HEAD_AND_OLD_ARCHIVE_LIMIT=PASS")
+
+    # Even an authenticated but inconsistent manifest must not be restored.
+    forged = Path(directory) / "inconsistent.jvault"
+    with zipfile.ZipFile(anchored["archive"]) as src, zipfile.ZipFile(forged, "w") as dst:
+        manifest = json.loads(src.read(vault_backup.MANIFEST))
+        keywrap = json.loads(src.read(vault_backup.KEYWRAP))
+        entry = next(item for item in keywrap["manifest_wraps"] if item["type"] == "passphrase")
+        manifest_key = vault_backup._unwrap(entry, b"switch plan dry run passphrase")
+        manifest["audit_snapshot"]["head"] = "0" * 64
+        manifest["manifest_hmac"] = vault_backup._manifest_hmac({k: v for k, v in manifest.items() if k != "manifest_hmac"}, manifest_key)
+        for name in src.namelist():
+            dst.writestr(name, json.dumps(manifest).encode("utf-8") if name == vault_backup.MANIFEST else src.read(name))
+    try:
+        vault_backup.restore_backup(forged, Path(directory) / "inconsistent-restored", passphrase="switch plan dry run passphrase")
+    except vault_backup.RestoreRejected:
+        pass
+    else:
+        raise AssertionError("inconsistent authenticated audit head accepted")
+    print("SNAPSHOT_AUDIT_HEAD_MISMATCH_REJECTED=PASS")
 
 print("VAULT_APP_SCHEMA_DRYRUN=PASS")
 print("PLAINTEXT_TO_VAULT_DATA_COPY_AND_ROLLBACK=NOT_IMPLEMENTED")

@@ -129,6 +129,16 @@ def migrate(source_db, vault_root, *, verify_samples=3):
                     "digest": _digest(source, name, _primary_key(_columns(source, name)))[0],
                 }
                 copied.append({"name": name, "rows": copied_rows})
+            names = {name for name, _ in tables}
+            if names.intersection({"audit_identity", "audit_chain"}):
+                if not {"audit_identity", "audit_chain"}.issubset(names):
+                    raise VerificationFailed("source audit tables are incomplete")
+                from usecases import audit_chain
+                if audit_chain.verify(source)["status"] != "LOCAL_CHAIN_CONSISTENT_UNANCHORED":
+                    raise VerificationFailed("source audit chain is invalid")
+                identity = source.execute("SELECT vault_id FROM audit_identity WHERE singleton=1").fetchone()
+                if identity:
+                    handle.execute("UPDATE vault_meta SET value=? WHERE name='vault_id'", (identity[0],))
             handle.commit()
 
         # Reopen with foreign keys on and check both directions.

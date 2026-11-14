@@ -113,20 +113,17 @@ class S3Sink:
         key = self.prefix + (name or Path(archive).name)
         target = self.client
         try:
+            options = {"Bucket": self.bucket, "Key": key, "Body": Path(archive).read_bytes(),
+                       "ContentType": "application/octet-stream"}
             if not overwrite:
-                try:
-                    target.head_object(Bucket=self.bucket, Key=key)
-                except self._errors:
-                    pass
-                else:
-                    raise SinkRejected("object already exists: " + key)
-            response = target.put_object(
-                Bucket=self.bucket, Key=key, Body=Path(archive).read_bytes(),
-                ContentType="application/octet-stream",
-            )
+                options["IfNoneMatch"] = "*"
+            response = target.put_object(**options)
         except SinkError:
             raise
         except self._errors as exc:
+            code = str(getattr(exc, "response", {}).get("Error", {}).get("Code", ""))
+            if not overwrite and code in {"PreconditionFailed", "412", "ConditionalRequestConflict"}:
+                raise SinkRejected("conditional create rejected: " + code) from exc
             raise self._wrap(exc, "upload") from exc
         return {"sink": self.kind, "key": key, "etag": response.get("ETag"), "bytes": Path(archive).stat().st_size}
 

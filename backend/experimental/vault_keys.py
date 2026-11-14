@@ -343,6 +343,7 @@ def create_vault(root, *, key_id=None):
             connection.execute("CREATE TABLE vault_meta(name TEXT PRIMARY KEY, value TEXT NOT NULL)")
             connection.execute("INSERT INTO vault_meta VALUES ('format', ?)", (FORMAT,))
             connection.execute("INSERT INTO vault_meta VALUES ('key_id', ?)", (identifier,))
+            connection.execute("INSERT INTO vault_meta VALUES ('vault_id', ?)", (secrets.token_hex(16),))
             connection.execute("INSERT INTO vault_meta VALUES ('created_at', ?)", (_now(),))
         if apswmc_storage.plaintext_header(staging / DBFILE):
             raise DbCorrupt("created vault is not encrypted")

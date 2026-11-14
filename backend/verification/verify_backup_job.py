@@ -170,6 +170,51 @@ try:
         except backup_sink.SinkError:
             pass
         print("REMOTE_LIST_PAGINATION_AND_INVALID_TOKEN=PASS")
+
+        # Two synthetic writers using the same key cannot both create it.
+        import threading
+        from concurrent.futures import ThreadPoolExecutor
+        from botocore.exceptions import ClientError
+        class AtomicClient:
+            def __init__(self):
+                self.lock = threading.Lock()
+                self.exists = False
+            def put_object(self, **kwargs):
+                assert kwargs.get("IfNoneMatch") == "*"
+                with self.lock:
+                    if self.exists:
+                        raise ClientError({"Error": {"Code": "PreconditionFailed", "Message": "exists"}}, "PutObject")
+                    self.exists = True
+                return {"ETag": "fixture"}
+        fake_sink._errors = ClientError
+        fake_sink.client = AtomicClient()
+        def conditional_create(_):
+            try:
+                fake_sink.upload(newest, name="fictional.jvault")
+                return "created"
+            except backup_sink.SinkRejected:
+                return "rejected"
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            assert sorted(pool.map(conditional_create, range(2))) == ["created", "rejected"]
+        class ErrorClient:
+            def put_object(self, **kwargs):
+                raise ClientError({"Error": {"Code": "AccessDenied", "Message": "no access"}}, "PutObject")
+        fake_sink.client = ErrorClient()
+        try:
+            fake_sink.upload(newest, name="fictional.jvault")
+            raise AssertionError("access failure swallowed")
+        except backup_sink.SinkAuthFailed:
+            pass
+        class ConflictClient:
+            def put_object(self, **kwargs):
+                raise ClientError({"Error": {"Code": "ConditionalRequestConflict", "Message": "conflict"}}, "PutObject")
+        fake_sink.client = ConflictClient()
+        try:
+            fake_sink.upload(newest, name="fictional.jvault")
+            raise AssertionError("conditional conflict accepted")
+        except backup_sink.SinkRejected:
+            pass
+        print("REMOTE_CONDITIONAL_CREATE_AND_AUTH_ERRORS=PASS")
 finally:
     for target in (PASS_TARGET, CODE_TARGET):
         wincred.delete_secret(target)

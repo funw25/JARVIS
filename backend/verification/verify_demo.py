@@ -45,3 +45,22 @@ runpy.run_path(sys.argv[0], run_name='__main__')
     assert list(Path(directory).iterdir()) == [], "temporary database was not removed"
 print("DIRECT_SYNTHETIC_DEMO_AND_CLEANUP=PASS")
 print("NETWORK_BLOCKED_SYNTHETIC_DEMO=PASS")
+
+# The M1 demo must not redirect its writes to a caller's configured vault.
+with tempfile.TemporaryDirectory(prefix="jarvis-m1-demo-guard-") as directory:
+    vault = Path(directory) / "must-not-be-created"
+    env = dict(os.environ, JARVIS_DATA_MODE="synthetic", JARVIS_VAULT_DIR=str(vault),
+               JARVIS_STORAGE_ADAPTER="dpapi-vault", PYTHONIOENCODING="utf-8")
+    result = subprocess.run([sys.executable, str(ROOT / "backend" / "usecases" / "m1_cli.py"), "demo", "--id", "m1-005"],
+                            cwd=ROOT, env=env, capture_output=True, text=True, encoding="utf-8", timeout=30)
+    assert result.returncode == 2 and "refuses inherited vault" in result.stderr
+    assert not vault.exists()
+    env.pop("JARVIS_VAULT_DIR")
+    env.pop("JARVIS_STORAGE_ADAPTER")
+    env.pop("JARVIS_APSWMC_KEY", None)
+    env.update(TEMP=directory, TMP=directory, TMPDIR=directory)
+    result = subprocess.run([sys.executable, str(ROOT / "backend" / "usecases" / "m1_cli.py"), "demo", "--id", "m1-005"],
+                            cwd=ROOT, env=env, capture_output=True, text=True, encoding="utf-8", timeout=30)
+    assert result.returncode == 0, result.stderr
+    assert list(Path(directory).iterdir()) == []
+print("M1_DEMO_REFUSES_INHERITED_VAULT=PASS")

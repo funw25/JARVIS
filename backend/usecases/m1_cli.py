@@ -10,6 +10,7 @@ import json
 import os
 import sys
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 
 BACKEND = Path(__file__).resolve().parents[1]
@@ -24,6 +25,19 @@ HOLDOUT = BACKEND / "evals" / "m1" / "holdout.jsonl"
 
 def _rows():
     return m1_pipeline.load_dataset(DATASET)
+
+
+@contextmanager
+def _demo_data_directory(directory):
+    previous = os.environ.get("JARVIS_DATA_DIR")
+    os.environ["JARVIS_DATA_DIR"] = directory
+    try:
+        yield
+    finally:
+        if previous is None:
+            os.environ.pop("JARVIS_DATA_DIR", None)
+        else:
+            os.environ["JARVIS_DATA_DIR"] = previous
 
 
 def command_eval(args):
@@ -116,8 +130,11 @@ def command_demo(args):
     edits = json.loads(args.modify) if args.modify else None
     import app.database as database
 
-    with tempfile.TemporaryDirectory(prefix="jarvis-m1-demo-", ignore_cleanup_errors=True) as directory:
-        os.environ["JARVIS_DATA_DIR"] = directory
+    adapter = os.environ.get("JARVIS_STORAGE_ADAPTER", "").strip().lower()
+    if os.environ.get("JARVIS_VAULT_DIR", "").strip() or adapter not in {"", "sqlite3"} or os.environ.get("JARVIS_APSWMC_KEY", "").strip():
+        print("error: demo refuses inherited vault or encrypted adapter settings", file=sys.stderr)
+        return 2
+    with tempfile.TemporaryDirectory(prefix="jarvis-m1-demo-") as directory, _demo_data_directory(directory):
         database.apply_migrations()
         with database.connect() as connection:
             transcript = m1_pipeline.run_item(connection, rows[args.id], action=args.action, edits=edits)

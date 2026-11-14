@@ -72,6 +72,26 @@ def verify_history(checkpoints, public_key):
     return previous_body
 
 
+def compare_with_pinned_history(connection, checkpoints, public_key, *, pinned_digest):
+    """Compare an externally supplied pinned digest, without claiming freshness.
+
+    The caller must obtain the pin and key independently. The pin must not be
+    read from the database under test, and this function cannot verify its origin.
+    """
+    if not isinstance(pinned_digest, str) or not audit_chain.HEX_HASH.fullmatch(pinned_digest):
+        return {"status": "ANCHOR_STALE_OR_UNKNOWN", "reason": "independent pinned digest unavailable"}
+    try:
+        verify_history(checkpoints, public_key)
+    except (CheckpointError, TypeError):
+        return {"status": "ANCHOR_CONFLICT", "reason": "signed checkpoint history is invalid"}
+    if pinned_digest not in {digest(checkpoint) for checkpoint in checkpoints}:
+        return {"status": "ANCHOR_STALE_OR_UNKNOWN", "reason": "history does not contain the supplied pin"}
+    result = compare(connection, checkpoints[-1], public_key)
+    if result.get("status") == "ANCHOR_STALE_OR_UNKNOWN" and "checkpoint_seq" in result:
+        result["reason"] = "signed history includes supplied pin; latest checkpoint freshness unverified"
+    return result
+
+
 def create(connection, private_key, previous=None):
     """Sign an already committed chain state; the caller supplies a test key."""
     if not isinstance(private_key, Ed25519PrivateKey):

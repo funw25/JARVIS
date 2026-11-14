@@ -48,6 +48,10 @@ with tempfile.TemporaryDirectory(prefix="jarvis-checkpoint-") as directory:
         second_cp = audit_checkpoint.create(connection, key, first_cp)
         assert second_cp["body"]["prev_digest"] == audit_checkpoint.digest(first_cp)
         assert audit_checkpoint.verify_history([first_cp, second_cp], public) == second_cp["body"]
+        pin = audit_checkpoint.digest(second_cp)
+        assert audit_checkpoint.compare_with_pinned_history(connection, [first_cp, second_cp], public, pinned_digest=pin)["status"] == "ANCHOR_STALE_OR_UNKNOWN"
+        assert audit_checkpoint.compare_with_pinned_history(connection, [first_cp], public, pinned_digest=pin)["status"] == "ANCHOR_STALE_OR_UNKNOWN"
+        assert audit_checkpoint.compare_with_pinned_history(connection, [second_cp, first_cp], public, pinned_digest=pin)["status"] == "ANCHOR_CONFLICT"
         expect(audit_checkpoint.CheckpointError, lambda: audit_checkpoint.verify_history([second_cp], public))
         expect(audit_checkpoint.CheckpointError, lambda: audit_checkpoint.verify_history([second_cp, first_cp], public))
         expect(audit_checkpoint.CheckpointError, lambda: audit_checkpoint.create(connection, key, second_cp))

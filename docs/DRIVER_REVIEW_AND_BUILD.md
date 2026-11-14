@@ -23,7 +23,7 @@
 
 > 曾把已测 SQLCipher wheel 的 OpenSSL 3.6 维护风险错误归到当前 APSW/SQLite3MC wheel。当前 SQLite3MC 源码检查未找到 OpenSSL/Botan 引用，二进制字符串也不能证明实际构建配置；应以可复核的源码、构建记录和二进制依赖清单确定原语及依赖。G1 仍未通过。
 
-**自动检测：** `backend/verification/verify_driver_provenance.py` 会比对 `docs/driver-manifest.json` 中记录的哈希与版本，并打印许可证覆盖与后端可识别性。当前输出：
+**自动检测：** `backend/verification/verify_driver_provenance.py` 会比对 `docs/driver-manifest.json` 中记录的哈希与版本，并打印许可证覆盖与后端可识别性。以下是历史诊断摘要；现在 `--release` 会额外核查完整 G1 证据并在当前缺口下以非零退出。`tools/release/check_release.py` 也会阻止当前发布。检查入口不能阻止具有外部发布权限的人绕过它直接发布；正式流水线与仓库权限仍需配置。详见 [M2 实施记录](M2_P0_REMEDIATION_2026-11-14.md)。
 
 ```
 DRIVER_VERSIONS_MATCH_MANIFEST=PASS

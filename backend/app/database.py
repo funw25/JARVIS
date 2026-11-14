@@ -28,6 +28,9 @@ class StorageAdapterError(RuntimeError):
 def connect_sqlite(path: Path | None = None) -> Iterator[sqlite3.Connection]:
     """Default storage: plain sqlite3 behind the synthetic-data gate."""
     require_synthetic_storage()
+    selected = os.environ.get("JARVIS_STORAGE_ADAPTER", "").strip().lower()
+    if vault_dir() is not None or selected not in {"", "sqlite3"}:
+        raise StorageAdapterError("plaintext storage conflicts with the selected vault or adapter")
     db_path = path or database_path()
     db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(db_path)
@@ -69,7 +72,7 @@ def _adapter_connect(path: Path):
 
 
 def adapter_requested() -> bool:
-    return os.environ.get("JARVIS_STORAGE_ADAPTER", "").strip().lower() == "apswmc"
+    return os.environ.get("JARVIS_STORAGE_ADAPTER", "").strip().lower() in {"apswmc", "dpapi-vault"}
 
 
 def connect(path: Path | None = None):
@@ -79,11 +82,33 @@ def connect(path: Path | None = None):
     switch to the experimental adapter without touching any service module.
     """
     require_synthetic_storage()
+    adapter = os.environ.get("JARVIS_STORAGE_ADAPTER", "").strip().lower()
+    if adapter not in {"", "sqlite3", "apswmc", "dpapi-vault"}:
+        raise StorageAdapterError("unknown storage adapter; refusing plaintext fallback")
     vault = vault_dir()
     if vault is not None and not (vault / "meta.json").is_file():
         raise StorageAdapterError("JARVIS_VAULT_DIR does not point at an initialised vault")
+    if vault is not None and adapter in {"", "sqlite3"}:
+        raise StorageAdapterError("a vault directory requires an encrypted storage adapter")
+    if adapter == "dpapi-vault":
+        if vault is None:
+            raise StorageAdapterError("dpapi-vault requires an initialised JARVIS_VAULT_DIR")
+        if os.environ.get("JARVIS_APSWMC_KEY", "").strip():
+            raise StorageAdapterError("dpapi-vault does not accept an environment key")
+        if path is not None and Path(path).resolve() != (vault / "vault.db").resolve():
+            raise StorageAdapterError("explicit database path conflicts with the vault directory")
+        for entry in (BACKEND_ROOT, APSWMC_PROBE):
+            if entry.is_dir() and str(entry) not in sys.path:
+                sys.path.insert(0, str(entry))
+        try:
+            from experimental.vault_keys import open_vault
+        except (ImportError, OSError) as exc:
+            raise StorageAdapterError("DPAPI vault adapter is unavailable") from exc
+        return open_vault(vault)
     target = Path(path) if path is not None else database_path()
-    if adapter_requested():
+    if adapter == "apswmc":
+        if vault is not None and target.resolve() != (vault / "vault.db").resolve():
+            raise StorageAdapterError("explicit database path conflicts with the vault directory")
         return _adapter_connect(target)
     return connect_sqlite(target)
 

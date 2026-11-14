@@ -32,9 +32,30 @@ def read_report(path, expected, dataset_path):
     if len(by_id) != len(expected) or set(by_id) != set(expected):
         raise ValueError("report IDs are missing, duplicated, or unexpected")
     for item_id, row in expected.items():
-        gold = by_id[item_id]["gold"]
+        detail = by_id[item_id]
+        gold = detail["gold"]
         if any(gold.get(field) != row["labels"][field] for field in DECISION_FIELDS):
             raise ValueError("gold labels differ from fixed dataset: " + item_id)
+        source = row["text"]
+        spans = detail.get("predicted", {}).get("evidence")
+        if isinstance(spans, list):
+            supported = bool(spans) and all(isinstance(span, str) and span.strip() and span in source for span in spans)
+        else:
+            ranges = detail.get("evidence_ranges")
+            if not isinstance(ranges, list):
+                raise ValueError("report lacks verifiable evidence ranges: " + item_id)
+            supported = bool(ranges)
+            for span_range in ranges:
+                if not isinstance(span_range, dict):
+                    supported = False
+                    break
+                start, end = span_range.get("start"), span_range.get("end")
+                if (type(start) is not int or type(end) is not int or not 0 <= start < end <= len(source)
+                        or not source[start:end].strip()):
+                    supported = False
+                    break
+        if type(detail.get("evidence_supported")) is not bool or detail["evidence_supported"] != bool(supported):
+            raise ValueError("evidence does not match source text: " + item_id)
     digest = report.get("model_digest", data.get("model_digest"))
     config = report.get("model_config", data.get("model"))
     if not digest or not config:

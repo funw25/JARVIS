@@ -44,11 +44,24 @@ def main():
         expected = dataset.get(item["id"])
         if expected is None or any(item["gold"].get(field) != expected["labels"][field] for field in FIELDS):
             parser.error("report gold labels differ from the selected dataset")
+        spans = item["predicted"].get("evidence")
+        if not isinstance(spans, list) or any(not isinstance(span, str) for span in spans):
+            parser.error("report has invalid evidence spans")
+        source = expected["text"]
+        supported = bool(spans) and all(span.strip() and span in source for span in spans)
+        if item["evidence_supported"] is not supported:
+            parser.error("evidence support does not match source text for " + item["id"])
+        ranges = []
+        if supported:
+            for span in spans:
+                start = source.index(span)
+                ranges.append({"start": start, "end": start + len(span)})
         rows.append({
             "id": item["id"],
             "gold": {field: item["gold"][field] for field in FIELDS},
             "predicted": {field: item["predicted"][field] for field in FIELDS},
             "evidence_supported": item["evidence_supported"],
+            "evidence_ranges": ranges,
             "latency_ms": item["latency_ms"],
             "attempts": item.get("attempts", 1),
         })

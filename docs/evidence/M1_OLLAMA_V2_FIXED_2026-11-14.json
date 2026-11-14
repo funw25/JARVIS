@@ -93,7 +93,22 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 7727.2
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 14
+        },
+        {
+          "start": 15,
+          "end": 24
+        },
+        {
+          "start": 25,
+          "end": 32
+        }
+      ],
+      "latency_ms": 7727.2,
+      "attempts": 1
     },
     {
       "id": "m1-002",
@@ -110,7 +125,22 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 6989.9
+      "evidence_ranges": [
+        {
+          "start": 10,
+          "end": 35
+        },
+        {
+          "start": 36,
+          "end": 49
+        },
+        {
+          "start": 51,
+          "end": 71
+        }
+      ],
+      "latency_ms": 6989.9,
+      "attempts": 1
     },
     {
       "id": "m1-003",
@@ -127,7 +157,22 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 7967.2
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 3
+        },
+        {
+          "start": 3,
+          "end": 11
+        },
+        {
+          "start": 18,
+          "end": 26
+        }
+      ],
+      "latency_ms": 7967.2,
+      "attempts": 1
     },
     {
       "id": "m1-004",
@@ -144,7 +189,18 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 7225.9
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 14
+        },
+        {
+          "start": 15,
+          "end": 22
+        }
+      ],
+      "latency_ms": 7225.9,
+      "attempts": 1
     },
     {
       "id": "m1-005",
@@ -161,7 +217,22 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 8758.0
+      "evidence_ranges": [
+        {
+          "start": 8,
+          "end": 21
+        },
+        {
+          "start": 22,
+          "end": 30
+        },
+        {
+          "start": 31,
+          "end": 45
+        }
+      ],
+      "latency_ms": 8758.0,
+      "attempts": 1
     },
     {
       "id": "m1-006",
@@ -178,7 +249,18 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 6650.1
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 41
+        },
+        {
+          "start": 42,
+          "end": 64
+        }
+      ],
+      "latency_ms": 6650.1,
+      "attempts": 1
     },
     {
       "id": "m1-007",
@@ -195,7 +277,22 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 8076.0
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 10
+        },
+        {
+          "start": 10,
+          "end": 16
+        },
+        {
+          "start": 17,
+          "end": 19
+        }
+      ],
+      "latency_ms": 8076.0,
+      "attempts": 1
     },
     {
       "id": "m1-008",
@@ -212,7 +309,18 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 6464.6
+      "evidence_ranges": [
+        {
+          "start": 6,
+          "end": 13
+        },
+        {
+          "start": 13,
+          "end": 19
+        }
+      ],
+      "latency_ms": 6464.6,
+      "attempts": 1
     },
     {
       "id": "m1-009",
@@ -229,7 +337,22 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 7844.0
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 8
+        },
+        {
+          "start": 8,
+          "end": 13
+        },
+        {
+          "start": 14,
+          "end": 23
+        }
+      ],
+      "latency_ms": 7844.0,
+      "attempts": 1
     },
     {
       "id": "m1-010",
@@ -246,7 +369,22 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 9130.2
+      "evidence_ranges": [
+        {
+          "start": 20,
+          "end": 36
+        },
+        {
+          "start": 64,
+          "end": 89
+        },
+        {
+          "start": 90,
+          "end": 101
+        }
+      ],
+      "latency_ms": 9130.2,
+      "attempts": 1
     },
     {
       "id": "m1-011",
@@ -263,7 +401,22 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 8446.0
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 5
+        },
+        {
+          "start": 6,
+          "end": 16
+        },
+        {
+          "start": 16,
+          "end": 20
+        }
+      ],
+      "latency_ms": 8446.0,
+      "attempts": 1
     },
     {
       "id": "m1-012",
@@ -280,7 +433,18 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 8095.4
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 13
+        },
+        {
+          "start": 14,
+          "end": 21
+        }
+      ],
+      "latency_ms": 8095.4,
+      "attempts": 1
     },
     {
       "id": "m1-013",
@@ -297,7 +461,18 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 7771.9
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 9
+        },
+        {
+          "start": 17,
+          "end": 22
+        }
+      ],
+      "latency_ms": 7771.9,
+      "attempts": 1
     },
     {
       "id": "m1-014",
@@ -314,7 +489,18 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 7206.5
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 20
+        },
+        {
+          "start": 21,
+          "end": 54
+        }
+      ],
+      "latency_ms": 7206.5,
+      "attempts": 1
     },
     {
       "id": "m1-015",
@@ -331,7 +517,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 7308.1
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 4
+        },
+        {
+          "start": 4,
+          "end": 19
+        },
+        {
+          "start": 20,
+          "end": 23
+        }
+      ],
+      "latency_ms": 7308.1,
+      "attempts": 1
     },
     {
       "id": "m1-016",
@@ -348,7 +549,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6236.4
+      "evidence_ranges": [
+        {
+          "start": 7,
+          "end": 25
+        },
+        {
+          "start": 35,
+          "end": 53
+        },
+        {
+          "start": 54,
+          "end": 67
+        }
+      ],
+      "latency_ms": 6236.4,
+      "attempts": 1
     },
     {
       "id": "m1-017",
@@ -365,7 +581,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6861.0
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 2
+        },
+        {
+          "start": 3,
+          "end": 8
+        },
+        {
+          "start": 10,
+          "end": 20
+        }
+      ],
+      "latency_ms": 6861.0,
+      "attempts": 1
     },
     {
       "id": "m1-018",
@@ -382,7 +613,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6170.9
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 8
+        },
+        {
+          "start": 10,
+          "end": 43
+        },
+        {
+          "start": 47,
+          "end": 58
+        }
+      ],
+      "latency_ms": 6170.9,
+      "attempts": 1
     },
     {
       "id": "m1-019",
@@ -399,7 +645,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6098.5
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 10
+        },
+        {
+          "start": 11,
+          "end": 18
+        }
+      ],
+      "latency_ms": 6098.5,
+      "attempts": 1
     },
     {
       "id": "m1-020",
@@ -416,7 +673,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6457.0
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 8
+        },
+        {
+          "start": 8,
+          "end": 16
+        }
+      ],
+      "latency_ms": 6457.0,
+      "attempts": 1
     },
     {
       "id": "m1-021",
@@ -433,7 +701,22 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 6031.8
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 18
+        },
+        {
+          "start": 23,
+          "end": 35
+        },
+        {
+          "start": 40,
+          "end": 52
+        }
+      ],
+      "latency_ms": 6031.8,
+      "attempts": 1
     },
     {
       "id": "m1-022",
@@ -450,7 +733,18 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 5815.3
+      "evidence_ranges": [
+        {
+          "start": 3,
+          "end": 13
+        },
+        {
+          "start": 16,
+          "end": 20
+        }
+      ],
+      "latency_ms": 5815.3,
+      "attempts": 1
     },
     {
       "id": "m1-023",
@@ -467,7 +761,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6412.2
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 3
+        },
+        {
+          "start": 3,
+          "end": 11
+        },
+        {
+          "start": 12,
+          "end": 18
+        }
+      ],
+      "latency_ms": 6412.2,
+      "attempts": 1
     },
     {
       "id": "m1-024",
@@ -484,7 +793,18 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 6685.3
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 4
+        },
+        {
+          "start": 4,
+          "end": 16
+        }
+      ],
+      "latency_ms": 6685.3,
+      "attempts": 1
     },
     {
       "id": "m1-025",
@@ -501,7 +821,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 7119.5
+      "evidence_ranges": [
+        {
+          "start": 7,
+          "end": 37
+        },
+        {
+          "start": 52,
+          "end": 70
+        }
+      ],
+      "latency_ms": 7119.5,
+      "attempts": 1
     },
     {
       "id": "m1-026",
@@ -518,7 +849,18 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 7289.7
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 4
+        },
+        {
+          "start": 4,
+          "end": 14
+        }
+      ],
+      "latency_ms": 7289.7,
+      "attempts": 1
     },
     {
       "id": "m1-027",
@@ -535,7 +877,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 8421.5
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 3
+        },
+        {
+          "start": 4,
+          "end": 15
+        },
+        {
+          "start": 16,
+          "end": 20
+        }
+      ],
+      "latency_ms": 8421.5,
+      "attempts": 1
     },
     {
       "id": "m1-028",
@@ -552,7 +909,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 9327.2
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 32
+        },
+        {
+          "start": 47,
+          "end": 72
+        }
+      ],
+      "latency_ms": 9327.2,
+      "attempts": 1
     },
     {
       "id": "m1-029",
@@ -569,7 +937,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 8770.2
+      "evidence_ranges": [
+        {
+          "start": 3,
+          "end": 7
+        },
+        {
+          "start": 7,
+          "end": 14
+        },
+        {
+          "start": 14,
+          "end": 18
+        }
+      ],
+      "latency_ms": 8770.2,
+      "attempts": 1
     },
     {
       "id": "m1-030",
@@ -586,7 +969,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 8596.2
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 21
+        },
+        {
+          "start": 23,
+          "end": 38
+        }
+      ],
+      "latency_ms": 8596.2,
+      "attempts": 1
     },
     {
       "id": "m1-031",
@@ -603,7 +997,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 7738.0
+      "evidence_ranges": [
+        {
+          "start": 3,
+          "end": 13
+        },
+        {
+          "start": 14,
+          "end": 17
+        }
+      ],
+      "latency_ms": 7738.0,
+      "attempts": 1
     },
     {
       "id": "m1-032",
@@ -620,7 +1025,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 8809.1
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 46
+        },
+        {
+          "start": 49,
+          "end": 64
+        }
+      ],
+      "latency_ms": 8809.1,
+      "attempts": 1
     },
     {
       "id": "m1-033",
@@ -637,7 +1053,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 7118.3
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 4
+        },
+        {
+          "start": 14,
+          "end": 18
+        }
+      ],
+      "latency_ms": 7118.3,
+      "attempts": 1
     },
     {
       "id": "m1-034",
@@ -654,7 +1081,18 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 7913.4
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 7
+        },
+        {
+          "start": 8,
+          "end": 11
+        }
+      ],
+      "latency_ms": 7913.4,
+      "attempts": 1
     },
     {
       "id": "m1-035",
@@ -671,7 +1109,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 7988.5
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 4
+        },
+        {
+          "start": 5,
+          "end": 17
+        },
+        {
+          "start": 18,
+          "end": 24
+        }
+      ],
+      "latency_ms": 7988.5,
+      "attempts": 1
     },
     {
       "id": "m1-036",
@@ -688,7 +1141,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6637.1
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 4
+        },
+        {
+          "start": 5,
+          "end": 10
+        },
+        {
+          "start": 11,
+          "end": 15
+        }
+      ],
+      "latency_ms": 6637.1,
+      "attempts": 1
     },
     {
       "id": "m1-037",
@@ -705,7 +1173,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6083.3
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 38
+        },
+        {
+          "start": 39,
+          "end": 50
+        }
+      ],
+      "latency_ms": 6083.3,
+      "attempts": 1
     },
     {
       "id": "m1-038",
@@ -722,7 +1201,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6545.8
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 5
+        },
+        {
+          "start": 6,
+          "end": 15
+        },
+        {
+          "start": 21,
+          "end": 25
+        }
+      ],
+      "latency_ms": 6545.8,
+      "attempts": 1
     },
     {
       "id": "m1-039",
@@ -739,7 +1233,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 5934.8
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 7
+        },
+        {
+          "start": 8,
+          "end": 12
+        }
+      ],
+      "latency_ms": 5934.8,
+      "attempts": 1
     },
     {
       "id": "m1-040",
@@ -756,7 +1261,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6067.6
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 13
+        },
+        {
+          "start": 15,
+          "end": 40
+        }
+      ],
+      "latency_ms": 6067.6,
+      "attempts": 1
     },
     {
       "id": "m1-041",
@@ -773,7 +1289,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6396.2
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 8
+        },
+        {
+          "start": 9,
+          "end": 38
+        }
+      ],
+      "latency_ms": 6396.2,
+      "attempts": 1
     },
     {
       "id": "m1-042",
@@ -790,7 +1317,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6347.7
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 28
+        },
+        {
+          "start": 33,
+          "end": 81
+        }
+      ],
+      "latency_ms": 6347.7,
+      "attempts": 1
     },
     {
       "id": "m1-043",
@@ -807,7 +1345,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6802.3
+      "evidence_ranges": [
+        {
+          "start": 5,
+          "end": 12
+        },
+        {
+          "start": 14,
+          "end": 20
+        },
+        {
+          "start": 21,
+          "end": 26
+        }
+      ],
+      "latency_ms": 6802.3,
+      "attempts": 1
     },
     {
       "id": "m1-044",
@@ -824,7 +1377,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6664.5
+      "evidence_ranges": [
+        {
+          "start": 8,
+          "end": 10
+        },
+        {
+          "start": 10,
+          "end": 14
+        },
+        {
+          "start": 17,
+          "end": 23
+        }
+      ],
+      "latency_ms": 6664.5,
+      "attempts": 1
     },
     {
       "id": "m1-045",
@@ -841,7 +1409,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6418.4
+      "evidence_ranges": [
+        {
+          "start": 35,
+          "end": 59
+        },
+        {
+          "start": 63,
+          "end": 82
+        }
+      ],
+      "latency_ms": 6418.4,
+      "attempts": 1
     },
     {
       "id": "m1-046",
@@ -858,7 +1437,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6652.4
+      "evidence_ranges": [
+        {
+          "start": 1,
+          "end": 7
+        },
+        {
+          "start": 9,
+          "end": 16
+        },
+        {
+          "start": 22,
+          "end": 51
+        }
+      ],
+      "latency_ms": 6652.4,
+      "attempts": 1
     },
     {
       "id": "m1-047",
@@ -875,7 +1469,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 5987.5
+      "evidence_ranges": [
+        {
+          "start": 11,
+          "end": 49
+        },
+        {
+          "start": 50,
+          "end": 61
+        }
+      ],
+      "latency_ms": 5987.5,
+      "attempts": 1
     },
     {
       "id": "m1-048",
@@ -892,7 +1497,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6754.6
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 6
+        },
+        {
+          "start": 7,
+          "end": 21
+        }
+      ],
+      "latency_ms": 6754.6,
+      "attempts": 1
     },
     {
       "id": "m1-049",
@@ -909,7 +1525,22 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 6922.8
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 3
+        },
+        {
+          "start": 3,
+          "end": 11
+        },
+        {
+          "start": 18,
+          "end": 26
+        }
+      ],
+      "latency_ms": 6922.8,
+      "attempts": 1
     },
     {
       "id": "m1-050",
@@ -926,7 +1557,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6845.2
+      "evidence_ranges": [
+        {
+          "start": 7,
+          "end": 25
+        },
+        {
+          "start": 35,
+          "end": 53
+        },
+        {
+          "start": 54,
+          "end": 67
+        }
+      ],
+      "latency_ms": 6845.2,
+      "attempts": 1
     },
     {
       "id": "m1-051",
@@ -943,7 +1589,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6319.4
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 3
+        },
+        {
+          "start": 4,
+          "end": 15
+        },
+        {
+          "start": 16,
+          "end": 20
+        }
+      ],
+      "latency_ms": 6319.4,
+      "attempts": 1
     },
     {
       "id": "m1-052",
@@ -960,7 +1621,22 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 6221.4
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 4
+        },
+        {
+          "start": 4,
+          "end": 9
+        },
+        {
+          "start": 10,
+          "end": 12
+        }
+      ],
+      "latency_ms": 6221.4,
+      "attempts": 1
     },
     {
       "id": "m1-053",
@@ -977,7 +1653,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 5762.9
+      "evidence_ranges": [
+        {
+          "start": 20,
+          "end": 38
+        },
+        {
+          "start": 40,
+          "end": 47
+        }
+      ],
+      "latency_ms": 5762.9,
+      "attempts": 1
     }
   ]
 }

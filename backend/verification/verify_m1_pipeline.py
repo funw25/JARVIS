@@ -1,8 +1,11 @@
 """Verify the M1 vertical loop end to end on a temporary database."""
 import json
 import os
+import sqlite3
 import sys
 import tempfile
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -110,6 +113,18 @@ with tempfile.TemporaryDirectory(prefix="jarvis-m1-pipeline-", ignore_cleanup_er
         assert connection.execute("SELECT count(*) FROM m1_suggestions").fetchone()[0] == before
         print("LOOP_UNSUPPORTED_EVIDENCE_REJECTED=PASS")
 
+        for blank in ("", "  ", "\t\n"):
+            def blank_model(text, *, kind):
+                return m1_rules.Suggestion("action", "normal", True, False, 0.9,
+                                           [{"span": blank, "kind": "model", "reason": "candidate"}])
+            try:
+                m1_pipeline.suggest(connection, imported["artifact_id"], blank_model)
+                raise AssertionError("blank evidence was accepted")
+            except ValueError as exc:
+                assert "nonblank" in str(exc)
+        assert connection.execute("SELECT count(*) FROM m1_suggestions").fetchone()[0] == before
+        print("LOOP_BLANK_EVIDENCE_REJECTED=PASS")
+
         # 5c. Editing an injection decision cannot re-enable actions.
         edited = m1_pipeline.decide(connection, accepted["suggestion"]["suggestion_id"], "modify", {"todo": True})
         try:
@@ -129,9 +144,96 @@ with tempfile.TemporaryDirectory(prefix="jarvis-m1-pipeline-", ignore_cleanup_er
         assert totals["audit"] >= 15, totals
         print("LOOP_ROW_TOTALS=PASS " + json.dumps(totals))
 
+        again = m1_pipeline.materialize(connection, transcript["decision"]["decision_id"])
+        assert again == created
+        assert connection.execute("SELECT count(*) FROM todos").fetchone()[0] == totals["todos"]
+        assert connection.execute("SELECT count(*) FROM m1_drafts").fetchone()[0] == totals["drafts"]
+        assert connection.execute("SELECT count(*) FROM audit_events").fetchone()[0] == totals["audit"]
+        print("LOOP_SAME_DECISION_RETURNS_SAME_WORK=PASS")
+
+        failed = m1_pipeline.decide(connection, transcript["suggestion"]["suggestion_id"], "accept")
+        original_audit = m1_pipeline.audit
+        def fail_after_todo(conn, event_type, *args, **kwargs):
+            if event_type == "todo_created":
+                raise RuntimeError("simulated failure after todo insertion")
+            return original_audit(conn, event_type, *args, **kwargs)
+        m1_pipeline.audit = fail_after_todo
+        try:
+            try:
+                m1_pipeline.materialize(connection, failed["decision_id"])
+                raise AssertionError("simulated failure did not stop materialization")
+            except RuntimeError as exc:
+                assert "simulated failure" in str(exc)
+        finally:
+            m1_pipeline.audit = original_audit
+        assert connection.execute("SELECT count(*) FROM todos").fetchone()[0] == totals["todos"]
+        assert connection.execute("SELECT count(*) FROM m1_materializations WHERE decision_id=?",
+                                  (failed["decision_id"],)).fetchone()[0] == 0
+        recovered = m1_pipeline.materialize(connection, failed["decision_id"])
+        assert recovered["todo_id"] and recovered["draft_id"]
+        assert m1_pipeline.materialize(connection, failed["decision_id"]) == recovered
+        print("LOOP_PARTIAL_FAILURE_ROLLBACK_AND_RETRY=PASS")
+
+        interrupted = m1_pipeline.decide(connection, transcript["suggestion"]["suggestion_id"], "accept")
+        before_interrupt = connection.execute("SELECT count(*) FROM todos").fetchone()[0]
+        def interrupt_after_todo(conn, event_type, *args, **kwargs):
+            if event_type == "todo_created":
+                raise KeyboardInterrupt("synthetic interruption")
+            return original_audit(conn, event_type, *args, **kwargs)
+        m1_pipeline.audit = interrupt_after_todo
+        try:
+            try:
+                m1_pipeline.materialize(connection, interrupted["decision_id"])
+                raise AssertionError("simulated interruption did not stop materialization")
+            except KeyboardInterrupt:
+                pass
+        finally:
+            m1_pipeline.audit = original_audit
+        assert connection.execute("SELECT count(*) FROM todos").fetchone()[0] == before_interrupt
+        assert connection.execute("SELECT count(*) FROM m1_materializations WHERE decision_id=?",
+                                  (interrupted["decision_id"],)).fetchone()[0] == 0
+        print("LOOP_INTERRUPTION_ROLLS_BACK=PASS")
+
         # 6. Nothing in the loop can send: the draft row is marked unsent and no sender exists.
         sent = connection.execute("SELECT count(*) FROM m1_drafts WHERE body LIKE '%已发送%'").fetchone()[0]
         assert sent == 0
         print("LOOP_HAS_NO_SENDER=PASS")
+
+    with database.connect() as connection:
+        concurrent_decision = m1_pipeline.decide(connection, transcript["suggestion"]["suggestion_id"], "accept")
+    barrier = threading.Barrier(2)
+    def concurrent_materialize(_):
+        with database.connect() as connection:
+            barrier.wait(timeout=10)
+            return m1_pipeline.materialize(connection, concurrent_decision["decision_id"])
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(concurrent_materialize, range(2)))
+    assert results[0] == results[1] and results[0]["todo_id"] and results[0]["draft_id"]
+    with database.connect() as connection:
+        assert connection.execute("SELECT count(*) FROM m1_materializations WHERE decision_id=?",
+                                  (concurrent_decision["decision_id"],)).fetchone()[0] == 1
+    print("LOOP_CONCURRENT_DECISION_MATERIALIZES_ONCE=PASS")
+
+# Decisions created before migration 0019 have no reliable result mapping.
+# Migration must preserve them without inventing an empty or completed result.
+legacy = sqlite3.connect(":memory:")
+legacy.row_factory = sqlite3.Row
+try:
+    legacy.executescript((ROOT / "backend" / "migrations" / "0018_m1_artifacts.sql").read_text(encoding="utf-8"))
+    legacy.execute("INSERT INTO m1_artifacts VALUES (?,?,?,?,?,?,?,?,?,?)",
+                   ("a", "local", "email", "2026-01-01", 1, "hash", None, "fictional", "{}", "2026-01-01"))
+    legacy.execute("INSERT INTO m1_suggestions VALUES (?,?,?,?,?,?,?,?,?,?)",
+                   ("s", "a", "rules", "fyi", "low", 0, 0, 0.5, "[]", "2026-01-01"))
+    legacy.execute("INSERT INTO m1_decisions VALUES (?,?,?,?,?)", ("d", "s", "accept", "{}", "2026-01-01"))
+    legacy.executescript((ROOT / "backend" / "migrations" / "0019_m1_materializations.sql").read_text(encoding="utf-8"))
+    assert legacy.execute("SELECT state FROM m1_materializations WHERE decision_id='d'").fetchone()[0] == "legacy_unknown"
+    try:
+        m1_pipeline.materialize(legacy, "d")
+        raise AssertionError("legacy decision was replayed without reconciliation")
+    except RuntimeError as exc:
+        assert "manual reconciliation" in str(exc)
+    print("LOOP_LEGACY_DECISIONS_REQUIRE_RECONCILIATION=PASS")
+finally:
+    legacy.close()
 
 print("M1_PIPELINE=PASS")

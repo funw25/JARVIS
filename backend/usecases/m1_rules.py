@@ -142,10 +142,12 @@ def suggest(text, *, kind="email"):
 
 
 def evidence_supported(text, suggestion):
-    """True when every evidence span appears verbatim in the text."""
+    """True only when every span contains text and occurs verbatim in the source."""
     if not suggestion.evidence:
         return False
-    return all(item["span"] in (text or "") for item in suggestion.evidence)
+    return all(isinstance(item, dict) and isinstance(item.get("span"), str)
+               and bool(item["span"].strip()) and item["span"] in (text or "")
+               for item in suggestion.evidence)
 
 
 ENGINE_NAME = "rules-v2"

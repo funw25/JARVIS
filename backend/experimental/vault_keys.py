@@ -4,8 +4,9 @@ Implements §3-§5 of docs/KEY_LIFECYCLE_AND_RECOVERY.md for synthetic data only
 a per-vault random data key wrapped by user-scoped DPAPI, a ``meta.json`` with a
 ``key_id``, and a fail-closed open path with stable error classes.
 
-Not implemented here: passphrase/recovery-code wrappers, rotation, backup and
-restore (S2/S3). Nothing in this module is used by the application.
+The application may open this vault through the synthetic dpapi-vault adapter.
+Backup and recovery wrappers are implemented separately; none are approved for
+real personal data.
 """
 import json
 import os
@@ -415,7 +416,10 @@ def open_vault(root):
 
     try:
         yield connection
-    finally:
+    except BaseException:
+        connection_cm.__exit__(*sys.exc_info())
+        raise
+    else:
         connection_cm.__exit__(None, None, None)
 
 

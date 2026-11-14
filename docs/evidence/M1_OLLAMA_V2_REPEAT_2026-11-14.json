@@ -95,6 +95,20 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 14
+        },
+        {
+          "start": 15,
+          "end": 24
+        },
+        {
+          "start": 25,
+          "end": 32
+        }
+      ],
       "latency_ms": 8251.3,
       "attempts": 1
     },
@@ -113,6 +127,20 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 10,
+          "end": 35
+        },
+        {
+          "start": 36,
+          "end": 49
+        },
+        {
+          "start": 51,
+          "end": 71
+        }
+      ],
       "latency_ms": 7069.7,
       "attempts": 1
     },
@@ -131,6 +159,20 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 3
+        },
+        {
+          "start": 3,
+          "end": 11
+        },
+        {
+          "start": 18,
+          "end": 26
+        }
+      ],
       "latency_ms": 7500.3,
       "attempts": 1
     },
@@ -149,6 +191,16 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 14
+        },
+        {
+          "start": 15,
+          "end": 22
+        }
+      ],
       "latency_ms": 6746.7,
       "attempts": 1
     },
@@ -167,6 +219,20 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 8,
+          "end": 21
+        },
+        {
+          "start": 22,
+          "end": 30
+        },
+        {
+          "start": 31,
+          "end": 45
+        }
+      ],
       "latency_ms": 8280.0,
       "attempts": 1
     },
@@ -185,6 +251,16 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 41
+        },
+        {
+          "start": 42,
+          "end": 64
+        }
+      ],
       "latency_ms": 6347.0,
       "attempts": 1
     },
@@ -203,6 +279,20 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 10
+        },
+        {
+          "start": 10,
+          "end": 16
+        },
+        {
+          "start": 17,
+          "end": 19
+        }
+      ],
       "latency_ms": 6741.5,
       "attempts": 1
     },
@@ -221,6 +311,16 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 6,
+          "end": 13
+        },
+        {
+          "start": 13,
+          "end": 19
+        }
+      ],
       "latency_ms": 5563.2,
       "attempts": 1
     },
@@ -239,6 +339,20 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 8
+        },
+        {
+          "start": 8,
+          "end": 13
+        },
+        {
+          "start": 14,
+          "end": 23
+        }
+      ],
       "latency_ms": 6712.0,
       "attempts": 1
     },
@@ -257,6 +371,20 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 20,
+          "end": 36
+        },
+        {
+          "start": 64,
+          "end": 89
+        },
+        {
+          "start": 90,
+          "end": 101
+        }
+      ],
       "latency_ms": 6142.0,
       "attempts": 1
     },
@@ -275,6 +403,20 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 5
+        },
+        {
+          "start": 6,
+          "end": 16
+        },
+        {
+          "start": 16,
+          "end": 20
+        }
+      ],
       "latency_ms": 6307.8,
       "attempts": 1
     },
@@ -293,6 +435,16 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 13
+        },
+        {
+          "start": 14,
+          "end": 21
+        }
+      ],
       "latency_ms": 6730.4,
       "attempts": 1
     },
@@ -311,6 +463,16 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 9
+        },
+        {
+          "start": 17,
+          "end": 22
+        }
+      ],
       "latency_ms": 6029.9,
       "attempts": 1
     },
@@ -329,6 +491,16 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 20
+        },
+        {
+          "start": 21,
+          "end": 54
+        }
+      ],
       "latency_ms": 6147.6,
       "attempts": 1
     },
@@ -347,6 +519,20 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 4
+        },
+        {
+          "start": 4,
+          "end": 19
+        },
+        {
+          "start": 20,
+          "end": 23
+        }
+      ],
       "latency_ms": 7937.0,
       "attempts": 1
     },
@@ -365,6 +551,20 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 7,
+          "end": 25
+        },
+        {
+          "start": 35,
+          "end": 53
+        },
+        {
+          "start": 54,
+          "end": 67
+        }
+      ],
       "latency_ms": 6289.3,
       "attempts": 1
     },
@@ -383,6 +583,20 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 2
+        },
+        {
+          "start": 3,
+          "end": 8
+        },
+        {
+          "start": 10,
+          "end": 20
+        }
+      ],
       "latency_ms": 6519.7,
       "attempts": 1
     },
@@ -401,6 +615,20 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 8
+        },
+        {
+          "start": 10,
+          "end": 43
+        },
+        {
+          "start": 47,
+          "end": 58
+        }
+      ],
       "latency_ms": 6597.1,
       "attempts": 1
     },
@@ -419,6 +647,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 10
+        },
+        {
+          "start": 11,
+          "end": 18
+        }
+      ],
       "latency_ms": 5931.8,
       "attempts": 1
     },
@@ -437,6 +675,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 8
+        },
+        {
+          "start": 8,
+          "end": 16
+        }
+      ],
       "latency_ms": 6505.4,
       "attempts": 1
     },
@@ -455,6 +703,20 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 18
+        },
+        {
+          "start": 23,
+          "end": 35
+        },
+        {
+          "start": 40,
+          "end": 52
+        }
+      ],
       "latency_ms": 6230.0,
       "attempts": 1
     },
@@ -473,6 +735,16 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 3,
+          "end": 13
+        },
+        {
+          "start": 16,
+          "end": 20
+        }
+      ],
       "latency_ms": 5809.9,
       "attempts": 1
     },
@@ -491,6 +763,20 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 3
+        },
+        {
+          "start": 3,
+          "end": 11
+        },
+        {
+          "start": 12,
+          "end": 18
+        }
+      ],
       "latency_ms": 6190.9,
       "attempts": 1
     },
@@ -509,6 +795,16 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 4
+        },
+        {
+          "start": 4,
+          "end": 16
+        }
+      ],
       "latency_ms": 5879.0,
       "attempts": 1
     },
@@ -527,6 +823,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 7,
+          "end": 37
+        },
+        {
+          "start": 52,
+          "end": 70
+        }
+      ],
       "latency_ms": 5839.4,
       "attempts": 1
     },
@@ -545,6 +851,16 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 4
+        },
+        {
+          "start": 4,
+          "end": 14
+        }
+      ],
       "latency_ms": 6285.0,
       "attempts": 1
     },
@@ -563,6 +879,20 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 3
+        },
+        {
+          "start": 4,
+          "end": 15
+        },
+        {
+          "start": 16,
+          "end": 20
+        }
+      ],
       "latency_ms": 6249.7,
       "attempts": 1
     },
@@ -581,6 +911,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 32
+        },
+        {
+          "start": 47,
+          "end": 72
+        }
+      ],
       "latency_ms": 6136.0,
       "attempts": 1
     },
@@ -599,6 +939,20 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 3,
+          "end": 7
+        },
+        {
+          "start": 7,
+          "end": 14
+        },
+        {
+          "start": 14,
+          "end": 18
+        }
+      ],
       "latency_ms": 6620.4,
       "attempts": 1
     },
@@ -617,6 +971,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 21
+        },
+        {
+          "start": 23,
+          "end": 38
+        }
+      ],
       "latency_ms": 6701.5,
       "attempts": 1
     },
@@ -635,6 +999,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 3,
+          "end": 13
+        },
+        {
+          "start": 14,
+          "end": 17
+        }
+      ],
       "latency_ms": 7142.5,
       "attempts": 1
     },
@@ -653,6 +1027,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 46
+        },
+        {
+          "start": 49,
+          "end": 64
+        }
+      ],
       "latency_ms": 6990.8,
       "attempts": 1
     },
@@ -671,6 +1055,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 4
+        },
+        {
+          "start": 14,
+          "end": 18
+        }
+      ],
       "latency_ms": 6063.2,
       "attempts": 1
     },
@@ -689,6 +1083,16 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 7
+        },
+        {
+          "start": 8,
+          "end": 11
+        }
+      ],
       "latency_ms": 5778.2,
       "attempts": 1
     },
@@ -707,6 +1111,20 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 4
+        },
+        {
+          "start": 5,
+          "end": 17
+        },
+        {
+          "start": 18,
+          "end": 24
+        }
+      ],
       "latency_ms": 6945.8,
       "attempts": 1
     },
@@ -725,6 +1143,20 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 4
+        },
+        {
+          "start": 5,
+          "end": 10
+        },
+        {
+          "start": 11,
+          "end": 15
+        }
+      ],
       "latency_ms": 6583.4,
       "attempts": 1
     },
@@ -743,6 +1175,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 38
+        },
+        {
+          "start": 39,
+          "end": 50
+        }
+      ],
       "latency_ms": 5988.4,
       "attempts": 1
     },
@@ -761,6 +1203,20 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 5
+        },
+        {
+          "start": 6,
+          "end": 15
+        },
+        {
+          "start": 21,
+          "end": 25
+        }
+      ],
       "latency_ms": 6196.3,
       "attempts": 1
     },
@@ -779,6 +1235,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 7
+        },
+        {
+          "start": 8,
+          "end": 12
+        }
+      ],
       "latency_ms": 5634.3,
       "attempts": 1
     },
@@ -797,6 +1263,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 13
+        },
+        {
+          "start": 15,
+          "end": 40
+        }
+      ],
       "latency_ms": 5976.7,
       "attempts": 1
     },
@@ -815,6 +1291,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 8
+        },
+        {
+          "start": 9,
+          "end": 38
+        }
+      ],
       "latency_ms": 6129.9,
       "attempts": 1
     },
@@ -833,6 +1319,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 28
+        },
+        {
+          "start": 33,
+          "end": 81
+        }
+      ],
       "latency_ms": 6139.5,
       "attempts": 1
     },
@@ -851,6 +1347,20 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 5,
+          "end": 12
+        },
+        {
+          "start": 14,
+          "end": 20
+        },
+        {
+          "start": 21,
+          "end": 26
+        }
+      ],
       "latency_ms": 6413.1,
       "attempts": 1
     },
@@ -869,6 +1379,20 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 8,
+          "end": 10
+        },
+        {
+          "start": 10,
+          "end": 14
+        },
+        {
+          "start": 17,
+          "end": 23
+        }
+      ],
       "latency_ms": 6072.9,
       "attempts": 1
     },
@@ -887,6 +1411,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 35,
+          "end": 59
+        },
+        {
+          "start": 63,
+          "end": 82
+        }
+      ],
       "latency_ms": 5840.9,
       "attempts": 1
     },
@@ -905,6 +1439,20 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 1,
+          "end": 7
+        },
+        {
+          "start": 9,
+          "end": 16
+        },
+        {
+          "start": 22,
+          "end": 51
+        }
+      ],
       "latency_ms": 6722.6,
       "attempts": 1
     },
@@ -923,6 +1471,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 11,
+          "end": 49
+        },
+        {
+          "start": 50,
+          "end": 61
+        }
+      ],
       "latency_ms": 6362.7,
       "attempts": 1
     },
@@ -941,6 +1499,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 6
+        },
+        {
+          "start": 7,
+          "end": 21
+        }
+      ],
       "latency_ms": 6139.6,
       "attempts": 1
     },
@@ -959,6 +1527,20 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 3
+        },
+        {
+          "start": 3,
+          "end": 11
+        },
+        {
+          "start": 18,
+          "end": 26
+        }
+      ],
       "latency_ms": 6572.4,
       "attempts": 1
     },
@@ -977,6 +1559,20 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 7,
+          "end": 25
+        },
+        {
+          "start": 35,
+          "end": 53
+        },
+        {
+          "start": 54,
+          "end": 67
+        }
+      ],
       "latency_ms": 6055.8,
       "attempts": 1
     },
@@ -995,6 +1591,20 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 3
+        },
+        {
+          "start": 4,
+          "end": 15
+        },
+        {
+          "start": 16,
+          "end": 20
+        }
+      ],
       "latency_ms": 6154.0,
       "attempts": 1
     },
@@ -1013,6 +1623,20 @@
         "draft": true
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 4
+        },
+        {
+          "start": 4,
+          "end": 9
+        },
+        {
+          "start": 10,
+          "end": 12
+        }
+      ],
       "latency_ms": 6102.6,
       "attempts": 1
     },
@@ -1031,6 +1655,16 @@
         "draft": false
       },
       "evidence_supported": true,
+      "evidence_ranges": [
+        {
+          "start": 20,
+          "end": 38
+        },
+        {
+          "start": 40,
+          "end": 47
+        }
+      ],
       "latency_ms": 5530.9,
       "attempts": 1
     }

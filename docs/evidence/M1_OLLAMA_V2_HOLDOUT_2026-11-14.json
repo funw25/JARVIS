@@ -90,7 +90,22 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 6685.2
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 7
+        },
+        {
+          "start": 8,
+          "end": 13
+        },
+        {
+          "start": 18,
+          "end": 25
+        }
+      ],
+      "latency_ms": 6685.2,
+      "attempts": 1
     },
     {
       "id": "h1-002",
@@ -107,7 +122,18 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 6598.0
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 39
+        },
+        {
+          "start": 40,
+          "end": 65
+        }
+      ],
+      "latency_ms": 6598.0,
+      "attempts": 1
     },
     {
       "id": "h1-003",
@@ -124,7 +150,22 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 6882.7
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 7
+        },
+        {
+          "start": 8,
+          "end": 14
+        },
+        {
+          "start": 15,
+          "end": 28
+        }
+      ],
+      "latency_ms": 6882.7,
+      "attempts": 1
     },
     {
       "id": "h1-004",
@@ -141,7 +182,18 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 6367.1
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 12
+        },
+        {
+          "start": 13,
+          "end": 18
+        }
+      ],
+      "latency_ms": 6367.1,
+      "attempts": 1
     },
     {
       "id": "h1-005",
@@ -158,7 +210,18 @@
         "draft": true
       },
       "evidence_supported": true,
-      "latency_ms": 6011.3
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 14
+        },
+        {
+          "start": 15,
+          "end": 60
+        }
+      ],
+      "latency_ms": 6011.3,
+      "attempts": 1
     },
     {
       "id": "h1-006",
@@ -175,7 +238,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6406.7
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 4
+        },
+        {
+          "start": 5,
+          "end": 11
+        },
+        {
+          "start": 15,
+          "end": 19
+        }
+      ],
+      "latency_ms": 6406.7,
+      "attempts": 1
     },
     {
       "id": "h1-007",
@@ -192,7 +270,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6075.9
+      "evidence_ranges": [
+        {
+          "start": 2,
+          "end": 10
+        },
+        {
+          "start": 11,
+          "end": 15
+        },
+        {
+          "start": 16,
+          "end": 20
+        }
+      ],
+      "latency_ms": 6075.9,
+      "attempts": 1
     },
     {
       "id": "h1-008",
@@ -209,7 +302,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 5892.9
+      "evidence_ranges": [
+        {
+          "start": 7,
+          "end": 38
+        },
+        {
+          "start": 39,
+          "end": 62
+        }
+      ],
+      "latency_ms": 5892.9,
+      "attempts": 1
     },
     {
       "id": "h1-009",
@@ -226,7 +330,26 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6514.2
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 2
+        },
+        {
+          "start": 3,
+          "end": 8
+        },
+        {
+          "start": 8,
+          "end": 12
+        },
+        {
+          "start": 13,
+          "end": 17
+        }
+      ],
+      "latency_ms": 6514.2,
+      "attempts": 1
     },
     {
       "id": "h1-010",
@@ -243,7 +366,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6065.5
+      "evidence_ranges": [
+        {
+          "start": 4,
+          "end": 14
+        },
+        {
+          "start": 15,
+          "end": 23
+        }
+      ],
+      "latency_ms": 6065.5,
+      "attempts": 1
     },
     {
       "id": "h1-011",
@@ -260,7 +394,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6499.6
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 11
+        },
+        {
+          "start": 12,
+          "end": 19
+        }
+      ],
+      "latency_ms": 6499.6,
+      "attempts": 1
     },
     {
       "id": "h1-012",
@@ -277,7 +422,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6706.8
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 4
+        },
+        {
+          "start": 5,
+          "end": 12
+        },
+        {
+          "start": 13,
+          "end": 19
+        }
+      ],
+      "latency_ms": 6706.8,
+      "attempts": 1
     },
     {
       "id": "h1-013",
@@ -294,7 +454,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 7034.8
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 3
+        },
+        {
+          "start": 9,
+          "end": 31
+        },
+        {
+          "start": 50,
+          "end": 71
+        }
+      ],
+      "latency_ms": 7034.8,
+      "attempts": 1
     },
     {
       "id": "h1-014",
@@ -311,7 +486,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6036.1
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 8
+        },
+        {
+          "start": 9,
+          "end": 15
+        }
+      ],
+      "latency_ms": 6036.1,
+      "attempts": 1
     },
     {
       "id": "h1-015",
@@ -328,7 +514,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 5991.7
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 6
+        },
+        {
+          "start": 7,
+          "end": 15
+        }
+      ],
+      "latency_ms": 5991.7,
+      "attempts": 1
     },
     {
       "id": "h1-016",
@@ -345,7 +542,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 5718.1
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 6
+        },
+        {
+          "start": 7,
+          "end": 13
+        }
+      ],
+      "latency_ms": 5718.1,
+      "attempts": 1
     },
     {
       "id": "h1-017",
@@ -362,7 +570,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6779.4
+      "evidence_ranges": [
+        {
+          "start": 11,
+          "end": 15
+        },
+        {
+          "start": 15,
+          "end": 23
+        },
+        {
+          "start": 28,
+          "end": 34
+        }
+      ],
+      "latency_ms": 6779.4,
+      "attempts": 1
     },
     {
       "id": "h1-018",
@@ -379,7 +602,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6420.1
+      "evidence_ranges": [
+        {
+          "start": 11,
+          "end": 71
+        },
+        {
+          "start": 72,
+          "end": 89
+        }
+      ],
+      "latency_ms": 6420.1,
+      "attempts": 1
     },
     {
       "id": "h1-019",
@@ -396,7 +630,22 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6648.2
+      "evidence_ranges": [
+        {
+          "start": 0,
+          "end": 10
+        },
+        {
+          "start": 11,
+          "end": 18
+        },
+        {
+          "start": 19,
+          "end": 25
+        }
+      ],
+      "latency_ms": 6648.2,
+      "attempts": 1
     },
     {
       "id": "h1-020",
@@ -413,7 +662,18 @@
         "draft": false
       },
       "evidence_supported": true,
-      "latency_ms": 6449.4
+      "evidence_ranges": [
+        {
+          "start": 7,
+          "end": 38
+        },
+        {
+          "start": 43,
+          "end": 75
+        }
+      ],
+      "latency_ms": 6449.4,
+      "attempts": 1
     }
   ]
 }

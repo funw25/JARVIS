@@ -19,5 +19,9 @@
   "known_gaps": [
     "dist-info licenses/LICENSE covers APSW only (zlib-style); the MIT notice for SQLite3 Multiple Ciphers and the SQLite public-domain notice are not bundled",
     "no OpenSSL or Botan version string in the shipped binaries, so the crypto backend cannot be verified from the artefact"
-  ]
+  ],
+  "release_g1": {
+    "state": "unapproved",
+    "reason": "Source-to-binary provenance, complete licenses, reproducible independent builds and independent review are not yet established."
+  }
 }

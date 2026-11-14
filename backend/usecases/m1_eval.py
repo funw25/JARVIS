@@ -50,9 +50,7 @@ def evaluate(rows, engine=None, *, engine_name=None, text_key="text", dataset_au
         retry_items += int(attempts > 1)
         retry_total += max(0, attempts - 1)
         gold = labels["classification"]
-        supported = bool(predicted.evidence) and all(
-            item["span"] in row[text_key] for item in predicted.evidence
-        )
+        supported = m1_rules.evidence_supported(row[text_key], predicted)
         details.append({
             "id": row["id"],
             "gold": {key: labels[key] for key in ("classification", "priority", "todo", "draft")},
@@ -84,11 +82,15 @@ def evaluate(rows, engine=None, *, engine_name=None, text_key="text", dataset_au
         if predicted.priority != labels["priority"]:
             priority_mismatches.append({"id": row["id"], "gold": labels["priority"], "predicted": predicted.priority})
         priority_correct += int(predicted.priority == labels["priority"])
-        if not predicted.evidence:
+        nonempty = bool(predicted.evidence) and all(
+            isinstance(item, dict) and isinstance(item.get("span"), str) and item["span"].strip()
+            for item in predicted.evidence
+        )
+        if not nonempty:
             missing_evidence.append(row["id"])
-        if predicted.evidence:
+        if nonempty:
             evidence_nonempty += 1
-            if all(item["span"] in row[text_key] for item in predicted.evidence):
+            if supported:
                 evidence_verbatim += 1
 
     total = len(rows)

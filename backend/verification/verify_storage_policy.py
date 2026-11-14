@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
-from app.database import connect
+from app.database import connect, StorageAdapterError
 from app.security.storage_policy import StorageSecurityError
 
 
@@ -25,6 +25,15 @@ with tempfile.TemporaryDirectory(prefix="jarvis-storage-check-") as directory:
         assert not path.exists() and not path.parent.exists()
     print("UNSET_AND_NON_SYNTHETIC_FAIL_CLOSED=PASS")
     os.environ["JARVIS_DATA_MODE"] = "synthetic"
+    os.environ["JARVIS_STORAGE_ADAPTER"] = "typo-cannot-fall-back"
+    try:
+        connect(path)
+        raise AssertionError("unknown storage adapter fell back to plaintext")
+    except StorageAdapterError:
+        pass
+    assert not path.exists() and not path.parent.exists()
+    os.environ.pop("JARVIS_STORAGE_ADAPTER")
+    print("UNKNOWN_ADAPTER_FAILS_CLOSED=PASS")
     with connect(path) as conn:
         conn.execute("CREATE TABLE synthetic_example(id INTEGER PRIMARY KEY)")
     assert path.exists()

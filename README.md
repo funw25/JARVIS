@@ -171,27 +171,30 @@ self-checks:
 All checks use fictional data and temporary databases.
 
 ```bash
-backend/verification/verify_all.py            # 62 checks
+backend/verification/verify_all.py            # current synthetic check list
 python backend/verification/verify_adapter_suite.py  # same suite on the encrypted backend
 ```
 
 | Environment | Result |
 |---|---|
-| Python 3.14, default SQLite (last recorded) | **62 script items PASS / 0 FAIL / 0 SKIP** |
-| Python 3.14, encrypted adapter (last recorded) | **62 script items PASS / 0 FAIL / 0 SKIP** |
+| Python 3.14, default SQLite (historical, 2026-11-08) | **62 script items PASS / 0 FAIL / 0 SKIP** |
+| Python 3.14, encrypted adapter (historical, 2026-11-08) | **60 script items PASS / 0 FAIL / 0 SKIP** |
 | Python 3.13, default SQLite | 46 PASS / 0 FAIL / 16 SKIP (3.14-only experiments) |
 
-One of the 62 items is `driver_provenance`: it can be counted as PASS while
-printing `G1_GATE=OPEN`. The aggregate is a synthetic regression count, not a
-release gate or approval for personal data. These are previously recorded runs;
-this documentation change did not rerun them.
+The historical 62-item run included the non-release `driver_provenance`
+diagnostic; its PASS does not approve the driver. The current strict release
+check is `python tools/release/check_release.py`; it exits nonzero while G1 or
+other real-data gates remain incomplete. A formal release pipeline is not yet
+implemented and external manual publishing can bypass a local check. See the
+[M2 remediation record](docs/M2_P0_REMEDIATION_2026-11-14.md).
 
 ## Safety and privacy boundaries
 
 - **Synthetic only.** Every workflow is gated behind `JARVIS_DATA_MODE=synthetic`.
   Real mail, chat logs, credentials and personal documents are out of scope until
   storage encryption, key recovery and an independent review are complete.
-- **No hidden egress.** There are no model calls, no analytics and no telemetry.
+- **No hidden egress.** The synthetic demo uses a fake model; the separate model
+  evaluation can call a configured local model or an explicitly allowed remote endpoint.
 - **No account connection.** Gmail, X, WeChat and Xiaohongshu integrations are
   designed but not implemented; no OAuth client, token or cookie handling exists.
 - **Secrets stay outside the repository.** Local tokens and keys are read from the

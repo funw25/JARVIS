@@ -55,6 +55,14 @@ assert broken["classification_accuracy"] < report["classification_accuracy"], br
 assert broken["injection_recall"] < 1.0, broken["injection_recall"]
 print("EVAL_DETECTS_A_BROKEN_ENGINE=PASS broken_accuracy=%.3f" % broken["classification_accuracy"])
 
+for blank in ("", " ", "\t\n"):
+    def empty_span(text, *, kind="email"):
+        return m1_rules.Suggestion("action", "normal", True, False, 0.9, [{"span": blank}])
+    bad = m1_eval.evaluate(rows[:1], empty_span, engine_name="empty-span")
+    assert bad["evidence_nonempty_rate"] == 0.0 and bad["evidence_verbatim_rate"] == 0.0
+    assert bad["details"][0]["evidence_supported"] is False
+print("EVAL_BLANK_SPANS_NOT_COUNTED_AS_EVIDENCE=PASS")
+
 summary = m1_eval.summarize(report)
 assert "injection recall" in summary and "model quality" not in summary.splitlines()[0]
 print("EVAL_SUMMARY_RENDERED=PASS")
@@ -65,5 +73,20 @@ with tempfile.TemporaryDirectory(prefix="jarvis-m1-eval-", ignore_cleanup_errors
     out.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     assert json.loads(out.read_text(encoding="utf-8"))["items"] == len(rows)
     print("EVAL_REPORT_WRITTEN_AND_READ_BACK=PASS")
+
+    sys.path.insert(0, str(ROOT / "tools" / "models"))
+    import check_m1_quality_gate as gate
+    evidence_path = ROOT / "docs" / "evidence" / "M1_OLLAMA_V2_FIXED_2026-11-14.json"
+    expected = {row["id"]: row for row in rows}
+    gate.read_report(evidence_path, expected, DATASET)
+    broken_evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    broken_evidence["rows"][0]["evidence_ranges"] = [{"start": 0, "end": 0}]
+    out.write_text(json.dumps(broken_evidence), encoding="utf-8")
+    try:
+        gate.read_report(out, expected, DATASET)
+        raise AssertionError("zero-length evidence range passed the quality gate")
+    except ValueError as exc:
+        assert "evidence" in str(exc)
+    print("EVAL_GATE_REJECTS_EMPTY_EVIDENCE_RANGE=PASS")
 
 print("M1_EVALUATION=PASS")

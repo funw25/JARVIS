@@ -1,7 +1,8 @@
 """Experimental Windows user-scoped DPAPI wrapping for synthetic tests only.
 
-This module is not wired to the application. Python cannot guarantee erasure of
-all copies of key material in memory; it does not provide cross-device recovery.
+The application can use this module only through its synthetic dpapi-vault
+adapter. Python cannot guarantee erasure of all key copies in memory; DPAPI
+alone does not provide cross-device recovery.
 """
 import ctypes
 import sys

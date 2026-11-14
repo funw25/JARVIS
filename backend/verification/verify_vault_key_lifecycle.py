@@ -70,6 +70,16 @@ with tempfile.TemporaryDirectory(prefix="jarvis-vault-keys-", ignore_cleanup_err
         assert connection.execute("SELECT count(*) FROM vault_meta").fetchone()[0] >= 2
     print("K1_CREATE_OPEN_AND_CIPHERTEXT=PASS")
 
+    try:
+        with keys.open_vault(root) as connection:
+            connection.execute("INSERT INTO vault_meta VALUES ('rollback_probe', 'fictional')")
+            raise RuntimeError("synthetic caller failure")
+    except RuntimeError as exc:
+        assert str(exc) == "synthetic caller failure"
+    with keys.open_vault(root) as connection:
+        assert connection.execute("SELECT count(*) FROM vault_meta WHERE name='rollback_probe'").fetchone()[0] == 0
+    print("VAULT_CALLER_EXCEPTION_ROLLS_BACK=PASS")
+
     # K2: missing or damaged material fails closed with a stable class.
     expect(keys.KeyMissing, lambda: keys.open_vault(base / "does-not-exist"), "missing vault")
     missing_key = fresh("missing-key")
@@ -133,4 +143,4 @@ with tempfile.TemporaryDirectory(prefix="jarvis-vault-keys-", ignore_cleanup_err
     print("CONNECTION_CLOSED_AFTER_OPEN=PASS")
 
 print("VAULT_KEY_LIFECYCLE=PASS")
-print("PASSPHRASE_RECOVERY_ROTATION_AND_BACKUP=NOT_IMPLEMENTED")
+print("PASSPHRASE_RECOVERY_ROTATION_AND_BACKUP=NOT_TESTED_BY_THIS_CHECK")

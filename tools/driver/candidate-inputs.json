@@ -1,0 +1,34 @@
+{
+  "format": "jarvis-g1-candidate-inputs-v1",
+  "observed_date": "2026-11-14",
+  "project": "apsw-sqlite3mc",
+  "version": "3.54.0.0",
+  "source_sqlite_version": "3.54.0",
+  "source_sqlite3mc_version": "SQLite3 Multiple Ciphers 2.6.1",
+  "pypi_metadata": "https://pypi.org/pypi/apsw-sqlite3mc/3.54.0.0/json",
+  "source": {
+    "filename": "apsw_sqlite3mc-3.54.0.0.tar.gz",
+    "url": "https://files.pythonhosted.org/packages/db/8f/bca0cdff784541de327f61b055efad355b14d390b36615548715dc6e9d55/apsw_sqlite3mc-3.54.0.0.tar.gz",
+    "size": 4405932,
+    "sha256": "60a021cd9f6c8f3e2aa6cb54e197cb344379d5eb9a688b7647a136fc24956db4",
+    "amalgamation_path": "apsw_sqlite3mc-3.54.0.0/sqlite3/sqlite3.c",
+    "amalgamation_sha256": "3153b2f567aceacd1f80a845e77f7b3c632e9af130af07343ee4bbcdcff31c60"
+  },
+  "wheel": {
+    "filename": "apsw_sqlite3mc-3.54.0.0-cp314-cp314-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/5e/9d/26fdc9c54b181b1178f69206be319964bce6d88efac1736e5f5e2ab48858/apsw_sqlite3mc-3.54.0.0-cp314-cp314-win_amd64.whl",
+    "size": 3866072,
+    "sha256": "ce02879c647746af870ee6081fa1b1882b1bd6b9ab559a31008cb887a7726815",
+    "record": "apsw_sqlite3mc-3.54.0.0.dist-info/RECORD"
+  },
+  "sqlite3mc_license": {
+    "upstream_tag": "v2.6.1",
+    "tag_object": "2c789d9d4d7fa2d65d260a35c69099c8a87eb435",
+    "peeled_commit": "45d4ed3487bc02cb08ac73afff47c031c3f88ee0",
+    "filename": "sqlite3mc-v2.6.1-LICENSE",
+    "url": "https://raw.githubusercontent.com/utelle/SQLite3MultipleCiphers/45d4ed3487bc02cb08ac73afff47c031c3f88ee0/LICENSE",
+    "size": 1074,
+    "sha256": "39205ec18e0f25f56c62d3bda9768e7509b63a74ba58beb7442903dfc81c247a"
+  },
+  "status": "Input verification only; source-to-wheel build provenance and G1 approval are NOT established."
+}

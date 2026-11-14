@@ -190,6 +190,10 @@ try:
     expect(m1_model.ModelUnavailable, lambda: m1_model._parse_reply(malformed), "non-boolean action")
     malformed = json.dumps({"classification": "fyi", "priority": "urgent", "todo": False, "draft": False})
     expect(m1_model.ModelUnavailable, lambda: m1_model._parse_reply(malformed), "unknown priority")
+    for blank in ("", "  ", "\t\n"):
+        malformed = json.dumps({"classification": "action", "priority": "normal", "todo": True,
+                                "draft": False, "evidence": [blank]})
+        expect(m1_model.ModelUnavailable, lambda: m1_model._parse_reply(malformed), "blank evidence")
 
     Stub.mode = "broken"
     expect(m1_model.ModelUnavailable, lambda: engine(TEXT), "invalid model reply")

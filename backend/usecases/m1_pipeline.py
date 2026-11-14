@@ -65,9 +65,8 @@ def suggest(connection, artifact_id, engine=None):
     result = engine(row["content"], kind=row["kind"])
     if result.classification not in m1_rules.CLASSES or result.priority not in m1_rules.PRIORITIES:
         raise ValueError("candidate has an invalid classification or priority")
-    if any(not isinstance(item, dict) or not isinstance(item.get("span"), str)
-           or item["span"] not in row["content"] for item in result.evidence):
-        raise ValueError("candidate evidence is not a verbatim source span")
+    if result.evidence and not m1_rules.evidence_supported(row["content"], result):
+        raise ValueError("candidate evidence must be a nonblank verbatim source span")
     if (result.wants_todo or result.wants_draft) and not result.evidence:
         raise ValueError("actionable candidate requires source evidence")
     rule_veto = False
@@ -89,7 +88,7 @@ def suggest(connection, artifact_id, engine=None):
          int(result.wants_todo), int(result.wants_draft), float(result.confidence),
          json.dumps(result.evidence, ensure_ascii=False), _now()),
     )
-    supported = all(item["span"] in row["content"] for item in result.evidence) if result.evidence else False
+    supported = m1_rules.evidence_supported(row["content"], result)
     audit(connection, "suggestion_created", "m1_suggestion", suggestion_id, actor_type="assistant", actor_id=ASSISTANT,
           metadata={"classification": result.classification, "priority": result.priority,
                     "evidence_supported": supported, "duplicate": bool(row["duplicate_of"]),
@@ -120,7 +119,41 @@ def decide(connection, suggestion_id, action, edits=None):
 
 
 def materialize(connection, decision_id):
-    """Create the todo or draft implied by the accepted/edited suggestion."""
+    """Create work once per decision, preserving the caller's transaction boundary."""
+    if not connection.in_transaction:
+        connection.execute("BEGIN IMMEDIATE")
+    connection.execute("SAVEPOINT m1_materialize")
+    try:
+        if connection.execute("SELECT 1 FROM m1_decisions WHERE id=?", (decision_id,)).fetchone() is None:
+            raise KeyError("unknown decision: " + decision_id)
+        claim_id = _id("claim")
+        connection.execute(
+            "INSERT OR IGNORE INTO m1_materializations (decision_id,state,claim_id,result_json,created_at)"
+            " VALUES (?,?,?,NULL,?)", (decision_id, "in_progress", claim_id, _now()))
+        saved = connection.execute(
+            "SELECT state,claim_id,result_json FROM m1_materializations WHERE decision_id=?", (decision_id,)
+        ).fetchone()
+        if saved["state"] == "complete":
+            result = json.loads(saved["result_json"])
+        elif saved["state"] == "legacy_unknown":
+            raise RuntimeError("legacy decision has unknown prior effects; manual reconciliation required")
+        elif saved["claim_id"] != claim_id:
+            raise RuntimeError("decision materialization is already in progress")
+        else:
+            result = _materialize_new(connection, decision_id)
+            connection.execute(
+                "UPDATE m1_materializations SET state='complete',result_json=? WHERE decision_id=? AND claim_id=?",
+                (json.dumps(result, ensure_ascii=False), decision_id, claim_id))
+        connection.execute("RELEASE SAVEPOINT m1_materialize")
+        return result
+    except BaseException:
+        connection.execute("ROLLBACK TO SAVEPOINT m1_materialize")
+        connection.execute("RELEASE SAVEPOINT m1_materialize")
+        raise
+
+
+def _materialize_new(connection, decision_id):
+    """Apply a claimed decision; the caller owns transaction and idempotency."""
     row = connection.execute(
         "SELECT d.id AS decision_id, d.action, d.edits_json, s.id AS suggestion_id, s.artifact_id,"
         " s.wants_todo, s.wants_draft, s.priority, s.evidence_json, s.classification, a.content, a.kind"

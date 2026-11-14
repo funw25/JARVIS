@@ -177,8 +177,8 @@ def _parse_reply(text):
     if not isinstance(payload.get("todo"), bool) or not isinstance(payload.get("draft"), bool):
         raise ModelUnavailable("model todo/draft fields must be booleans")
     evidence = payload.get("evidence", [])
-    if not isinstance(evidence, list) or any(not isinstance(item, str) for item in evidence):
-        raise ModelUnavailable("model evidence must be a list of strings")
+    if not isinstance(evidence, list) or any(not isinstance(item, str) or not item.strip() for item in evidence):
+        raise ModelUnavailable("model evidence must contain nonblank strings")
     confidence = payload.get("confidence", 0.5)
     if isinstance(confidence, bool) or not isinstance(confidence, (int, float)) or not math.isfinite(confidence):
         raise ModelUnavailable("model confidence must be a finite number")

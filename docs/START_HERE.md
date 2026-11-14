@@ -77,13 +77,13 @@ $env:JARVIS_DATA_MODE = 'synthetic'
 & 'C:\Users\Admin\.codex\.chatgpt-projects\g-p-6ae96df8f3c48191a4e131d6589494db\tools\backup\backup.cmd' store-passphrase
 ```
 
-输出分别列出功能项与诊断项的 PASS、FAIL、SKIP；有跳过项时退出非零。**2026-11-14 实测：功能 64 项、诊断 1 项成功，0 失败、0 跳过**；3.13 对照的 46 通过 / 16 跳过是旧版 62 项的历史记录，本轮未重跑。诊断 `driver_provenance` 仍报告 `G1_GATE=OPEN`，成功仅指诊断运行成功，不表示驱动获准。`sqlcipher3-wheels` 位于 `.jarvis-python314-deps`，`apsw-sqlite3mc` 位于 `.jarvis-python314-apswmc-probe`；缺失时对应检查会 SKIP。加密候选仍未获真实数据放行。
+输出分别列出功能项与诊断项的 PASS、FAIL、SKIP；有跳过项时退出非零。**2026-11-14 实测：功能 65 项、诊断 1 项成功，0 失败、0 跳过**；3.13 对照的 46 通过 / 16 跳过是旧版 62 项的历史记录，本轮未重跑。诊断 `driver_provenance` 仍报告 `G1_GATE=OPEN`，成功仅指诊断运行成功，不表示驱动获准。`sqlcipher3-wheels` 位于 `.jarvis-python314-deps`，`apsw-sqlite3mc` 位于 `.jarvis-python314-apswmc-probe`；缺失时对应检查会 SKIP。加密候选仍未获真实数据放行。
 
 ## 工作节奏与推送约定
 
 - 每完成一个**大阶段**（一个可独立验收的交付：S1–S5 的一段、某个 G 门槛、评审包等）做一次仓库推送。
 - 推送频率上限：**每天最多一次**。同一天内的多个小改动先在本地提交，合并进当天那一次推送。
-- 每次推送前：跑对应验证 + 完整回归（当前 65 项，含 1 项诊断），并更新 `docs/PROJECT_LOG.md`、`docs/CURRENT_STATUS.md` 与相关设计文档里的数字；文档数字与代码不一致视为未完成。
+- 每次推送前：跑对应验证 + 完整回归（当前 66 项，含 1 项诊断），并更新 `docs/PROJECT_LOG.md`、`docs/CURRENT_STATUS.md` 与相关设计文档里的数字；文档数字与代码不一致视为未完成。
 - 推送命令必须带代理：`git -c http.proxy=http://127.0.0.1:7890 -c https.proxy=http://127.0.0.1:7890 push origin main`。
 - 存在未推送提交时，汇报里必须写明，避免远端看起来"落后"却无人知道。
 

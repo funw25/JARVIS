@@ -111,7 +111,7 @@ backend/
   app/                 domain: api, services, repositories, security, migrations
   migrations/          17 versioned SQL migrations
   experimental/        encrypted adapter and isolated storage experiments
-  verification/        65 checks plus standalone suites
+  verification/        66 checks plus standalone suites
   demo_jarvis.py       dependency-free synthetic demo
   API_REFERENCE.md     local HTTP contract
 docs/                  product, architecture, security, storage and status records

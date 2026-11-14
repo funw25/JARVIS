@@ -82,6 +82,7 @@ CHECKS = [
     ("m1_dataset", "verify_m1_dataset.py", ()),
     ("m1_pipeline", "verify_m1_pipeline.py", ()),
     ("audit_chain", "verify_audit_chain.py", ()),
+    ("audit_checkpoint", "verify_audit_checkpoint.py", ("cryptography",)),
     ("m1_evaluation", "verify_m1_evaluation.py", ()),
     ("m1_model_probe", "verify_m1_model_probe.py", ()),
     ("sqlcipher_candidate", "verify_sqlcipher_candidate.py", ("sqlcipher3",)),

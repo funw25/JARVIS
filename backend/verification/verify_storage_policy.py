@@ -6,8 +6,20 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from app.database import connect, StorageAdapterError
 from app.security.storage_policy import StorageSecurityError
+from test_environment import isolated_environment
+
+hostile = {"JARVIS_VAULT_DIR": "do-not-touch", "JARVIS_STORAGE_ADAPTER": "dpapi-vault",
+           "JARVIS_BACKUP_PASSPHRASE": "fictional-secret", "KEEP_THIS": "yes"}
+clean = isolated_environment(hostile)
+assert clean == {"KEEP_THIS": "yes"}
+adapter = isolated_environment(hostile, experimental_apswmc=True)
+assert adapter["JARVIS_STORAGE_ADAPTER"] == "apswmc" and len(adapter["JARVIS_APSWMC_KEY"]) == 64
+assert "JARVIS_VAULT_DIR" not in adapter and "JARVIS_BACKUP_PASSPHRASE" not in adapter
+assert adapter["JARVIS_APSWMC_KEY"] != isolated_environment(hostile, experimental_apswmc=True)["JARVIS_APSWMC_KEY"]
+print("VERIFICATION_ENVIRONMENT_ISOLATION=PASS")
 
 
 with tempfile.TemporaryDirectory(prefix="jarvis-storage-check-") as directory:

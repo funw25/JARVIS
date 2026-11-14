@@ -4,12 +4,16 @@ Exit 0 only if every selected check passes, 1 on failure, 2 when checks are skip
 External services and actual user data are never used.
 """
 import importlib.util
+import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))  # Embedded Python does not add the script directory.
+from test_environment import isolated_environment
 
 # A crashed child can emit bytes that are not valid in the console code page
 # (GBK on this host); never let reporting itself turn into a failure.
@@ -85,6 +89,11 @@ CHECKS = [
 ]
 
 DIAGNOSTICS = {"driver_provenance"}
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--experimental-apswmc", action="store_true", help="explicitly run compatible checks with a fresh synthetic APSW key")
+options = parser.parse_args()
+child_environment = isolated_environment(os.environ, experimental_apswmc=options.experimental_apswmc)
+print("VERIFICATION_STORAGE=%s (inherited JARVIS_* removed)" % ("experimental-apswmc" if options.experimental_apswmc else "test-default"), flush=True)
 results = {group: {"PASS": [], "FAIL": [], "SKIP": []} for group in ("functional", "diagnostic")}
 for name, filename, dependencies in CHECKS:
     group = "diagnostic" if name in DIAGNOSTICS else "functional"
@@ -95,7 +104,7 @@ for name, filename, dependencies in CHECKS:
         print(f"SKIP [{group}] {name}: missing {', '.join(missing)}", flush=True)
         continue
     try:
-        run = subprocess.run([sys.executable, str(HERE / filename)], cwd=ROOT,
+        run = subprocess.run([sys.executable, str(HERE / filename)], cwd=ROOT, env=child_environment,
                              capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=45)
     except subprocess.TimeoutExpired:
         group_results["FAIL"].append(name)

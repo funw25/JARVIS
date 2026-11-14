@@ -33,6 +33,15 @@ assert isinstance(report["missing_evidence"], list)
 print("EVAL_REPORT_STATES_ITS_LIMITS=PASS todo_mismatches=%d priority_mismatches=%d missing_evidence=%d"
       % (len(report["todo_mismatches"]), len(report["priority_mismatches"]), len(report["missing_evidence"])))
 
+fixture = {"details": [{"id": "fictional-1", "gold": {"classification": "noise", "todo": False, "draft": False, "priority": "low"},
+                        "predicted": {"classification": "action", "todo": True, "draft": True, "priority": "high", "evidence": ["not in source"]},
+                        "evidence_supported": False}]}
+issues = m1_eval.evaluation_issues(fixture)
+assert [issue["type"] for issue in issues] == ["classification", "todo", "draft", "priority", "evidence_unsupported"]
+assert all(issue["id"] == "fictional-1" for issue in issues)
+assert m1_eval.evaluation_issues({"details": []}) == []
+print("EVAL_CANONICAL_ITEM_ISSUES=PASS")
+
 # Model quality must stay unverified unless a real model exists.
 status = m1_eval.model_status()
 assert status["status"] == "未验证", status

@@ -136,6 +136,23 @@ def _accuracy(confusion, correct_key=None):
     return _safe_div(correct, total)
 
 
+def evaluation_issues(report):
+    """Derive per-item issues from ``details``, the canonical item-level record.
+
+    Legacy mismatch lists remain in serialized reports for compatibility. Evidence
+    that exists but is unsupported is an issue even when it is not "missing".
+    """
+    issues = []
+    for item in report["details"]:
+        gold, predicted = item["gold"], item["predicted"]
+        for field in ("classification", "todo", "draft", "priority"):
+            if gold[field] != predicted[field]:
+                issues.append({"id": item["id"], "type": field, "gold": gold[field], "predicted": predicted[field]})
+        if not item["evidence_supported"]:
+            issues.append({"id": item["id"], "type": "evidence_unsupported"})
+    return issues
+
+
 def evaluate_model(rows, model, *, dataset_authored_with_rules=True):
     """Evaluate a real model, or refuse to fabricate a number."""
     if model is None:
@@ -158,9 +175,10 @@ def summarize(report):
         item = report["per_class"][name]
         lines.append("  %-12s P=%.2f R=%.2f F1=%.2f (n=%d)" % (
             name, item["precision"], item["recall"], item["f1"], item["support"]))
-    if report["failures"]:
+    classification_issues = [issue for issue in evaluation_issues(report) if issue["type"] == "classification"]
+    if classification_issues:
         lines.append("misclassified: " + ", ".join("%s %s->%s" % (f["id"], f["gold"], f["predicted"])
-                                                    for f in report["failures"][:8]))
+                                                    for f in classification_issues[:8]))
     else:
         lines.append("misclassified: none")
     return "\n".join(lines)

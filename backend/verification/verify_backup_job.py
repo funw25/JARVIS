@@ -38,6 +38,26 @@ MARKER = "FICTIONAL-JOB-" + os.urandom(6).hex()
 try:
     with tempfile.TemporaryDirectory(prefix="jarvis-backup-job-") as directory:
         base = Path(directory)
+        # Reject unsafe retention before touching credentials, files, or a sink.
+        from unittest.mock import patch
+        with patch.object(backup_job, "resolve_passphrase", side_effect=AssertionError("credential access")):
+            for local_keep, remote_keep in ((0, 4), (-1, 4), (1, 0), (1, -1), (True, 4), (1, 1.5)):
+                try:
+                    backup_job.run(base / "missing", local_dir=base / "not-created",
+                                   keep_local=local_keep, keep_remote=remote_keep)
+                except ValueError:
+                    pass
+                else:
+                    raise AssertionError("unsafe retention accepted")
+        assert not (base / "not-created").exists()
+        for invalid in (-1, True, 1.5):
+            try:
+                backup_job.prune_local(base / "not-created", invalid)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("unsafe direct prune count accepted")
+        print("JOB_REJECTS_UNSAFE_RETENTION_BEFORE_SIDE_EFFECTS=PASS")
         vault = base / "vault"
         vault_keys.create_vault(vault)
         with vault_keys.open_vault(vault) as connection:

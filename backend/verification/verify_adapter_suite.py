@@ -1,12 +1,10 @@
 """Run the whole verification suite against the experimental encrypted adapter.
 
-Starts ``verify_all.py`` as a child process with ``JARVIS_STORAGE_ADAPTER=apswmc``
-and a fresh random key, so every domain, migration, HTTP and concurrency check
-runs on ciphertext. Synthetic temporary data only; the default storage is not
-changed and no security review is implied.
+Starts ``verify_all.py --experimental-apswmc`` with a fresh random key. Individual
+checks can explicitly select another backend. Synthetic data only; this is not
+a security review.
 """
 import os
-import secrets
 import subprocess
 import sys
 import tempfile
@@ -22,14 +20,10 @@ if sys.platform != "win32" or sys.version_info[:2] != (3, 14) or not PROBE.is_di
 with tempfile.TemporaryDirectory(prefix="jarvis-adapter-suite-") as directory:
     environment = dict(os.environ)
     environment.update({
-        "JARVIS_DATA_MODE": "synthetic",
-        "JARVIS_DATA_DIR": str(Path(directory) / "data"),
-        "JARVIS_STORAGE_ADAPTER": "apswmc",
-        "JARVIS_APSWMC_KEY": secrets.token_bytes(32).hex(),
         "PYTHONIOENCODING": "utf-8",
     })
     run = subprocess.run(
-        [sys.executable, str(ROOT / "backend" / "verification" / "verify_all.py")],
+        [sys.executable, str(ROOT / "backend" / "verification" / "verify_all.py"), "--experimental-apswmc"],
         cwd=ROOT, env=environment, capture_output=True, text=True,
         encoding="utf-8", errors="replace", timeout=1800,
     )

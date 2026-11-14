@@ -20,6 +20,21 @@ def _utc(value: str) -> datetime | None:
         return None
 
 
+def _task_bucket(value, now, local_zone, local_date):
+    if value is None:
+        return "without_due", None
+    due = _utc(value)
+    if due is None:
+        return "invalid_due", None
+    if due < now:
+        return "overdue", due
+    try:
+        same_day = due.astimezone(local_zone).date() == local_date
+    except OverflowError:
+        same_day = False
+    return ("due_today" if same_day else "future"), due
+
+
 class JarvisOverviewService:
     def snapshot(self, context: AssistantContext, *, utc_offset_minutes: int = 0, limit: int = 5,
                  now: datetime | None = None) -> dict:
@@ -46,20 +61,7 @@ class JarvisOverviewService:
                 rows = conn.execute("SELECT id,title,status,priority,due_at FROM todos WHERE owner_id=? AND created_by_assistant='jarvis' AND status IN ('open','in_progress') AND deleted_at IS NULL", (context.owner_id,))
                 for row in rows:
                     item = dict(row)
-                    if item["due_at"] is None:
-                        bucket, due = "without_due", None
-                    else:
-                        due = _utc(item["due_at"])
-                        if due is None:
-                            bucket = "invalid_due"
-                        elif due < now:
-                            bucket = "overdue"
-                        else:
-                            try:
-                                same_day = due.astimezone(local_zone).date() == local_date
-                            except OverflowError:
-                                same_day = False
-                            bucket = "due_today" if same_day else "future"
+                    bucket, due = _task_bucket(item["due_at"], now, local_zone, local_date)
                     buckets[bucket] += 1
                     item["bucket"] = bucket
                     yield (bucket, due, item)

@@ -8,6 +8,7 @@ and it is not a security review.
 import os
 import secrets
 import sqlite3
+from contextlib import closing
 import sys
 import tempfile
 from pathlib import Path
@@ -37,7 +38,7 @@ def header_is_plaintext(path):
         return source.read(16) == b"SQLite format 3\x00"
 
 
-with tempfile.TemporaryDirectory(prefix="jarvis-apswmc-services-", ignore_cleanup_errors=True) as directory:
+with tempfile.TemporaryDirectory(prefix="jarvis-apswmc-services-") as directory:
     data_dir = Path(directory) / "data"
     os.environ["JARVIS_DATA_MODE"] = "synthetic"
     os.environ["JARVIS_DATA_DIR"] = str(data_dir)
@@ -54,7 +55,7 @@ with tempfile.TemporaryDirectory(prefix="jarvis-apswmc-services-", ignore_cleanu
     print("SERVICES_ADAPTER_SELECTED_AND_MIGRATED=PASS")
 
     # The migrated encrypted database must reject a plain sqlite3 reader.
-    with sqlite3.connect(path) as plain:
+    with closing(sqlite3.connect(path)) as plain, plain:
         try:
             plain.execute("SELECT count(*) FROM sqlite_master").fetchone()
             raise AssertionError("plain sqlite3 read the migrated adapter database")

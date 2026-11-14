@@ -7,6 +7,7 @@ the adapter into the application, and it is not a security review.
 import os
 import secrets
 import sqlite3
+from contextlib import closing
 import sys
 import tempfile
 from pathlib import Path
@@ -38,7 +39,7 @@ def raw_open(path, key, busy_ms=0):
     return connection
 
 
-with tempfile.TemporaryDirectory(prefix="jarvis-apswmc-adapter-", ignore_cleanup_errors=True) as directory:
+with tempfile.TemporaryDirectory(prefix="jarvis-apswmc-adapter-") as directory:
     base = Path(directory)
     target = base / "adapter.db"
     key = secrets.token_bytes(32)
@@ -182,7 +183,7 @@ with tempfile.TemporaryDirectory(prefix="jarvis-apswmc-adapter-", ignore_cleanup
         assert probe.pragma("cipher") == "chacha20"
     finally:
         probe.close()
-    with sqlite3.connect(target) as plain:
+    with closing(sqlite3.connect(target)) as plain, plain:
         try:
             plain.execute("SELECT count(*) FROM sqlite_master").fetchone()
             raise AssertionError("plain sqlite3 opened the encrypted database")

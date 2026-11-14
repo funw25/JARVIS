@@ -2,6 +2,7 @@
 import json
 import os
 import sqlite3
+from contextlib import closing
 import sys
 import tempfile
 from pathlib import Path
@@ -42,7 +43,7 @@ def expect(error, call, label):
     raise AssertionError("%s did not raise %s" % (label, error.__name__))
 
 
-with tempfile.TemporaryDirectory(prefix="jarvis-migrate-", ignore_cleanup_errors=True) as directory:
+with tempfile.TemporaryDirectory(prefix="jarvis-migrate-") as directory:
     base = Path(directory)
     source_dir = base / "plaintext"
     source_dir.mkdir()
@@ -51,7 +52,7 @@ with tempfile.TemporaryDirectory(prefix="jarvis-migrate-", ignore_cleanup_errors
     database.apply_migrations()
     source_db = database.database_path()
 
-    with sqlite3.connect(source_db) as connection:
+    with closing(sqlite3.connect(source_db)) as connection, connection:
         for assistant in ("companion", "jarvis"):
             connection.execute(
                 "INSERT OR IGNORE INTO assistant_profiles VALUES (?,?,?,?,?,?,?)",
@@ -96,7 +97,7 @@ with tempfile.TemporaryDirectory(prefix="jarvis-migrate-", ignore_cleanup_errors
 
     # A source that carries a reserved table name must abort and leave no vault behind.
     broken = base / "broken.sqlite3"
-    with sqlite3.connect(broken) as connection:
+    with closing(sqlite3.connect(broken)) as connection, connection:
         connection.execute("CREATE TABLE vault_meta(name TEXT)")
         connection.execute("INSERT INTO vault_meta VALUES ('x')")
     unsafe_target = base / "unsafe-vault"
@@ -110,7 +111,7 @@ with tempfile.TemporaryDirectory(prefix="jarvis-migrate-", ignore_cleanup_errors
     assert drill["tables"]["todos"] == TODOS, drill["tables"].get("todos")
     assert drill["total_rows"] == sum(source_counts.values()), (drill["total_rows"], sum(source_counts.values()))
     restored = base / "rollback" / "jarvis-dev.sqlite3"
-    with sqlite3.connect(restored) as connection:
+    with closing(sqlite3.connect(restored)) as connection, connection:
         assert connection.execute("SELECT count(*) FROM todos").fetchone()[0] == TODOS
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
     assert (base / "rollback" / "rollback-report.json").is_file()

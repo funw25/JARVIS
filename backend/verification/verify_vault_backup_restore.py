@@ -7,6 +7,7 @@ import json
 import os
 import shutil
 import sqlite3
+from contextlib import closing
 import sys
 import tempfile
 import threading
@@ -62,7 +63,7 @@ def rebuild(source, target, mutate):
             dst.writestr(name, replacement)
 
 
-with tempfile.TemporaryDirectory(prefix="jarvis-vault-backup-", ignore_cleanup_errors=True) as directory:
+with tempfile.TemporaryDirectory(prefix="jarvis-vault-backup-") as directory:
     base = Path(directory)
     os.environ.pop("JARVIS_DATA_MODE")
     expect(StorageSecurityError, lambda: backup.create_backup(base / "missing", base / "should-not-exist", passphrase="correct horse battery staple"), "backup without mode")
@@ -100,7 +101,7 @@ with tempfile.TemporaryDirectory(prefix="jarvis-vault-backup-", ignore_cleanup_e
     print("D4_MANIFEST_KEY_IS_INDEPENDENT=PASS")
     in_place = base / "extracted.db"
     in_place.write_bytes(database)
-    with sqlite3.connect(in_place) as plain:
+    with closing(sqlite3.connect(in_place)) as plain, plain:
         expect(sqlite3.DatabaseError, lambda: plain.execute("SELECT count(*) FROM sqlite_master").fetchone(), "plain sqlite on backup")
     print("B2_BACKUP_USES_INDEPENDENT_KEY_AND_REJECTS_PLAIN_SQLITE=PASS")
 

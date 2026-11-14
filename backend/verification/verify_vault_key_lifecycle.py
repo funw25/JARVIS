@@ -44,7 +44,7 @@ def expect(error, call, label):
     raise AssertionError("%s did not raise %s" % (label, error.__name__))
 
 
-with tempfile.TemporaryDirectory(prefix="jarvis-vault-keys-", ignore_cleanup_errors=True) as directory:
+with tempfile.TemporaryDirectory(prefix="jarvis-vault-keys-") as directory:
     base = Path(directory)
 
     def fresh(name):

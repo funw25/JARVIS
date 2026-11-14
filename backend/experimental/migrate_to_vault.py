@@ -11,6 +11,7 @@ import hashlib
 import json
 import shutil
 import sqlite3
+from contextlib import closing
 import tempfile
 import time
 from pathlib import Path
@@ -81,11 +82,15 @@ def _digest(connection, table, primary_key):
 def migrate(source_db, vault_root, *, verify_samples=3):
     """Copy every table into a new vault and verify the result."""
     started = time.monotonic()
-    source = _source_connection(source_db)
     vault = Path(vault_root)
     if vault.exists():
         raise MigrationError("vault target already exists")
-    staging = Path(tempfile.mkdtemp(prefix=".jarvis-migrate-staging-", dir=vault.parent))
+    source = _source_connection(source_db)
+    try:
+        staging = Path(tempfile.mkdtemp(prefix=".jarvis-migrate-staging-", dir=vault.parent))
+    except BaseException:
+        source.close()
+        raise
     staged_vault = staging / vault.name
     try:
         tables = _tables(source)
@@ -215,7 +220,7 @@ def drill_rollback(source_db, target_root):
     try:
         database = target / "jarvis-dev.sqlite3"
         shutil.copy2(source, database)
-        with sqlite3.connect(database) as connection:
+        with closing(sqlite3.connect(database)) as connection, connection:
             integrity = connection.execute("PRAGMA integrity_check").fetchone()[0]
             if integrity != "ok":
                 raise VerificationFailed("rollback integrity_check: " + integrity)

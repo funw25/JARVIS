@@ -84,33 +84,42 @@ CHECKS = [
     ("windows_dpapi_candidate", "verify_windows_dpapi_candidate.py", ()),
 ]
 
-results = {"PASS": [], "FAIL": [], "SKIP": []}
+DIAGNOSTICS = {"driver_provenance"}
+results = {group: {"PASS": [], "FAIL": [], "SKIP": []} for group in ("functional", "diagnostic")}
 for name, filename, dependencies in CHECKS:
+    group = "diagnostic" if name in DIAGNOSTICS else "functional"
+    group_results = results[group]
     missing = [module for module in dependencies if importlib.util.find_spec(module) is None]
     if missing:
-        results["SKIP"].append(name)
-        print(f"SKIP {name}: missing {', '.join(missing)}", flush=True)
+        group_results["SKIP"].append(name)
+        print(f"SKIP [{group}] {name}: missing {', '.join(missing)}", flush=True)
         continue
     try:
         run = subprocess.run([sys.executable, str(HERE / filename)], cwd=ROOT,
                              capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=45)
     except subprocess.TimeoutExpired:
-        results["FAIL"].append(name)
-        print(f"FAIL {name}: timeout", flush=True)
+        group_results["FAIL"].append(name)
+        print(f"FAIL [{group}] {name}: timeout", flush=True)
         continue
     if run.returncode == 0:
-        results["PASS"].append(name)
-        print(f"PASS {name}", flush=True)
+        group_results["PASS"].append(name)
+        print(f"PASS [{group}] {name}", flush=True)
+        if group == "diagnostic":
+            for line in run.stdout.splitlines():
+                if line.startswith(("G1_GATE=", "REAL_DATA_APPROVAL=")):
+                    print(f"  {line}", flush=True)
     elif run.returncode == 2 and "NOT_RUN" in run.stdout:
-        results["SKIP"].append(name)
-        print(f"SKIP {name}: {run.stdout.strip()}", flush=True)
+        group_results["SKIP"].append(name)
+        print(f"SKIP [{group}] {name}: {run.stdout.strip()}", flush=True)
     else:
-        results["FAIL"].append(name)
-        print(f"FAIL {name} (exit {run.returncode}):\n{run.stdout}{run.stderr}", flush=True)
-print("Summary:", ", ".join(f"{key}={len(value)}" for key, value in results.items()))
+        group_results["FAIL"].append(name)
+        print(f"FAIL [{group}] {name} (exit {run.returncode}):\n{run.stdout}{run.stderr}", flush=True)
+for group, outcome in results.items():
+    print(f"{group.upper()} Summary:", ", ".join(f"{key}={len(value)}" for key, value in outcome.items()))
+print("Diagnostic PASS means the check ran successfully, not that G1 is approved.")
 print("All checks use synthetic data; integrated encryption, recovery and security review remain NOT VERIFIED.")
-if results["FAIL"]:
+if any(group["FAIL"] for group in results.values()):
     raise SystemExit(1)
-if results["SKIP"]:
+if any(group["SKIP"] for group in results.values()):
     raise SystemExit(2)
 print("ALL_SELECTED_CHECKS=PASS")

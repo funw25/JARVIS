@@ -48,7 +48,7 @@ def open_with_wrapper(root, wrapper_path):
     return keys.open_vault(probe), probe
 
 
-with tempfile.TemporaryDirectory(prefix="jarvis-vault-rotation-", ignore_cleanup_errors=True) as directory:
+with tempfile.TemporaryDirectory(prefix="jarvis-vault-rotation-") as directory:
     base = Path(directory)
     vault = base / "vault"
     info = keys.create_vault(vault)

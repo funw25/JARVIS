@@ -59,7 +59,7 @@ def client_error(call):
     return None, ""
 
 
-with tempfile.TemporaryDirectory(prefix="jarvis-vault-upload-", ignore_cleanup_errors=True) as directory:
+with tempfile.TemporaryDirectory(prefix="jarvis-vault-upload-") as directory:
     base = Path(directory)
     vault = base / "vault"
     vault_keys.create_vault(vault)

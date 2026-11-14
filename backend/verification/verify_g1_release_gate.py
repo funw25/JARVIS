@@ -16,7 +16,7 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
-with tempfile.TemporaryDirectory(prefix="jarvis-g1-gate-", ignore_cleanup_errors=True) as directory:
+with tempfile.TemporaryDirectory(prefix="jarvis-g1-gate-") as directory:
     root = Path(directory)
     (root / "docs").mkdir()
     probe = root / ".jarvis-python314-apswmc-probe"

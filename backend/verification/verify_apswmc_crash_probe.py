@@ -37,7 +37,7 @@ if len(sys.argv) == 3 and sys.argv[1] == "--crash-child":
     raise SystemExit(0)
 
 
-with tempfile.TemporaryDirectory(prefix="jarvis-apswmc-crash-", ignore_cleanup_errors=True) as directory:
+with tempfile.TemporaryDirectory(prefix="jarvis-apswmc-crash-") as directory:
     os.environ["JARVIS_DATA_MODE"] = "synthetic"
     target = Path(directory) / "vault"
     vault.initialize(target)

@@ -122,24 +122,27 @@ class SyntheticMailRuleService:
                     conn.execute("UPDATE synthetic_rule_previews SET status='invalidated',plan_json='{}' WHERE id=? AND owner_id=?", (preview_id, context.owner_id))
                     failure = "Rule preview changed"
                 else:
-                    for item in plan["items"]:
-                        current = conn.execute("SELECT sender,subject,triage_status,priority,revision FROM mail_items WHERE id=? AND owner_id=? AND source_kind='synthetic'", (item["mail_id"], context.owner_id)).fetchone()
-                        if current is None or current["sender"] != item["sender"] or current["subject"] != item["subject"] or current["triage_status"] != item["before"]["triage_status"] or current["priority"] != item["before"]["priority"] or current["revision"] != item["before"]["revision"]:
-                            failure = "Mail changed; review a new rule preview"
-                            break
-                    if failure:
-                        conn.execute("UPDATE synthetic_rule_previews SET status='invalidated',plan_json='{}' WHERE id=? AND owner_id=?", (preview_id, context.owner_id))
-                        self._audit(conn, context, "rule.preview_invalidated", "rule_preview", preview_id, now)
-                    else:
-                        for item in plan["items"]:
-                            conn.execute("UPDATE mail_items SET triage_status=?,priority=?,revision=revision+1,updated_at=? WHERE id=? AND owner_id=?", (item["after"]["triage_status"], item["after"]["priority"], now, item["mail_id"], context.owner_id))
-                            conn.execute("INSERT INTO synthetic_rule_changes(preview_id,mail_id,before_triage,before_priority,after_triage,after_priority,applied_revision,undo_status) VALUES (?,?,?,?,?,?,?,'pending')", (preview_id, item["mail_id"], item["before"]["triage_status"], item["before"]["priority"], item["after"]["triage_status"], item["after"]["priority"], item["before"]["revision"] + 1))
-                        changed = len(plan["items"])
-                        conn.execute("UPDATE synthetic_rule_previews SET status='applied',plan_json='{}',applied_at=? WHERE id=? AND owner_id=?", (now, preview_id, context.owner_id))
-                        self._audit(conn, context, "rule.applied", "rule_preview", preview_id, now)
+                    changed, failure = self._apply_plan(conn, context, preview_id, plan, now)
         if failure:
             raise InvalidTransition(failure)
         return changed
+
+    def _apply_plan(self, conn, context, preview_id, plan, now):
+        # Check every source before writing any change, in the same transaction.
+        for item in plan["items"]:
+            current = conn.execute("SELECT sender,subject,triage_status,priority,revision FROM mail_items WHERE id=? AND owner_id=? AND source_kind='synthetic'", (item["mail_id"], context.owner_id)).fetchone()
+            before = item["before"]
+            if (current is None or current["sender"] != item["sender"] or current["subject"] != item["subject"]
+                    or any(current[field] != before[field] for field in ("triage_status", "priority", "revision"))):
+                conn.execute("UPDATE synthetic_rule_previews SET status='invalidated',plan_json='{}' WHERE id=? AND owner_id=?", (preview_id, context.owner_id))
+                self._audit(conn, context, "rule.preview_invalidated", "rule_preview", preview_id, now)
+                return 0, "Mail changed; review a new rule preview"
+        for item in plan["items"]:
+            conn.execute("UPDATE mail_items SET triage_status=?,priority=?,revision=revision+1,updated_at=? WHERE id=? AND owner_id=?", (item["after"]["triage_status"], item["after"]["priority"], now, item["mail_id"], context.owner_id))
+            conn.execute("INSERT INTO synthetic_rule_changes(preview_id,mail_id,before_triage,before_priority,after_triage,after_priority,applied_revision,undo_status) VALUES (?,?,?,?,?,?,?,'pending')", (preview_id, item["mail_id"], item["before"]["triage_status"], item["before"]["priority"], item["after"]["triage_status"], item["after"]["priority"], item["before"]["revision"] + 1))
+        conn.execute("UPDATE synthetic_rule_previews SET status='applied',plan_json='{}',applied_at=? WHERE id=? AND owner_id=?", (now, preview_id, context.owner_id))
+        self._audit(conn, context, "rule.applied", "rule_preview", preview_id, now)
+        return len(plan["items"]), None
 
     def undo(self, context: AssistantContext, preview_id: str, *, confirmed_by_user: bool = False) -> dict:
         _jarvis(context)

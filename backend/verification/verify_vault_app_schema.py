@@ -41,7 +41,7 @@ with database.connect() as connection:
 print(json.dumps({"versions": versions, "tables": tables, "integrity": integrity, "todos": has_todos}))
 """
 
-with tempfile.TemporaryDirectory(prefix="jarvis-vault-app-", ignore_cleanup_errors=True) as directory:
+with tempfile.TemporaryDirectory(prefix="jarvis-vault-app-") as directory:
     vault = Path(directory) / "vault"
     info = vault_keys.create_vault(vault)
     key = vault_keys._load_key(vault)

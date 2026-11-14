@@ -36,7 +36,7 @@ PASSPHRASE = "scheduled backup passphrase 2026"
 MARKER = "FICTIONAL-JOB-" + os.urandom(6).hex()
 
 try:
-    with tempfile.TemporaryDirectory(prefix="jarvis-backup-job-", ignore_cleanup_errors=True) as directory:
+    with tempfile.TemporaryDirectory(prefix="jarvis-backup-job-") as directory:
         base = Path(directory)
         vault = base / "vault"
         vault_keys.create_vault(vault)

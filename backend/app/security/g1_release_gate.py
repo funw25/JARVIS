@@ -112,6 +112,11 @@ def assess_g1(root=ROOT):
             and "SQLite" in license_text and "public domain" in license_text.lower()):
         reasons.append("installed driver license notices are incomplete or unreadable")
 
+    return _assess_review(root, manifest, files, reasons)
+
+
+def _assess_review(root, manifest, files, reasons):
+    """Check review identities, build digests and the referenced evidence."""
     review = manifest.get("release_g1")
     if not isinstance(review, dict) or review.get("state") != "approved":
         reasons.append("G1 independent approval is missing")

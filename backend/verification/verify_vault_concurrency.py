@@ -34,7 +34,7 @@ READERS = 3
 EXPECTED = WRITERS * INCREMENTS
 
 
-with tempfile.TemporaryDirectory(prefix="jarvis-vault-concurrency-", ignore_cleanup_errors=True) as directory:
+with tempfile.TemporaryDirectory(prefix="jarvis-vault-concurrency-") as directory:
     vault = Path(directory) / "vault"
     keys.create_vault(vault)
     with keys.open_vault(vault) as connection:

@@ -32,7 +32,7 @@ def audit_events(connection, object_ids):
     ]
 
 
-with tempfile.TemporaryDirectory(prefix="jarvis-m1-pipeline-", ignore_cleanup_errors=True) as directory:
+with tempfile.TemporaryDirectory(prefix="jarvis-m1-pipeline-") as directory:
     os.environ["JARVIS_DATA_DIR"] = directory
     database.apply_migrations()
     with database.connect() as connection:

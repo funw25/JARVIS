@@ -19,7 +19,7 @@ if sys.platform != "win32" or sys.version_info[:2] != (3, 14) or not PROBE.is_di
     print("APSWMC_FULL_SUITE=NOT_RUN (isolated Windows CPython 3.14 candidate required)")
     raise SystemExit(2)
 
-with tempfile.TemporaryDirectory(prefix="jarvis-adapter-suite-", ignore_cleanup_errors=True) as directory:
+with tempfile.TemporaryDirectory(prefix="jarvis-adapter-suite-") as directory:
     environment = dict(os.environ)
     environment.update({
         "JARVIS_DATA_MODE": "synthetic",
@@ -35,15 +35,18 @@ with tempfile.TemporaryDirectory(prefix="jarvis-adapter-suite-", ignore_cleanup_
     )
 
     lines = (run.stdout or "").splitlines()
-    summary = [line for line in lines if line.startswith("Summary:")]
+    summaries = [line for line in lines if line.startswith(("FUNCTIONAL Summary:", "DIAGNOSTIC Summary:"))]
     failures = [line for line in lines if line.startswith("FAIL ")]
     skipped = [line for line in lines if line.startswith("SKIP ")]
-    print(summary[-1] if summary else "Summary: (missing)")
+    for line in summaries:
+        print(line)
+    if len(summaries) != 2:
+        print("FAIL: functional or diagnostic summary missing")
     for line in failures:
         print(line)
     for line in skipped:
         print(line)
-    if run.returncode != 0 or failures:
+    if run.returncode != 0 or failures or len(summaries) != 2:
         raise SystemExit(1)
 
 print("APSWMC_FULL_SUITE=PASS")

@@ -35,7 +35,7 @@ def raw(path):
     return connection
 
 
-with tempfile.TemporaryDirectory(prefix="jarvis-storage-tx-", ignore_cleanup_errors=True) as directory:
+with tempfile.TemporaryDirectory(prefix="jarvis-storage-tx-") as directory:
     data_dir = Path(directory) / "data"
     os.environ["JARVIS_DATA_DIR"] = str(data_dir)
 

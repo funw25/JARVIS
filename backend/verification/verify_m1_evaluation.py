@@ -68,7 +68,7 @@ assert "injection recall" in summary and "model quality" not in summary.splitlin
 print("EVAL_SUMMARY_RENDERED=PASS")
 
 import tempfile
-with tempfile.TemporaryDirectory(prefix="jarvis-m1-eval-", ignore_cleanup_errors=True) as directory:
+with tempfile.TemporaryDirectory(prefix="jarvis-m1-eval-") as directory:
     out = Path(directory) / "report.json"
     out.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     assert json.loads(out.read_text(encoding="utf-8"))["items"] == len(rows)

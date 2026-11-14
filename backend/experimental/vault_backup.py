@@ -24,6 +24,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from . import apswmc_storage, vault_keys
 from .windows_dpapi import protect_synthetic_key
+from app.security.storage_policy import require_synthetic_storage
 
 FORMAT = "jarvis-backup-v1"
 KEYWRAP_FORMAT = "jarvis-backup-keywrap-v1"
@@ -34,6 +35,9 @@ MANIFEST = "manifest.json"
 ALLOWED = {DB, KEYWRAP, MANIFEST}
 MIN_PASSPHRASE = 12
 ARGON2 = {"name": "argon2id", "m": 65536, "t": 3, "p": 2}
+ARGON2_MAX = {"m": 262144, "t": 10, "p": 8}
+MAX_METADATA_BYTES = 1024 * 1024
+MAX_DATABASE_BYTES = 1024 * 1024 * 1024
 FORBIDDEN = ("passphrase", "recovery", "secret", "plain", "dek.dpapi", "key.dpapi")
 COMMON_PASSPHRASES = {
     "password1234", "passwordpassword", "123456789012", "qwertyuiop12",
@@ -122,12 +126,13 @@ def _unwrap(entry, secret):
     if kdf.get("name") != "argon2id":
         raise KdfParamsRejected("unsupported KDF")
     for name in ("m", "t", "p"):
-        try:
-            value = int(kdf.get(name, 0))
-        except (TypeError, ValueError):
+        value = kdf.get(name)
+        if type(value) is not int:
             raise KdfParamsRejected("invalid KDF parameters")
         if value < ARGON2[name]:
             raise KdfParamsRejected("KDF parameters below the accepted floor")
+        if value > ARGON2_MAX[name]:
+            raise KdfParamsRejected("KDF parameters exceed the accepted ceiling")
     try:
         salt = bytes.fromhex(entry["salt"])
         nonce = bytes.fromhex(entry["nonce"])
@@ -168,6 +173,7 @@ def _snapshot(source, target_path, bk):
 
 def create_backup(vault_root, destination_dir, *, passphrase, recovery_code=None):
     """Write a self-contained archive and return its metadata (code only if generated)."""
+    require_synthetic_storage()
     secret = validate_passphrase(passphrase)
     code = recovery_code or new_recovery_code()
     normalized = normalize_code(code)
@@ -184,6 +190,8 @@ def create_backup(vault_root, destination_dir, *, passphrase, recovery_code=None
             schema_version = source.execute("PRAGMA user_version").fetchone()[0]
         if apswmc_storage.plaintext_header(staging / DB):
             raise BackupError("backup database is not encrypted")
+        if (staging / DB).stat().st_size > MAX_DATABASE_BYTES:
+            raise BackupError("backup database exceeds the experimental restore size limit")
 
         wraps = [_wrap(bk, secret.encode("utf-8"), "passphrase"), _wrap(bk, normalized.encode("ascii"), "recovery_code")]
         # D4: the manifest key is independent from the backup key, so a database
@@ -253,19 +261,27 @@ def inspect_archive(path):
 
 def assert_upload_safe(path):
     report = inspect_archive(path)
-    if report["suspicious"] or report["unexpected"]:
+    if (report["suspicious"] or report["unexpected"] or
+            len(report["entries"]) != len(ALLOWED) or set(report["entries"]) != ALLOWED):
         raise ArchiveRejected("archive contains entries that must not be uploaded")
     return report
 
 
 def _read_archive(path):
     with zipfile.ZipFile(path) as bundle:
-        names = set(bundle.namelist())
-        if names != ALLOWED:
+        entries = bundle.infolist()
+        names = [entry.filename for entry in entries]
+        if len(names) != len(ALLOWED) or set(names) != ALLOWED:
             raise ArchiveRejected("archive entries are not exactly the expected set")
+        for entry in entries:
+            limit = MAX_DATABASE_BYTES if entry.filename == DB else MAX_METADATA_BYTES
+            if entry.file_size > limit or entry.flag_bits & 1:
+                raise ArchiveRejected("archive entry exceeds limits or uses unsupported ZIP encryption")
         manifest = json.loads(bundle.read(MANIFEST).decode("utf-8"))
         keywrap = json.loads(bundle.read(KEYWRAP).decode("utf-8"))
         database = bundle.read(DB)
+    if not isinstance(manifest, dict) or not isinstance(keywrap, dict):
+        raise ArchiveRejected("archive metadata must be objects")
     if manifest.get("format") != FORMAT:
         raise ArchiveRejected("unknown backup format")
     if keywrap.get("format") != KEYWRAP_FORMAT:
@@ -278,6 +294,7 @@ def _read_archive(path):
 
 def restore_backup(archive, target_root, *, passphrase=None, recovery_code=None):
     """Restore into a new directory; never overwrites an existing vault."""
+    require_synthetic_storage()
     manifest, keywrap, database = _read_archive(archive)
     target = Path(target_root)
     if os.path.lexists(target):

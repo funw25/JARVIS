@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import backup_sink, vault_backup, wincred
+from app.security.storage_policy import require_synthetic_storage
 
 PASSPHRASE_TARGET = wincred.DEFAULT_TARGET
 CODE_TARGET = wincred.TARGET_PREFIX + "backup-recovery-code"
@@ -90,6 +91,7 @@ def prune_remote(sink, keep):
 def run(vault_root, *, local_dir, sink=None, passphrase=None, recovery_code=None,
         keep_local=7, keep_remote=4, passphrase_target=PASSPHRASE_TARGET, code_target=CODE_TARGET):
     """Create one backup, keep the local copy, optionally upload and prune."""
+    require_synthetic_storage()
     secret = resolve_passphrase(passphrase, target=passphrase_target)
     code, code_created = resolve_recovery_code(recovery_code, target=code_target)
     made = vault_backup.create_backup(vault_root, local_dir, passphrase=secret, recovery_code=code)

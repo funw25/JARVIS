@@ -32,6 +32,8 @@ os.environ["JARVIS_DATA_MODE"] = "synthetic"
 
 from experimental import vault_backup as backup
 from experimental import vault_keys as keys
+from experimental import backup_job
+from app.security.storage_policy import StorageSecurityError
 
 MARKER = "FICTIONAL-BACKUP-MARKER-" + os.urandom(6).hex()
 
@@ -62,6 +64,13 @@ def rebuild(source, target, mutate):
 
 with tempfile.TemporaryDirectory(prefix="jarvis-vault-backup-", ignore_cleanup_errors=True) as directory:
     base = Path(directory)
+    os.environ.pop("JARVIS_DATA_MODE")
+    expect(StorageSecurityError, lambda: backup.create_backup(base / "missing", base / "should-not-exist", passphrase="correct horse battery staple"), "backup without mode")
+    expect(StorageSecurityError, lambda: backup.restore_backup(base / "missing.jvault", base / "should-not-exist", passphrase="correct horse battery staple"), "restore without mode")
+    expect(StorageSecurityError, lambda: backup_job.run(base / "missing", local_dir=base / "should-not-exist"), "scheduled backup without mode")
+    assert not (base / "should-not-exist").exists()
+    os.environ["JARVIS_DATA_MODE"] = "synthetic"
+    print("BACKUP_REQUIRES_EXPLICIT_SYNTHETIC_MODE_BEFORE_SIDE_EFFECTS=PASS")
     vault = base / "vault"
     info = keys.create_vault(vault)
     with keys.open_vault(vault) as connection:
@@ -164,6 +173,32 @@ with tempfile.TemporaryDirectory(prefix="jarvis-vault-backup-", ignore_cleanup_e
     rebuild(archive, weak, weaken_kdf)
     expect(backup.KdfParamsRejected, lambda: backup.restore_backup(weak, base / "weak-out", passphrase=passphrase), "downgraded KDF")
     print("B9_KDF_DOWNGRADE_REJECTED=PASS")
+
+    # Unauthenticated KDF values must not cause unbounded resource allocation.
+    def oversized_kdf(name, data):
+        if name == backup.KEYWRAP:
+            payload = json.loads(data)
+            payload["wraps"][0]["kdf"]["m"] = backup.ARGON2_MAX["m"] + 1
+            return json.dumps(payload).encode("utf-8")
+        return data
+    excessive = base / "excessive-kdf.jvault"
+    rebuild(archive, excessive, oversized_kdf)
+    expect(backup.KdfParamsRejected, lambda: backup.restore_backup(excessive, base / "excessive-out", passphrase=passphrase), "excessive KDF")
+
+    # A set comparison alone accepts a ZIP containing duplicate names.
+    duplicate = base / "duplicate.jvault"
+    import warnings
+    with warnings.catch_warnings(), zipfile.ZipFile(archive) as src, zipfile.ZipFile(duplicate, "w") as dst:
+        warnings.simplefilter("ignore", UserWarning)
+        for name in src.namelist():
+            dst.writestr(name, src.read(name))
+        dst.writestr(backup.MANIFEST, src.read(backup.MANIFEST))
+    expect(backup.ArchiveRejected, lambda: backup.restore_backup(duplicate, base / "duplicate-out", passphrase=passphrase), "duplicate ZIP member")
+    expect(backup.ArchiveRejected, lambda: backup.assert_upload_safe(duplicate), "duplicate upload member")
+    oversized = base / "oversized-metadata.jvault"
+    rebuild(archive, oversized, lambda name, data: b"x" * (backup.MAX_METADATA_BYTES + 1) if name == backup.MANIFEST else data)
+    expect(backup.ArchiveRejected, lambda: backup.restore_backup(oversized, base / "oversized-out", passphrase=passphrase), "oversized metadata")
+    print("RESTORE_RESOURCE_LIMITS_AND_DUPLICATE_MEMBERS=PASS")
 
     # B10: missing or damaged key wrap is reported distinctly.
     without_wrap = base / "no-wrap.jvault"

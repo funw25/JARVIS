@@ -17,9 +17,8 @@ BACKEND = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / ".jarvis-python314-apswmc-probe"))
 
-os.environ.setdefault("JARVIS_DATA_MODE", "synthetic")
-
 from experimental import backup_job, backup_sink, vault_backup, vault_keys, wincred
+from app.security.storage_policy import StorageSecurityError, require_synthetic_storage
 
 
 def command_store_passphrase(args):
@@ -138,7 +137,11 @@ def main(argv=None):
 
     arguments = parser.parse_args(argv)
     try:
+        require_synthetic_storage()
         return arguments.func(arguments) or 0
+    except StorageSecurityError as exc:
+        print("error: %s" % exc, file=sys.stderr)
+        return 2
     except backup_job.PassphraseUnavailable as exc:
         print("error: %s" % exc, file=sys.stderr)
         print("fix: python backend/experimental/backup_cli.py store-passphrase", file=sys.stderr)

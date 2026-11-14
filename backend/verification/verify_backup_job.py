@@ -29,13 +29,11 @@ os.environ.pop("JARVIS_BACKUP_RECOVERY_CODE", None)
 
 from experimental import backup_job, backup_sink, vault_backup, vault_keys, wincred
 
-PASS_TARGET = "Jarvis:test-backup-passphrase"
-CODE_TARGET = "Jarvis:test-backup-recovery-code"
+RUN_ID = os.urandom(16).hex()
+PASS_TARGET = "Jarvis:test-backup-passphrase-" + RUN_ID
+CODE_TARGET = "Jarvis:test-backup-recovery-code-" + RUN_ID
 PASSPHRASE = "scheduled backup passphrase 2026"
 MARKER = "FICTIONAL-JOB-" + os.urandom(6).hex()
-
-for target in (PASS_TARGET, CODE_TARGET, wincred.DEFAULT_TARGET, backup_job.CODE_TARGET):
-    wincred.delete_secret(target)
 
 try:
     with tempfile.TemporaryDirectory(prefix="jarvis-backup-job-", ignore_cleanup_errors=True) as directory:
@@ -51,7 +49,8 @@ try:
 
         # Without any stored credential the job must refuse, not guess.
         try:
-            backup_job.run(vault, local_dir=local, passphrase=None)
+            backup_job.run(vault, local_dir=local, passphrase=None,
+                           passphrase_target=PASS_TARGET, code_target=CODE_TARGET)
             raise AssertionError("job ran without a passphrase")
         except backup_job.PassphraseUnavailable:
             pass
@@ -112,7 +111,7 @@ try:
         assert not removed and locked, (removed, locked)
         print("JOB_TOLERATES_LOCKED_REMOTE_OBJECTS=PASS")
 finally:
-    for target in (PASS_TARGET, CODE_TARGET, wincred.DEFAULT_TARGET, backup_job.CODE_TARGET):
+    for target in (PASS_TARGET, CODE_TARGET):
         wincred.delete_secret(target)
 
 print("VAULT_BACKUP_JOB=PASS")

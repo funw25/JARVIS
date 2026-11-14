@@ -2,6 +2,8 @@
 
 更新：2026-11-14。当前开发方向是 Jarvis 底层；陪伴模式保留现有通道，暂不扩展；电影 HUD 原型冻结，尚未接后端。
 
+**本轮安全补强：** 备份/恢复和定时任务入口在副作用前要求显式虚构模式；恢复拒绝重复 ZIP 条目、过大的条目和超出上限的 KDF 参数。备份测试不再删除默认 Windows 凭据。新增手动触发的只读发布预检工作流；它不发布，也不能限制仓库授权用户绕过工作流发布。真实数据与正式发布仍未放行，详见 [本轮记录](M2_BACKUP_AND_RELEASE_2026-11-14.md)。
+
 **重审进度：** [M1 虚构数据研究闭环](M1_RESULTS.md)已收口；本轮修复了空证据与重复执行，并重新核验历史 v2 模型证据。**M2 可信本机底座已开始，尚未完成：** 应用可在虚构数据模式下使用 DPAPI 包装密钥的实验加密库；G1 严格检查会阻止当前候选发布。真实资料、正式发布、独立安全评审及异机恢复仍未放行。详见 [四项问题实施记录](M2_P0_REMEDIATION_2026-11-14.md)。
 
 **现在只能使用虚构资料。** 主应用默认数据库仍是明文；显式配置可选的 DPAPI 实验 vault 后可在加密库中运行虚构流程。尚无真实账户连接或邮件发送器。以下“可用”均指开发环境里的本机合成数据功能，不是可以接管真实账户的产品。
@@ -19,7 +21,7 @@
 
 ## 验证情况
 
-- **隔离 Python 3.14 一键回归（2026-11-08 最近记录）：62 个脚本项 PASS、0 FAIL、0 SKIP**，输出 `ALL_SELECTED_CHECKS=PASS`，退出码 0。环境：项目内便携解释器 `.jarvis-python-3.14.10` + `.jarvis-python314-deps`（fastapi / pydantic / uvicorn / sqlcipher3-wheels）+ `.jarvis-python314-apswmc-probe`（apsw 3.54.0.0 / SQLite3 Multiple Ciphers 2.6.1）。62 项中包含 `driver_provenance`：它虽被计作 PASS，却仍打印 `G1_GATE=OPEN`；因此该数字不能作为加密驱动放行或真实数据可用的证据。
+- **隔离 Python 3.14 一键回归（2026-11-14）：64 个脚本项 PASS、0 FAIL、0 SKIP**，输出 `ALL_SELECTED_CHECKS=PASS`，退出码 0。环境：项目内便携解释器 `.jarvis-python-3.14.10` + `.jarvis-python314-deps`（fastapi / pydantic / uvicorn / sqlcipher3-wheels）+ `.jarvis-python314-apswmc-probe`（apsw 3.54.0.0 / SQLite3 Multiple Ciphers 2.6.1）。64 项中包含 `driver_provenance`：它虽被计作 PASS，却仍打印 `G1_GATE=OPEN`；因此该数字不能作为加密驱动放行或真实数据可用的证据。
 - **整套回归已能跑在加密后端上（2026-11-07 当时实测）**：`verify_adapter_suite.py` 以随机密钥、`JARVIS_STORAGE_ADAPTER=apswmc` 启动 `verify_all.py`；2026-11-08 重新实测 **60 PASS / 0 FAIL / 0 SKIP**；早前记录的 49 项为历史值。
 - **备份链路已在真实 R2 上验证（2026-11-07）**：本地目录 sink + Cloudflare R2（桶 `jarvis-backup`，`backups/` 前缀 35 天桶锁、120 天生命周期）；上传守卫拒绝带恢复材料的归档，覆盖与删除都被桶锁拒绝（`ObjectLockedByBucketPolicy`），从云端下载后分别用口令与恢复码恢复到新目录成功；备份期间并发写无撕裂事务。凭据只存在于仓库外的 `%USERPROFILE%\.jarvis\r2.env`。
 - **本地模型质量已测量（2026-11-14）**：v1 是失败基线；后续 v2 的两次 53 条运行、20 条留出集及实测指标见 [M1 结果](M1_RESULTS.md)。模型尚未接入真实资料链路，噪声、优先级和独立标注仍不足。
@@ -27,7 +29,7 @@
 - **M1 离线环境已锁定（2026-11-09）**：解释器固定为 CPython 3.14.10（官方 embeddable zip，SHA-256 `90905e64…`；与本项目解释器逐文件比对 36/37 一致，唯一差异是 `._pth`），32 个依赖版本与 wheel 哈希写入 `tools/env/requirements-m1.lock`，离线 wheelhouse + `bootstrap.ps1` 重建，`test-cleanroom.ps1` 在全新目录实测通过（环境校验 + M1 三项检查，零 SKIP）。详见 [M1_ENVIRONMENT.md](M1_ENVIRONMENT.md)。
 - **M1 离线纵向闭环已交付（2026-11-08）**：53 条虚构标注样本（5 类、6 条长线程、3 组重复、4 条含糊承诺，证据全部逐字校验）、规则基线 `rules-v2`（分类 100%、todo 88.7%、draft 100%、优先级 94.3%、注入召回 100%，并明确标注"数据集与规则同源、不主张泛化"）、纵向链路 `import → suggestion(证据) → 用户修改/拒绝 → todo 或草稿 → 审计`（CLI 一条命令可跑，注入被接受也不产生动作，无发送器），以及评测框架（无真实模型时 `evaluate_model` 直接拒绝编造分数，`model_status` 固定为"未验证"）。结果与限制见 [M1_RESULTS.md](M1_RESULTS.md)。
 - **G1 清单与检测就绪（2026-11-08）**：`verify_driver_provenance.py` 比对 `docs/driver-manifest.json` 的版本与文件哈希（漂移即失败），并报告许可证覆盖与后端可识别性。实测两条缺口：随包许可证只有 APSW（缺 SQLite3MC/SQLite）、二进制无法证实实际原语来源 → **G1 仍 OPEN**。当前 APSW/SQLite3MC 不能被认定为使用 OpenSSL 3.6；此前的结论属于另行测试的 SQLCipher 候选。修订后的自建草案见 [DRIVER_REVIEW_AND_BUILD.md](DRIVER_REVIEW_AND_BUILD.md)。
-- **G6/G7 已实现（2026-11-08）**：`experimental/migrate_to_vault.py` 把明文库逐表复制进 vault（31 表/22 行合成数据、行数与内容摘要逐表比对、外键检查、密文校验、`migration-report.json`），并实现回滚演练 `drill_rollback`（快照恢复、`integrity_check`、逐表行数、`rollback-report.json`、拒绝覆盖）。两者注册时回归为 56 项全绿；当前 62 项结果见上。评审包见 [REVIEW_PACKET.md](REVIEW_PACKET.md)。
+- **G6/G7 已实现（2026-11-08）**：`experimental/migrate_to_vault.py` 把明文库逐表复制进 vault（31 表/22 行合成数据、行数与内容摘要逐表比对、外键检查、密文校验、`migration-report.json`），并实现回滚演练 `drill_rollback`（快照恢复、`integrity_check`、逐表行数、`rollback-report.json`、拒绝覆盖）。两者注册时回归为 56 项全绿；当前 64 项结果见上。评审包见 [REVIEW_PACKET.md](REVIEW_PACKET.md)。
 - **决策 D4/D5/D6（2026-11-08）**：D4 备份清单使用**独立随机密钥**；D5 采用**手动轮换 + 180 天到期查询**，尚无主动通知；D6 已纠正为“当前 APSW/SQLite3MC 构建来源与依赖未证实，不得承载真实数据”，不能把 SQLCipher 候选的 OpenSSL 3.6 风险外推。具体整改见 [风险整改方案](RISK_REMEDIATION_OPTIONS.md)。
 - **S3 密钥轮换已实现（2026-11-07）**：`PRAGMA rekey` 实机可用；轮换带 pending 标记与中断自动续做，成功时双向验证（新钥匙开得动、旧钥匙开不动），失败回滚到旧密钥；`verify_vault_rotation.py` 覆盖 K4/K5/C2。
 - **备份自动化实验已就绪（2026-11-08）**：`backup_job` 默认读取 Windows 凭据管理器中的口令与恢复码，但代码仍允许显式参数和环境变量回退，需在正式版本中收紧；创建归档、尝试保留本地 7 份/远端 4 份、写不含密钥的审计行。远端 35 天锁定会使实际份数高于 4。`backup_cli.py` 提供 store-passphrase / show-recovery-code / run；`tools/backup/schedule-backup.ps1` 可注册任务，但 G4 连续运行尚未开始。

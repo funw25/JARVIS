@@ -101,9 +101,7 @@ def migrate(source_db, vault_root, *, verify_samples=3):
 
         expected = {}
         copied = []
-        connection = apswmc_storage.connect(staged_vault / vault_keys.DBFILE, key, create=False)
-        handle = connection.__enter__()
-        try:
+        with apswmc_storage.connect(staged_vault / vault_keys.DBFILE, key, create=False) as handle:
             # Foreign keys are enforced again after the copy, once every table exists.
             handle.execute("PRAGMA foreign_keys=OFF")
             for name, statement in tables:
@@ -132,30 +130,20 @@ def migrate(source_db, vault_root, *, verify_samples=3):
                 }
                 copied.append({"name": name, "rows": copied_rows})
             handle.commit()
-        finally:
-            connection.__exit__(None, None, None)
 
         # Reopen with foreign keys on and check both directions.
-        check_cm = apswmc_storage.connect(staged_vault / vault_keys.DBFILE, key, create=False)
-        check = check_cm.__enter__()
-        try:
+        with apswmc_storage.connect(staged_vault / vault_keys.DBFILE, key, create=False) as check:
             violations = check.execute("PRAGMA foreign_key_check").fetchall()
             if violations:
                 raise VerificationFailed("foreign key violations after copy: %d" % len(violations))
-        finally:
-            check_cm.__exit__(None, None, None)
 
         mismatches = []
-        reader_cm = apswmc_storage.connect(staged_vault / vault_keys.DBFILE, key, create=False)
-        reader = reader_cm.__enter__()
-        try:
+        with apswmc_storage.connect(staged_vault / vault_keys.DBFILE, key, create=False) as reader:
             for name, _ in tables:
                 digest, count = _digest(reader, name, _primary_key(_columns(source, name)))
                 if count != expected[name]["rows"] or digest != expected[name]["digest"]:
                     mismatches.append({"table": name, "source_rows": expected[name]["rows"],
                                        "vault_rows": count, "digest_match": digest == expected[name]["digest"]})
-        finally:
-            reader_cm.__exit__(None, None, None)
         if mismatches:
             raise VerificationFailed("verification failed: %s" % json.dumps(mismatches))
         if (staged_vault / vault_keys.DBFILE).read_bytes()[:16] == b"SQLite format 3\x00":

@@ -139,14 +139,23 @@ class S3Sink:
         return {"sink": self.kind, "key": key, "bytes": len(body)}
 
     def list(self, prefix=None):
-        try:
-            listing = self.client.list_objects_v2(Bucket=self.bucket, Prefix=prefix or self.prefix)
-        except self._errors as exc:
-            raise self._wrap(exc, "list") from exc
-        return [
-            {"key": item["Key"], "bytes": item["Size"], "modified": item["LastModified"].isoformat()}
-            for item in listing.get("Contents", [])
-        ]
+        items, token, seen = [], None, set()
+        while True:
+            kwargs = {"Bucket": self.bucket, "Prefix": prefix or self.prefix}
+            if token is not None:
+                kwargs["ContinuationToken"] = token
+            try:
+                listing = self.client.list_objects_v2(**kwargs)
+            except self._errors as exc:
+                raise self._wrap(exc, "list") from exc
+            items.extend({"key": item["Key"], "bytes": item["Size"], "modified": item["LastModified"].isoformat()}
+                         for item in listing.get("Contents", []))
+            if not listing.get("IsTruncated", False):
+                return items
+            token = listing.get("NextContinuationToken")
+            if not isinstance(token, str) or not token or token in seen:
+                raise SinkError("remote listing has an invalid continuation token")
+            seen.add(token)
 
     def delete(self, key):
         try:

@@ -101,7 +101,21 @@ with tempfile.TemporaryDirectory(prefix="jarvis-migrate-") as directory:
         connection.execute("CREATE TABLE vault_meta(name TEXT)")
         connection.execute("INSERT INTO vault_meta VALUES ('x')")
     unsafe_target = base / "unsafe-vault"
-    expect(migrate_to_vault.MigrationError, lambda: migrate_to_vault.migrate(broken, unsafe_target), "reserved table")
+    from contextlib import contextmanager
+    from unittest.mock import patch
+    original_connect = apswmc_storage.connect
+    propagated = []
+    @contextmanager
+    def traced_connect(*args, **kwargs):
+        try:
+            with original_connect(*args, **kwargs) as handle:
+                yield handle
+        except migrate_to_vault.MigrationError:
+            propagated.append(True)
+            raise
+    with patch.object(apswmc_storage, "connect", traced_connect):
+        expect(migrate_to_vault.MigrationError, lambda: migrate_to_vault.migrate(broken, unsafe_target), "reserved table")
+    assert propagated, "migration error did not reach the storage context manager"
     assert not unsafe_target.exists(), "aborted migration left a vault behind"
     print("G6_ABORTS_ON_RESERVED_TABLE_WITHOUT_RESIDUE=PASS")
 

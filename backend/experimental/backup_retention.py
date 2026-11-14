@@ -33,7 +33,16 @@ def prune_local(directory, keep):
 def prune_remote(sink, keep):
     _validate_prune_count(keep)
     removed, locked = [], []
-    items = sorted(sink.list(), key=lambda item: item.get("modified") or item["key"], reverse=True)
+    prefix = getattr(sink, "prefix", "")
+    def is_backup(item):
+        key = item.get("key")
+        if not isinstance(key, str) or not key.startswith(prefix):
+            return False
+        name = key[len(prefix):]
+        return ("/" not in name and "\\" not in name and
+                name.startswith("jarvis-backup-") and name.endswith(".jvault"))
+    items = sorted((item for item in sink.list() if is_backup(item)),
+                   key=lambda item: item.get("modified") or item["key"], reverse=True)
     for item in items[keep:]:
         try:
             sink.delete(item["key"])

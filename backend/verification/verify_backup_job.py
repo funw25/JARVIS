@@ -130,6 +130,46 @@ try:
         removed, locked = backup_job.prune_remote(LockedSink(remote), 0)
         assert not removed and locked, (removed, locked)
         print("JOB_TOLERATES_LOCKED_REMOTE_OBJECTS=PASS")
+
+        # Retention must never delete a checkpoint or another prefix's object.
+        class MixedSink:
+            prefix = "backups/"
+            def __init__(self):
+                self.deleted = []
+            def list(self):
+                return [{"key": key, "modified": str(index)} for index, key in enumerate((
+                    "backups/jarvis-backup-old.jvault", "backups/audit/checkpoint.json",
+                    "backups/readme.txt", "other/jarvis-backup-unrelated.jvault",
+                    "backups/jarvis-backup-new.jvault"))]
+            def delete(self, key):
+                self.deleted.append(key)
+        mixed = MixedSink()
+        removed, locked = backup_job.prune_remote(mixed, 1)
+        assert removed == ["backups/jarvis-backup-old.jvault"] and not locked
+        assert mixed.deleted == removed
+        print("REMOTE_RETENTION_IGNORES_CHECKPOINTS_AND_OTHER_OBJECTS=PASS")
+
+        # Exercise S3 pagination without network or credentials.
+        class FakeClient:
+            def __init__(self, repeated=False):
+                self.calls = []
+                self.repeated = repeated
+            def list_objects_v2(self, **kwargs):
+                self.calls.append(kwargs)
+                if len(self.calls) == 1 or self.repeated:
+                    return {"IsTruncated": True, "NextContinuationToken": "next", "Contents": []}
+                return {"IsTruncated": False, "Contents": []}
+        fake_sink = object.__new__(backup_sink.S3Sink)
+        fake_sink.bucket, fake_sink.prefix, fake_sink._errors = "fictional", "backups/", RuntimeError
+        fake_sink.client = FakeClient()
+        assert fake_sink.list() == [] and fake_sink.client.calls[1]["ContinuationToken"] == "next"
+        fake_sink.client = FakeClient(repeated=True)
+        try:
+            fake_sink.list()
+            raise AssertionError("repeated pagination token accepted")
+        except backup_sink.SinkError:
+            pass
+        print("REMOTE_LIST_PAGINATION_AND_INVALID_TOKEN=PASS")
 finally:
     for target in (PASS_TARGET, CODE_TARGET):
         wincred.delete_secret(target)
